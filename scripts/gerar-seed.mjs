@@ -149,7 +149,16 @@ function areaEmM2(texto, linha) {
   return Number.isFinite(area) && area > 0 ? area : falhar(`lojas.csv linha ${linha}: área "${texto}"`)
 }
 
-const lojas = lerCsv('lojas.csv').map((l) => {
+/** "LOJA 48A" → "48A", sem observação entre parênteses ("LOJA 109 (segunda, repetida na planta)"). */
+const rotuloDaUnidade = (l) => l.loja.replace(/^LOJA\s+/i, '').replace(/\s*\(.*\)\s*$/, '').trim().toUpperCase()
+const linhasDasLojas = lerCsv('lojas.csv')
+const vezesDoRotulo = new Map()
+for (const l of linhasDasLojas) vezesDoRotulo.set(rotuloDaUnidade(l), (vezesDoRotulo.get(rotuloDaUnidade(l)) ?? 0) + 1)
+/** O número da unidade é único: um número repetido na planta usa o do mapa_id ("loja-109-b" → "109-B"). */
+const numeroDaUnidade = (l) =>
+  vezesDoRotulo.get(rotuloDaUnidade(l)) > 1 ? l.id_mapa.replace(/^loja-/i, '').toUpperCase() : rotuloDaUnidade(l)
+
+const lojas = linhasDasLojas.map((l) => {
   const piso = /t[ée]rreo/i.test(l.piso) ? 1 : /2/.test(l.piso) ? 2 : falhar(`lojas.csv linha ${l.numero}: piso "${l.piso}"`)
   const vaga = l.situacao.toUpperCase() === 'VAGA'
   const cnpj = /^\d{14}$/.test(l.cnpj ?? '') ? l.cnpj : null
@@ -157,8 +166,8 @@ const lojas = lerCsv('lojas.csv').map((l) => {
     codigo: l.loja,
     id: uuid(`loja:${l.loja}`),
     nome: l.nome_da_marca || (vaga ? 'Vaga' : l.loja.replace(/^LOJA\b/i, 'Loja')),
-    // "LOJA 48A" → "48A": o número da unidade na planta (as telas mostram "LOJA 48A").
-    numero: l.loja.replace(/^LOJA\s+/i, '').trim().toUpperCase(),
+    // O número da unidade na planta: as telas mostram "LOJA 48A".
+    numero: numeroDaUnidade(l),
     areaM2: areaEmM2(l.area_m2, l.numero),
     // Unidade vaga não tem CNPJ (migration 0003).
     cnpj: vaga ? null : (cnpj ?? cnpjFicticio(l.id_mapa, cnpjs)),
