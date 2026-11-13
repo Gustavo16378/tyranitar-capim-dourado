@@ -13,7 +13,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:unidade": "vitest run tests/unidade"
+    "test:unidade": "vitest run tests/unidade",
+    "db:migrar": "wrangler d1 migrations apply tyranitar --local",
+    "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
