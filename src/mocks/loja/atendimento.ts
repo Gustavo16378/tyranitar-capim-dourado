@@ -6,7 +6,8 @@ import type { Atendimento, Compra, PedidoCompra, PreviaCompra } from '../../tipo
 import { podeRetirar, STATUS_ATIVOS } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
 import { hojeEmPalmas } from '../../painel/comum/formatos'
-import { banco, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
+import { registrarReembolso } from '../comum/reembolsos'
+import { banco, LOJA, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
 import {
   dadosInvalidos,
   erro,
@@ -172,12 +173,36 @@ export function registrarCompra(pedido: PedidoMock): RespostaMock {
   if ('status' in calculo) return calculo
   const { cliente, reserva, usados, previa } = calculo
 
-  banco.compras += 1
   const compra: Compra = { id: novoId('co'), ...previa }
   cliente.pontos += compra.pontosGerados
+  let descontoLoja = 0
+  let descontoShopping = 0
   for (const cupom of usados) {
     const centavos = compra.descontos.find((d) => d.cupom === cupom.id)?.centavos ?? 0
     banco.usos.push({ cupomId: cupom.id, clienteId: cliente.id, compraId: compra.id, centavos })
+    if (cupom.origem === 'SHOPPING') descontoShopping += centavos
+    else descontoLoja += centavos
+  }
+  banco.compras.push({
+    id: compra.id,
+    clienteId: cliente.id,
+    cliente: cliente.nome,
+    criadoEm: new Date().toISOString(),
+    brutoCentavos: compra.valorBrutoCentavos,
+    descontoLojaCentavos: descontoLoja,
+    descontoShoppingCentavos: descontoShopping,
+    pagoCentavos: compra.valorPagoCentavos,
+    retirada: Boolean(reserva),
+  })
+  // RN11: o voucher do shopping usado na loja vira reembolso a receber.
+  if (compra.reembolsoGerado) {
+    registrarReembolso({
+      lojaId: LOJA.id,
+      compraId: compra.id,
+      cupomId: compra.reembolsoGerado.cupom,
+      centavos: compra.reembolsoGerado.centavos,
+      criadoEm: new Date().toISOString(),
+    })
   }
   if (reserva) reserva.status = 'RETIRADA'
   return ok(compra, 201)

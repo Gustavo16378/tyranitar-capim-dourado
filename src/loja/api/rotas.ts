@@ -5,6 +5,7 @@ import type {
   Atendimento,
   Compra,
   CupomDaLoja,
+  Extrato,
   FiltroProdutos,
   FiltroReservas,
   Pagina,
@@ -97,4 +98,9 @@ export function criarCupom(cupom: PedidoCupom) {
 /** GET /api/loja/relatorios: o desempenho da loja no período (RF24). */
 export function buscarRelatorio(periodo: Periodo, sinal?: AbortSignal) {
   return requisitar<Relatorio>('GET', '/api/loja/relatorios', { busca: { periodo }, sinal })
+}
+
+/** GET /api/loja/extrato: vendas pela plataforma, descontos e reembolsos a receber (RF25). */
+export function buscarExtrato(periodo: Periodo, pagina: number, sinal?: AbortSignal) {
+  return requisitar<Extrato>('GET', '/api/loja/extrato', { busca: { periodo, pagina, tamanho: 20 }, sinal })
 }

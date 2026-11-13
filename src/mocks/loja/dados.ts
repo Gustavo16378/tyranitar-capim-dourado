@@ -2,6 +2,7 @@
 // reservas, o catálogo e os cupons da loja. Fica na memória: recarregar a página volta tudo
 // ao início, o que deixa a demonstração repetível. Os testes chamam reiniciarMocks().
 import { hojeEmPalmas } from '../../painel/comum/formatos'
+import { diasAtras, reiniciarReembolsos, VOUCHERS_DA_LOJA_DE_ESPORTES } from '../comum/reembolsos'
 import { QR_DA_ANA } from '../../loja/telas/atendimento/demo'
 import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom, UsuarioLogado } from '../../tipos/loja'
 
@@ -51,6 +52,19 @@ export interface CupomMock {
 
 export interface ReservaMock extends ReservaDaLoja {
   clienteId: string
+}
+
+/** Uma compra registrada pela plataforma (POST /api/loja/compras), como o Extrato lê. */
+export interface CompraMock {
+  id: string
+  clienteId: string
+  cliente: string
+  criadoEm: string
+  brutoCentavos: number
+  descontoLojaCentavos: number
+  descontoShoppingCentavos: number
+  pagoCentavos: number
+  retirada: boolean
 }
 
 export interface UsoDeCupom {
@@ -122,12 +136,7 @@ function estadoInicial() {
     cupom({ id: 'cp5', titulo: '15% para clientes Dourado', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 15, nivelMinimo: 'DOURADO', limitePorCliente: 2 }),
   ]
 
-  // Usos de outros clientes antes de hoje, para a tela de Cupons ter o que mostrar.
-  const usos: UsoDeCupom[] = [
-    ...Array.from({ length: 12 }, (_, i) => ({ cupomId: 'cp1', clienteId: `cliente-antigo-${i}`, compraId: `co-antiga-${i}`, centavos: 2990 + i * 410 })),
-    ...Array.from({ length: 5 }, (_, i) => ({ cupomId: 'cp3', clienteId: `cliente-antigo-${i}`, compraId: `co-antiga-c${i}`, centavos: 1500 })),
-    ...Array.from({ length: 9 }, (_, i) => ({ cupomId: 'cp4', clienteId: `cliente-antigo-${i}`, compraId: `co-antiga-b${i}`, centavos: 0 })),
-  ]
+  const { compras, usos } = historicoDeCompras()
 
   const reserva = (
     id: string,
@@ -196,16 +205,62 @@ function estadoInicial() {
     reservas,
     produtos,
     usos,
-    compras: 0,
+    compras,
     proximoId: 100,
   }
 }
 
+const NOMES = ['Rafael', 'Juliana', 'Pedro', 'Marina', 'Lucas', 'Camila', 'Thiago', 'Beatriz', 'Felipe', 'Larissa', 'Hugo', 'Aline']
+
+/**
+ * As compras pela plataforma nos últimos 90 dias, para o Extrato, e os usos de cupom que
+ * saem delas, para a tela de Cupons: as duas telas contam a mesma história. As compras com
+ * voucher do shopping têm os ids de VOUCHERS_DA_LOJA_DE_ESPORTES, que geram os reembolsos.
+ */
+function historicoDeCompras() {
+  const compras: CompraMock[] = []
+  const usos: UsoDeCupom[] = []
+  const registrar = (
+    id: string,
+    bruto: number,
+    cupom?: { cupomId: string; centavos: number; doShopping?: boolean },
+    dias = 1 + ((compras.length * 37) % 88),
+  ) => {
+    const i = compras.length
+    const clienteId = `cliente-antigo-${i}`
+    const descontoLoja = cupom && !cupom.doShopping ? cupom.centavos : 0
+    const descontoShopping = cupom?.doShopping ? cupom.centavos : 0
+    compras.push({
+      id,
+      clienteId,
+      cliente: NOMES[i % NOMES.length],
+      criadoEm: diasAtras(dias, 10 + ((i * 5) % 11)),
+      brutoCentavos: bruto,
+      descontoLojaCentavos: descontoLoja,
+      descontoShoppingCentavos: descontoShopping,
+      pagoCentavos: bruto - descontoLoja - descontoShopping,
+      retirada: i % 6 === 0,
+    })
+    if (cupom) usos.push({ cupomId: cupom.cupomId, clienteId, compraId: id, centavos: cupom.centavos })
+  }
+
+  for (let i = 0; i < 12; i++) registrar(`co-h${i + 1}`, 29900 + 4100 * i, { cupomId: 'cp1', centavos: 2990 + 410 * i })
+  for (let i = 0; i < 5; i++) registrar(`co-c${i + 1}`, 17980 + 1000 * i, { cupomId: 'cp3', centavos: 1500 })
+  for (let i = 0; i < 9; i++) registrar(`co-b${i + 1}`, 12990 + 500 * i, { cupomId: 'cp4', centavos: 0 })
+  for (const [i, voucher] of VOUCHERS_DA_LOJA_DE_ESPORTES.entries()) {
+    registrar(voucher.compraId, 8990 + 2500 * i, { cupomId: 'cp2', centavos: voucher.centavos, doShopping: true }, voucher.dias)
+  }
+  for (let i = 0; i < 16; i++) registrar(`co-s${i + 1}`, 5990 + 2700 * i)
+
+  return { compras, usos }
+}
+
 export let banco = estadoInicial()
 
-/** Volta os dados ao início (testes e "recomeçar a demonstração"). */
+/** Volta os dados ao início (testes e "recomeçar a demonstração"), com os reembolsos. */
 export function reiniciarMocks() {
   banco = estadoInicial()
+  reiniciarReembolsos()
 }
 
 /** Id novo para o que o mock cria: novoId('p') → 'p100'. */

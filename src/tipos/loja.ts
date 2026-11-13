@@ -2,7 +2,7 @@
 // O front (src/loja/api) e os mocks (src/mocks/loja) leem daqui; quando as Functions
 // existirem, elas podem importar os mesmos tipos. Os comuns aos dois painéis ficam em
 // comum.ts e são repetidos aqui, para as telas da loja importarem tudo de um lugar.
-import type { CupomComUso, NivelApi, Periodo } from './comum'
+import type { CupomComUso, NivelApi, Pagina, Periodo } from './comum'
 
 export type * from './comum'
 
@@ -160,4 +160,40 @@ export interface Relatorio {
   comparativoCategoria: { categoria: string; ticketMedioLojaCentavos: number; ticketMedioCategoriaCentavos: number }[] | null
   /** O que aconteceu com as reservas feitas no período: quantas viraram retirada. */
   reservas: { feitas: number; retiradas: number; emAberto: number; canceladas: number; expiradas: number }
+}
+
+// ---------- GET /api/loja/extrato (RF25) ----------
+
+/** Uma compra registrada pela plataforma, com os descontos e o reembolso do voucher. */
+export interface LancamentoDoExtrato {
+  id: string
+  /** ISO 8601 (UTC). */
+  criadoEm: string
+  /** Só o primeiro nome. */
+  cliente: string
+  brutoCentavos: number
+  /** Cupom da loja: a loja dá o desconto. */
+  descontoLojaCentavos: number
+  /** Voucher do shopping: o shopping devolve esse valor à loja (RN11). */
+  descontoShoppingCentavos: number
+  pagoCentavos: number
+  /** Retirada de uma reserva. */
+  retirada: boolean
+  reembolso: { status: 'PENDENTE' | 'PAGO'; pagoEm: string | null } | null
+}
+
+export interface Extrato {
+  periodo: Periodo
+  /** Somas das compras do período. */
+  resumo: {
+    compras: number
+    brutoCentavos: number
+    descontoLojaCentavos: number
+    descontoShoppingCentavos: number
+    pagoCentavos: number
+  }
+  /** Reembolsos dos vouchers do shopping: o que falta receber (de qualquer data) e o que foi pago no período. */
+  reembolsos: { pendenteCentavos: number; pagoNoPeriodoCentavos: number }
+  /** As compras do período, da mais nova para a mais antiga, paginadas. */
+  lancamentos: Pagina<LancamentoDoExtrato>
 }
