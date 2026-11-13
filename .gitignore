@@ -1,0 +1,36 @@
+# Dependências e build
+node_modules/
+dist/
+dev-dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Cloudflare (D1 local e estado do wrangler)
+.wrangler/
+
+# Segredos: nunca versionar
+.dev.vars
+.env
+.env.*
+!.dev.vars.exemplo
+
+# Kit de implementação e arquivos de IA: ficam fora do Git
+kit/
+.claude/
+CLAUDE.md
+
+# Planta oficial do shopping (PDF): nunca versionar
+*.pdf
+
+# Testes
+playwright-report/
+test-results/
+blob-report/
+
+# Sistema e editor
+*.log
+*.local
+.DS_Store
+Thumbs.db
+.idea/
