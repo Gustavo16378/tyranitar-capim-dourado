@@ -22,8 +22,8 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | 401 | Sem token, token inválido ou vencido (`NAO_AUTENTICADO`) |
 | 403 | Perfil sem permissão ou recurso de outra loja (`SEM_PERMISSAO`) |
 | 404 | Recurso não existe (`NAO_ENCONTRADO`) |
-| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`) |
-| 422 | Regra de negócio violada: cupom inválido, combinação proibida, loja fora do shopping (`CUPOM_INVALIDO`, `CUPONS_INCOMPATIVEIS`, `LOJA_NAO_CADASTRADA`) |
+| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada, e-mail ou CNPJ já cadastrado (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`, `EMAIL_EM_USO`, `CNPJ_EM_USO`) |
+| 422 | Regra de negócio violada: cupom inválido, combinação proibida, loja fora do shopping, lojista numa unidade vaga (`CUPOM_INVALIDO`, `CUPONS_INCOMPATIVEIS`, `LOJA_NAO_CADASTRADA`, `LOJA_VAGA`) |
 | 503 | A IA não respondeu (`IA_INDISPONIVEL`); o app mostra a busca comum |
 
 **Paginação:** listas aceitam `?pagina=1&tamanho=20` e respondem `{ "itens": [...], "total": 42 }`.
@@ -531,7 +531,7 @@ Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, 
 
 ### `GET /api/loja/extrato`
 
-Parâmetros: `periodo` (`7d`, `30d`, `90d`), `pagina` e `tamanho`. As compras registradas pela plataforma no período, os descontos de cada lado e os reembolsos dos vouchers do shopping (RN11).
+Parâmetros: `periodo` (`7d`, `30d`, `90d`), `pagina` e `tamanho`. As compras registradas no caixa pela plataforma no período (as que o cliente cadastra por nota fiscal ficam fora), os descontos de cada lado e os reembolsos dos vouchers do shopping (RN11).
 
 ```json
 {
@@ -607,7 +607,7 @@ As unidades da planta e a loja de cada uma. Unidade vaga é uma loja com `ativa:
 }
 ```
 
-**De onde vêm `unidade` e `areaM2`:** a tabela `loja` da migration inicial não tem as duas colunas. A unidade sai do `mapa_id` (`loja-47` é a `LOJA 47`). A área está na planilha das lojas (`area_m2`) e pode ser calculada do polígono da unidade na planta (`src/mapa/piso-*.svg`, em metros); a API pode guardá-la numa migration nova ou na `configuracao`. Sem área, a vaga fica fora do cruzamento com a demanda.
+**De onde vêm `unidade` e `areaM2`:** das colunas `numero` e `area_m2` da tabela `loja` (migration `0003`), que o seed preenche a partir da planilha das lojas (`kit/seed/lojas.csv`). `unidade` é `LOJA ` mais o número; numa unidade gravada sem número, ele sai do `mapa_id` (`loja-47` é a `LOJA 47`). Sem área, a vaga fica fora do cruzamento com a demanda (`GET /api/shopping/vagas`).
 
 ### `PUT /api/shopping/lojas/{id}` e `POST /api/shopping/lojas`
 
@@ -617,11 +617,11 @@ O `PUT` ocupa uma vaga, edita a loja ou libera a unidade:
 { "nome": "Eletrônicos do Cerrado", "cnpj": "12345678000190", "tipo": "loja", "categorias": ["eletronicos"], "ativa": true }
 ```
 
-Com `ativa: true`, o nome (2 a 80 caracteres) e o CNPJ (14 dígitos, aceita pontuação) são obrigatórios, e as categorias filtram a ficha que o lojista vê (RN04). Com `ativa: false`, a unidade volta a ser vaga: nome `Vaga`, sem CNPJ nem categorias, e os lojistas da loja perdem o acesso. Resposta `200` com a loja. Erros: `400`, `404`, `409` (`CNPJ_EM_USO`). O `POST` cria uma unidade nova e leva, além disso, `unidade`, `piso`, `areaM2` e `mapaId` (o id do polígono na planta).
+Com `ativa: true`, o nome (2 a 80 caracteres) e o CNPJ (14 dígitos, aceita pontuação) são obrigatórios, e as categorias filtram a ficha que o lojista vê (RN04). Com `ativa: false`, a unidade volta a ser vaga: nome `Vaga`, sem CNPJ nem categorias, e os lojistas da loja perdem o acesso (as contas deles são apagadas). Os produtos e cupons da loja ficam no banco, mas somem do app, que só mostra lojas ativas. Resposta `200` com a loja. Erros: `400`, `404`, `409` (`CNPJ_EM_USO`). O `POST` cria uma unidade nova e leva, além disso, `unidade` (`"LOJA 150"` ou só `"150"`), `piso`, `areaM2` e `mapaId` (o id do polígono na planta); `ativa: false` cria a unidade vaga. Resposta `201`; unidade ou `mapaId` que já está na planta dá `400`.
 
 ### `GET /api/shopping/lojas/{id}/lojistas`
 
-Quem administra a loja: `[ { "id": "u1", "nome": "Equipe da Loja de esportes", "email": "lojista.loja-19@demo.test" } ]`.
+Quem administra a loja: `[ { "id": "u1", "nome": "Equipe da Loja PC01A", "email": "lojista.loja-pc01a@demo.test" } ]`, em ordem de nome.
 
 ### `POST /api/shopping/lojistas`
 
@@ -629,7 +629,7 @@ Quem administra a loja: `[ { "id": "u1", "nome": "Equipe da Loja de esportes", "
 { "lojaId": "l47", "nome": "Equipe de eletrônicos", "email": "eletronicos@demo.test" }
 ```
 
-Resposta `201` com o lojista e a `senhaProvisoria`, que só aparece nesta resposta: `{ "id": "u9", "nome": "...", "email": "...", "lojaId": "l47", "senhaProvisoria": "7ds3vrn4gt" }`. Erros: `400`, `404`, `409` (`EMAIL_EM_USO`), `422` (`LOJA_VAGA`: cadastre a loja na unidade antes do lojista).
+Resposta `201` com o lojista e a `senhaProvisoria`, que só aparece nesta resposta: `{ "id": "u9", "nome": "...", "email": "...", "lojaId": "l47", "senhaProvisoria": "7ds3vrn4gt" }`. A senha tem 10 letras e números, sem os que se confundem; o lojista entra com ela no login único (`/entrar`). Erros: `400`, `404`, `409` (`EMAIL_EM_USO`, o e-mail já tem uma conta, de qualquer perfil), `422` (`LOJA_VAGA`: cadastre a loja na unidade antes do lojista).
 
 ### `GET /api/shopping/configuracao` e `PUT`
 
@@ -647,7 +647,7 @@ O `PUT` recebe o mesmo corpo. Regras: `SEMENTE` é 0 e cada nível precisa de ma
 
 ### `GET /api/shopping/cupons` e `POST`
 
-Os vouchers do shopping (cupons sem loja), no mesmo formato de `GET /api/loja/cupons`. Aqui `usos` conta as compras com o voucher e `descontoCentavos` é o que o shopping devolveu ou deve às lojas por eles (RN11). O `POST` recebe o mesmo corpo de `POST /api/loja/cupons`, com `categoriaAlvo` entre todas as categorias do shopping. O voucher criado já vale no atendimento das lojas e aparece na vitrine do app (`GET /api/ofertas`) para os clientes do nível. Brinde do shopping (estacionamento) não aparece no caixa das lojas: ele se resgata no balcão do shopping.
+Os vouchers do shopping (cupons sem loja), no mesmo formato de `GET /api/loja/cupons`. Aqui `usos` conta as compras com o voucher e `descontoCentavos` é o que o shopping devolveu ou deve às lojas por eles (RN11; um brinde conta o uso com desconto zero). O `POST` recebe o mesmo corpo de `POST /api/loja/cupons`, com `categoriaAlvo` entre todas as categorias do shopping. O voucher criado já vale no atendimento das lojas e aparece na vitrine do app (`GET /api/ofertas`) para os clientes do nível.
 
 ### `GET /api/shopping/demanda`
 
@@ -706,7 +706,7 @@ O cruzamento das buscas sem resultado do período (a mesma base de `GET /api/sho
 }
 ```
 
-**A regra** (a mesma de `src/mocks/shopping/sugerirVagas.ts`, testada em `tests/unidade/shopping-vagas.test.ts`, para portar para `functions/_lib/regras/`):
+**A regra** (`functions/_lib/regras/vagas.ts`, testada em `tests/unidade/regras/vagas.test.ts` com as 13 vagas da planta):
 
 1. Cada categoria tem uma faixa de área típica e um piso. Hoje: alimentação de 25 a 120 m², só no 2º piso (a praça de alimentação); eletrônicos de 60 a 250; artigos esportivos de 150 a 500; casa e decoração de 100 a 400; livraria de 80 a 350; bebê e brinquedos de 60 a 200; pet shop de 50 a 150; roupas de 40 a 300; calçados de 35 a 120; ótica de 25 a 60; perfumaria de 25 a 90; acessórios de 20 a 60; joias de 20 a 50 (todas no térreo).
 2. Encaixe `IDEAL`: a área está na faixa. `POSSIVEL`: até 20% menor que o mínimo ou 25% maior que o máximo.
