@@ -194,6 +194,8 @@ Com o Claude simulado:
 | TE12 | Cupons do Início no celular | RF06, RNF01 | O dedo desliza a faixa; as setas não aparecem |
 | TE13 | Minha conta: nome, senha e dados | RF01, RF13 | O nome novo aparece no Início; a senha atual errada é recusada sem sair da conta e a nova entra; o arquivo JSON baixa com a conta |
 | TE14 | Minha conta: apagar um interesse da ficha | RF13, RN04 | O interesse some da lista e do atendimento da loja |
+| TE15 | As 11 telas dos painéis em 390, 768 e 1440 px | RNF01 | Nada rola para o lado, nem com os formulários abertos; abaixo de 1024 px a navegação fica no Menu; o extrato vira cartões; no celular, formulário em uma coluna |
+| TE16 | Menu do painel no celular | RNF01, RNF08 | O Menu abre a navegação (`aria-expanded`); Esc fecha e devolve o foco; escolher uma tela navega e fecha |
 
 ### Acessibilidade (TX)
 
@@ -208,6 +210,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX05 | Carteira com o QR |
 | TX06 | Atendimento do painel da loja, incluindo navegação só pelo teclado |
 | TX07 | Relatórios do painel da loja (gráficos com texto alternativo) |
+| TX08 | Painel no celular com o Menu aberto |
 
 ### Manual (TM)
 

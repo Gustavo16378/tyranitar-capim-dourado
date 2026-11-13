@@ -122,5 +122,12 @@ for (const tema of ['light', 'dark'] as const) {
       await expect(page.getByRole('heading', { name: 'Mais vendidos' })).toBeVisible()
       await semViolacoesGraves(page)
     })
+
+    test('TX08: painel no celular, com o Menu aberto', async ({ page }) => {
+      await entrarNoPainelDaLoja(page, '/loja/extrato')
+      await page.getByRole('button', { name: 'Menu' }).click()
+      await expect(page.getByRole('navigation', { name: 'Telas do painel' })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
   })
 }

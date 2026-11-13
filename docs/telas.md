@@ -42,6 +42,10 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo e "Como chegar") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
 | Minha conta | Nome (editável), e-mail, nível e pontos; trocar a senha pedindo a atual; a ficha que a Capi anotou, com o consentimento e um botão de apagar em cada interesse; baixar os dados em JSON (LGPD); sair e excluir a conta | NivelBadge, Button | RF01, RF13 |
 
+## Painéis no celular e no tablet
+
+Os dois painéis funcionam de 390 px em diante sem rolar para o lado. Abaixo de 1024 px, a barra lateral vira uma barra no topo com o botão Menu, que abre a lista de telas (Esc ou a escolha de uma tela fecham); as tabelas viram cartões, um por linha, e os formulários ficam em uma coluna no celular.
+
 ## Painel da loja
 
 | Tela | Para que serve | Componentes | Requisitos |
