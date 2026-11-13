@@ -33,11 +33,11 @@ export default function Inicio() {
             </div>
             <h1 className="mt-1 text-title-lg">O que você procura hoje?</h1>
           </div>
-          {/* O avatar abre a Minha conta. */}
+          {/* O avatar abre a Minha conta. A partir de 768 px, quem faz isso é a barra lateral. */}
           <Link
             to="/conta"
             aria-label="Minha conta"
-            className="grid size-11 flex-none place-items-center rounded-full bg-terra text-title-sm text-on-terra"
+            className="grid size-11 flex-none place-items-center rounded-full bg-terra text-title-sm text-on-terra md:hidden"
           >
             <span aria-hidden="true">{usuario ? primeiroNome(usuario.nome).charAt(0).toUpperCase() : '?'}</span>
           </Link>
