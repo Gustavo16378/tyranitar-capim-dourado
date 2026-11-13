@@ -15,6 +15,18 @@ export async function categoriasDaFicha(db: D1Database, clienteId: string): Prom
   return results.flatMap((r) => (r.categoria ? [r.categoria] : []))
 }
 
+/** Os interesses da ficha; vazio sem consentimento. */
+export async function interessesDoCliente(db: D1Database, clienteId: string): Promise<Interesse[]> {
+  const linha = await db
+    .prepare(
+      `SELECT f.interesses FROM ficha f JOIN usuario u ON u.id = f.cliente_id
+       WHERE f.cliente_id = ?1 AND u.consentimento_ficha = 1`,
+    )
+    .bind(clienteId)
+    .first<{ interesses: string }>()
+  return lerJson<Interesse[]>(linha?.interesses, [])
+}
+
 /**
  * Acrescenta interesses à ficha (a Capi chama isto pela ferramenta gerar_ficha). Sem
  * consentimento nada é gravado e a função devolve false.

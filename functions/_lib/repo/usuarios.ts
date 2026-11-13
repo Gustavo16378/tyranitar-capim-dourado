@@ -20,6 +20,14 @@ export function buscarUsuarioPorEmail(db: D1Database, email: string) {
   return db.prepare(`SELECT ${COLUNAS} FROM usuario WHERE email = ?1`).bind(email).first<UsuarioLinha>()
 }
 
+/** O cliente dono do QR da carteira (o vendedor lê no balcão). */
+export function buscarClientePorQr(db: D1Database, qrToken: string) {
+  return db
+    .prepare(`SELECT ${COLUNAS} FROM usuario WHERE qr_token = ?1 AND perfil = 'CLIENTE'`)
+    .bind(qrToken)
+    .first<UsuarioLinha>()
+}
+
 export function buscarUsuarioPorId(db: D1Database, id: string) {
   return db.prepare(`SELECT ${COLUNAS} FROM usuario WHERE id = ?1`).bind(id).first<UsuarioLinha>()
 }
