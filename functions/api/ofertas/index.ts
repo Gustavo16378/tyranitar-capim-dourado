@@ -3,12 +3,11 @@
 // pode usar (RN06), os de categoria-alvo da ficha dele, e destaque para as categorias da ficha.
 import type { Rota } from '../../_lib/contexto'
 import { json, paginacao } from '../../_lib/http'
-import { lerLimitesNivel } from '../../_lib/repo/configuracao'
 import { listarCuponsVigentes, usosDoCliente, type CupomLinha } from '../../_lib/repo/cupons'
+import { nivelDoCliente } from '../../_lib/repo/fidelidade'
 import { categoriasDaFicha } from '../../_lib/repo/fichas'
-import { buscarUsuarioPorId } from '../../_lib/repo/usuarios'
 import { dataEmPalmas } from '../../_lib/regras/datas'
-import { nivelAtende, nivelPorPontos, type NivelFidelidade } from '../../_lib/regras/niveis'
+import { nivelAtende, type NivelFidelidade } from '../../_lib/regras/niveis'
 import { lerJson } from '../../_lib/texto'
 
 interface Cliente {
@@ -17,15 +16,13 @@ interface Cliente {
   usos: Record<string, number>
 }
 
-async function lerCliente(db: D1Database, id: string): Promise<Cliente | null> {
-  const [usuario, limites, categorias, usos] = await Promise.all([
-    buscarUsuarioPorId(db, id),
-    lerLimitesNivel(db),
+async function lerCliente(db: D1Database, id: string): Promise<Cliente> {
+  const [{ nivel }, categorias, usos] = await Promise.all([
+    nivelDoCliente(db, id),
     categoriasDaFicha(db, id),
     usosDoCliente(db, id),
   ])
-  if (!usuario) return null
-  return { nivel: nivelPorPontos(usuario.pontos, limites), categorias: new Set(categorias), usos }
+  return { nivel, categorias: new Set(categorias), usos }
 }
 
 function visivel(c: CupomLinha, cliente: Cliente | null) {

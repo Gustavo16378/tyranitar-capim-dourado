@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { lerLimites, LIMITES_PADRAO, nivelAtende, nivelPorPontos, proximoNivel } from '../../../functions/_lib/regras/niveis'
+import { deSqlite, paraSqlite } from '../../../functions/_lib/regras/datas'
+import {
+  inicioDaJanelaDoNivel,
+  lerLimites,
+  LIMITES_PADRAO,
+  nivelAtende,
+  nivelPorPontos,
+  proximoNivel,
+} from '../../../functions/_lib/regras/niveis'
 import { pontosDaCompra } from '../../../functions/_lib/regras/pontos'
 
 describe('pontos (RN07)', () => {
@@ -55,6 +63,20 @@ describe('níveis (RN08)', () => {
     expect(nivelAtende('CAPIM', 'BROTO')).toBe(true)
     expect(nivelAtende('CAPIM', 'CAPIM')).toBe(true)
     expect(nivelAtende('CAPIM', 'DOURADO')).toBe(false)
+  })
+
+  it('conta os pontos dos últimos 12 meses, no formato de data do banco', () => {
+    const agora = new Date('2026-11-13T15:04:05.678Z')
+    const inicio = inicioDaJanelaDoNivel(agora)
+    expect(paraSqlite(inicio)).toBe('2025-11-13 15:04:05')
+    // Uma compra gravada por datetime('now') há 13 meses fica fora; há 11 meses, dentro.
+    expect('2025-10-13 10:00:00' >= paraSqlite(inicio)).toBe(false)
+    expect('2025-12-13 10:00:00' >= paraSqlite(inicio)).toBe(true)
+  })
+
+  it('lê e escreve datas no formato do SQLite, em UTC', () => {
+    expect(deSqlite('2026-11-13 17:00:00').toISOString()).toBe('2026-11-13T17:00:00.000Z')
+    expect(deSqlite(paraSqlite(new Date('2026-01-02T03:04:05Z'))).toISOString()).toBe('2026-01-02T03:04:05.000Z')
   })
 
   it('lê os limites da configuração e completa o que faltar com o padrão', () => {

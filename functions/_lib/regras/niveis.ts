@@ -1,5 +1,5 @@
-// RN08: níveis de fidelidade por pontos. Os limites vêm da configuração do shopping.
-// O nível é calculado sobre o saldo de pontos do cliente (usuario.pontos).
+// RN08: níveis de fidelidade pelos pontos ganhos nos últimos 12 meses (soma de
+// compra.pontos_gerados), separados do saldo (usuario.pontos). Os limites vêm da configuração.
 
 export type NivelFidelidade = 'SEMENTE' | 'BROTO' | 'CAPIM' | 'DOURADO'
 export type LimitesNivel = Record<NivelFidelidade, number>
@@ -31,6 +31,13 @@ export function proximoNivel(
 /** Se o nível do cliente alcança o nível mínimo pedido (cupons com nível mínimo). */
 export function nivelAtende(nivelCliente: NivelFidelidade, nivelMinimo: NivelFidelidade) {
   return ORDEM_NIVEIS.indexOf(nivelCliente) >= ORDEM_NIVEIS.indexOf(nivelMinimo)
+}
+
+/** Início da janela do nível: os pontos ganhos a partir daqui contam (12 meses antes de agora). */
+export function inicioDaJanelaDoNivel(agora: Date): Date {
+  const inicio = new Date(agora.getTime())
+  inicio.setUTCFullYear(inicio.getUTCFullYear() - 1)
+  return inicio
 }
 
 /** Lê os limites gravados na configuração; o que faltar ou vier errado usa o padrão. */
