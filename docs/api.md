@@ -314,13 +314,108 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
 
 Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`). Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
 
+### `GET /api/loja/produtos`
+
+O catálogo da loja, ativos e inativos (os inativos não aparecem na busca nem para a Capi). Parâmetros: `q` (texto no nome, sem diferenciar acento), `pagina` e `tamanho`. Vêm os ativos primeiro, em ordem alfabética.
+
+```json
+{
+  "itens": [
+    {
+      "id": "p1",
+      "nome": "Tênis de corrida Pulse",
+      "descricao": "Leve e com amortecimento",
+      "categoria": "calcados",
+      "precoCentavos": 39990,
+      "estoque": 2,
+      "fotos": [ "https://.../pulse.webp" ],
+      "atributos": { "numeracao": [ 38, 39, 40, 41, 42, 43 ], "cor": "preto" },
+      "ativo": true
+    }
+  ],
+  "total": 9
+}
+```
+
+### `POST /api/loja/produtos` e `PUT /api/loja/produtos/{id}`
+
+O corpo é um item de `GET /api/loja/produtos` sem o `id`. `categoria` é uma das categorias do shopping (`calcados`, `roupas`, `acessorios`, `perfumaria`); uma categoria nova no catálogo passa a valer para o filtro da ficha (RN04). Os atributos mudam por categoria: `numeracao` (lista de números) e `cor` em calçados, `tamanhos` (lista) e `cor` em roupas, `cor` e `material` em acessórios, `ml` (número) e `familia` em perfumaria.
+
+Resposta: `201` (criar) ou `200` (editar) com o produto. Erros: `400` (`DADOS_INVALIDOS`: nome de 2 a 120 caracteres, preço maior que zero, estoque inteiro de zero ou mais, categoria conhecida), `404` (produto de outra loja ou inexistente).
+
 ### `POST /api/loja/produtos/importar`
 
-Recebe um CSV (`text/csv`) com as colunas `nome,descricao,categoria,preco,estoque,fotos,atributos`. O preço vai em reais com vírgula ou ponto; `atributos` em JSON. Resposta com `importados` e a lista de `erros` por linha, sem salvar as linhas com erro.
+Recebe um CSV (`text/csv`) com as colunas `nome,descricao,categoria,preco,estoque,fotos,atributos`. O preço vai em reais com vírgula ou ponto; `fotos` separadas por `|` (ou uma lista JSON); `atributos` em JSON. Uma linha com o nome de um produto que já está no catálogo atualiza esse produto, para dar para reimportar a planilha corrigida. As linhas com erro não são salvas; `linha` conta o cabeçalho como linha 1, como na planilha.
+
+```json
+{ "importados": 12, "erros": [ { "linha": 4, "mensagem": "O preço precisa estar em reais, como 399,90." } ] }
+```
+
+Erro `400` quando falta alguma das colunas.
+
+### `GET /api/loja/cupons`
+
+Os cupons da loja (não traz os vouchers do shopping), com quantas compras usaram cada um e o desconto que deram. Vêm primeiro os que valem hoje, os que vencem antes no topo.
+
+```json
+{
+  "itens": [
+    {
+      "id": "cp1",
+      "titulo": "10% em calçados",
+      "tipo": "PERCENTUAL",
+      "valor": 10,
+      "categoriaAlvo": "calcados",
+      "nivelMinimo": "SEMENTE",
+      "limitePorCliente": 1,
+      "validade": "2026-12-31",
+      "ativo": true,
+      "usos": 12,
+      "descontoCentavos": 62940
+    }
+  ],
+  "total": 4
+}
+```
+
+`valor` segue o `tipo`: de 1 a 100 em `PERCENTUAL`, centavos em `VALOR` e 0 em `BRINDE`. `validade` é o último dia de uso, em Palmas.
+
+### `POST /api/loja/cupons`
+
+```json
+{
+  "titulo": "R$ 30 em tênis",
+  "tipo": "VALOR",
+  "valor": 3000,
+  "categoriaAlvo": "calcados",
+  "nivelMinimo": "BROTO",
+  "limitePorCliente": 1,
+  "validade": "2026-12-13"
+}
+```
+
+Resposta `201` com o cupom, no formato de um item de `GET /api/loja/cupons`. Ele já aparece no atendimento dos clientes do nível. Erro `400` (`DADOS_INVALIDOS`: título de 3 a 60 caracteres, valor fora da regra do tipo, limite de 1 a 99, validade antes de hoje, categoria desconhecida).
 
 ### `GET /api/loja/relatorios`
 
-Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, `naoEncontrados`, `parados`, `picos` (por dia da semana e hora), `cupons` (usos e desconto), `ticketMedio` (com e sem ficha) e `comparativoCategoria` (só com 3 lojas ou mais na categoria, RN13).
+Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, `naoEncontrados`, `parados`, `picos` (por dia da semana e hora), `cupons` (usos e desconto), `ticketMedio` (com e sem ficha), `comparativoCategoria` (só com 3 lojas ou mais na categoria, RN13) e `reservas` (o que aconteceu com as reservas feitas no período).
+
+```json
+{
+  "periodo": "30d",
+  "maisVendidos": [ { "produtoId": "p3", "nome": "Camiseta dry-fit Trilha", "quantidade": 41, "valorCentavos": 368590 } ],
+  "maisBuscados": [ { "termo": "tênis de corrida", "buscas": 214 } ],
+  "naoEncontrados": [ { "termo": "tênis de trilha", "buscas": 120 } ],
+  "parados": [ { "produtoId": "p9", "nome": "Jaqueta corta-vento", "estoque": 3, "diasSemVenda": 54 } ],
+  "picos": [ { "diaDaSemana": 6, "hora": 17, "compras": 24 } ],
+  "cupons": [ { "cupomId": "cp1", "titulo": "10% em calçados", "usos": 12, "descontoCentavos": 62940 } ],
+  "ticketMedio": { "comFichaCentavos": 31240, "semFichaCentavos": 18990 },
+  "comparativoCategoria": [ { "categoria": "calcados", "ticketMedioLojaCentavos": 34990, "ticketMedioCategoriaCentavos": 29870 } ],
+  "reservas": { "feitas": 64, "retiradas": 41, "emAberto": 7, "canceladas": 9, "expiradas": 7 }
+}
+```
+
+`naoEncontrados` são buscas nas categorias da loja sem resultado em nenhuma loja do shopping (RN12). `diaDaSemana` vai de 0 (domingo) a 6 e `hora` está em Palmas. `ticketMedio` traz `null` no lado sem compras no período; `comparativoCategoria` vem `null` quando nenhuma categoria da loja tem 3 lojas ou mais (RN13). Em `reservas`, `feitas` é a soma das outras quatro.
 
 ## Painel do shopping
 
