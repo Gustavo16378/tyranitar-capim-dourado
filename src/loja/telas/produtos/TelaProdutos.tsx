@@ -1,36 +1,62 @@
 // Produtos (RF21, RF22): o catálogo da loja, o cadastro com atributos por categoria e a
 // importação por planilha CSV.
 //
-// Passo a passo: docs/como-fazer-uma-tela.md. Copie a estrutura de telas/atendimento/.
-//
-// Componentes (src/componentes): ProdutoCard (horizontal, na lista), Button (Novo produto
-//   como primary; Importar planilha como secondary), Badge (estoque baixo, inativo).
-//   Formulário: Campo e Opcao de src/loja/comum.
-// Rotas (docs/api.md): ainda não existem no front. Para cada uma, nesta ordem:
-//   1. tipos em src/tipos/loja.ts   2. função em src/loja/api/rotas.ts
-//   3. mock em src/mocks/loja/ e uma linha em ROTAS_MOCKADAS (src/mocks/loja/index.ts)
-//   GET  /api/loja/produtos                listar (paginado: { itens, total })
-//   POST /api/loja/produtos                criar
-//   PUT  /api/loja/produtos/{id}           editar
-//   POST /api/loja/produtos/importar       CSV (text/csv): nome,descricao,categoria,preco,estoque,fotos,atributos
-//                                          responde { importados, erros } por linha
-// Regras: preço em centavos na API (lerValorEmCentavos em comum/formatos.ts); estoque nunca
-//   negativo; atributos mudam por categoria (numeracao em calcados, ml em perfumaria...).
-// Estados: carregando, vazio ("Nenhum produto ainda. Cadastre ou importe uma planilha."),
-//   erro e com dados.
+//   TelaProdutos          cabeçalho e o modo da tela: catálogo, formulário ou importação
+//   ├─ ListaDeProdutos    GET /api/loja/produtos com busca, os quatro estados e a paginação
+//   ├─ FormularioProduto  POST /api/loja/produtos ou PUT /api/loja/produtos/{id}
+//   └─ ImportarPlanilha   POST /api/loja/produtos/importar (text/csv)
+import { useState } from 'react'
+import { Button } from '../../../componentes'
 import { useEntrada } from '../../../movimento'
+import type { ProdutoDaLoja } from '../../../tipos/loja'
 import { CabecalhoTela } from '../../comum/CabecalhoTela'
-import { EmMontagem } from '../../comum/EmMontagem'
+import { FormularioProduto } from './FormularioProduto'
+import { ImportarPlanilha } from './ImportarPlanilha'
+import { ListaDeProdutos } from './ListaDeProdutos'
+
+type Modo = { tipo: 'catalogo' } | { tipo: 'novo' } | { tipo: 'editar'; produto: ProdutoDaLoja } | { tipo: 'importar' }
 
 export function TelaProdutos() {
   const ref = useEntrada<HTMLDivElement>()
+  const [modo, setModo] = useState<Modo>({ tipo: 'catalogo' })
+  // Frase que o catálogo anuncia quando volta de um cadastro ou importação.
+  const [aviso, setAviso] = useState('')
+
+  function voltar(mensagem = '') {
+    setAviso(mensagem)
+    setModo({ tipo: 'catalogo' })
+  }
+
   return (
     <div ref={ref} className="flex flex-col gap-6">
       <CabecalhoTela
         titulo="Produtos"
-        descricao="O catálogo da loja. Cadastre, edite ou importe uma planilha."
-      />
-      <EmMontagem />
+        descricao="O catálogo da loja: o que a Capi e a busca mostram aos clientes. Cadastre, edite ou importe uma planilha."
+      >
+        {/* No catálogo, o primário é "Novo produto"; nos outros modos, o botão de salvar. */}
+        {modo.tipo === 'catalogo' && (
+          <>
+            <Button variant="primary" onClick={() => setModo({ tipo: 'novo' })}>
+              Novo produto
+            </Button>
+            <Button onClick={() => setModo({ tipo: 'importar' })}>Importar planilha</Button>
+          </>
+        )}
+      </CabecalhoTela>
+
+      <div data-anim>
+        {modo.tipo === 'catalogo' && (
+          <ListaDeProdutos aviso={aviso} aoEditar={(produto) => setModo({ tipo: 'editar', produto })} />
+        )}
+        {(modo.tipo === 'novo' || modo.tipo === 'editar') && (
+          <FormularioProduto
+            produto={modo.tipo === 'editar' ? modo.produto : undefined}
+            aoSalvar={(produto) => voltar(`Produto salvo: ${produto.nome}.`)}
+            aoVoltar={() => voltar()}
+          />
+        )}
+        {modo.tipo === 'importar' && <ImportarPlanilha aoVoltar={voltar} />}
+      </div>
     </div>
   )
 }
