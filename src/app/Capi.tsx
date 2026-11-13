@@ -5,7 +5,7 @@ import { comoErroApi, enviarMensagem, listarProdutos, PERGUNTA_DEMO, separarLink
 import { Button, CapiMark, ChatBubble, ChatComposer, Icon, ProdutoCard } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
-import { comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
+import { cascata, comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
 import type { AcaoChat, MensagemChat, ProdutoResumo, RespostaChat } from '../tipos'
 import { acoesNaConversa } from './acoesDoChat'
 import { FolhaLink } from './FolhaLink'
@@ -192,21 +192,25 @@ export default function Capi() {
     }
   }
 
-  // Cada mensagem nova sobe e aparece.
+  // Os resultados entram em cascata, um cartão depois do outro (movimento 2 da marca); os
+  // balões sobem 16 px e aparecem, como no protótipo.
   useGSAP(
     () => {
       const ultima = lista.current?.lastElementChild
       if (!ultima) return
-      const mm = comMovimento(
-        () => {
-          gsap.fromTo(
-            ultima,
-            { y: DESLOCAMENTO * (2 / 3), opacity: 0 },
-            { y: 0, opacity: 1, duration: DURACAO.media, ease: EASE.saida },
-          )
-        },
-        () => {},
-      )
+      const mm =
+        ultima.tagName === 'UL'
+          ? cascata(Array.from(ultima.children))
+          : comMovimento(
+              () => {
+                gsap.fromTo(
+                  ultima,
+                  { y: DESLOCAMENTO * (2 / 3), opacity: 0 },
+                  { y: 0, opacity: 1, duration: DURACAO.media, ease: EASE.saida },
+                )
+              },
+              () => {},
+            )
       return () => mm.revert()
     },
     { dependencies: [itens.length] },
