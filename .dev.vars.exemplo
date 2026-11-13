@@ -7,13 +7,13 @@ JWT_SECRET=
 CAPI_MODELO=
 
 # Modo demonstração das Functions (o pitch e a banca; veja "Modo demonstração" no README).
-# As duas já vêm ligadas (1) pelo [vars] do wrangler.toml. Descomente aqui só para mudar na sua
-# máquina: o que estiver neste arquivo vale por cima do wrangler.toml.
+# As duas vêm do [vars] do wrangler.toml (DEMO=1, CAPI_MODO_DEMO=0). Descomente aqui só para mudar
+# na sua máquina: o que estiver neste arquivo vale por cima do wrangler.toml.
 #   DEMO: 1 liga POST /api/auth/demo (entrar como a Ana, sem senha); 0 desliga e a rota dá 404.
 #   CAPI_MODO_DEMO: 1 faz a Capi usar as respostas salvas (functions/_lib/capi/demonstracao.json)
 #   sempre que a mensagem bater com uma; com 0, elas só entram se o Claude falhar.
 # DEMO=0
-# CAPI_MODO_DEMO=0
+# CAPI_MODO_DEMO=1
 # O par do front é VITE_MODO_DEMO=1, no .env.local: o Vite não lê este arquivo.
 
 # Senhas dos usuários de teste, usadas só pelo npm run seed:local e npm run seed:remoto

@@ -42,21 +42,21 @@ Outros comandos: `npm run build`, `npm run lint` e `npm test`.
 
 Para o pitch e para a banca testar sem cadastro. São três chaves, ligadas com `1`; nenhuma é segredo.
 
-| Chave | Quem lê | Onde fica | O que faz |
+| Chave | Quem lê | No hackathon | O que faz |
 | --- | --- | --- | --- |
-| `VITE_MODO_DEMO` | Front | `.env.local` (lido no build) | A Capi abre tocando o roteiro da demonstração (o print do tênis). Desligada, abre vazia. |
-| `DEMO` | Functions | `[vars]` do `wrangler.toml` (ligada); o `.dev.vars` muda na máquina | Liga `POST /api/auth/demo`, o botão "Entrar com a conta de demonstração" (entra como a cliente Ana, sem senha). Desligada, a rota responde 404. |
-| `CAPI_MODO_DEMO` | Functions | `[vars]` do `wrangler.toml` (ligada); o `.dev.vars` muda na máquina | A Capi responde as mensagens do roteiro com as respostas salvas (`functions/_lib/capi/demonstracao.json`), sem chamar o Claude. As outras mensagens vão para o Claude. |
+| `VITE_MODO_DEMO` | Front, no build | `1`, no `.env.local` | A Capi abre tocando o roteiro da demonstração (o print do tênis). Desligada, abre vazia. |
+| `DEMO` | Functions | `1`, no `[vars]` do `wrangler.toml` | Liga `POST /api/auth/demo`, o botão "Entrar com a conta de demonstração" (entra como a cliente Ana, sem senha). Desligada, a rota responde 404. |
+| `CAPI_MODO_DEMO` | Functions | `0`, no `[vars]` do `wrangler.toml` | Com `0`, a Capi é o Claude de verdade, também no roteiro, e as respostas salvas (`functions/_lib/capi/demonstracao.json`) só entram se ele falhar. Com `1`, o roteiro sai sempre das respostas salvas, sem chamar o Claude (para apresentar sem internet). |
 
 Na máquina:
 
 ```bash
 echo VITE_MODO_DEMO=1 > .env.local   # o Vite não lê o .dev.vars; o .env.local fica fora do Git
-# DEMO e CAPI_MODO_DEMO já vêm ligadas pelo wrangler.toml
+# DEMO e CAPI_MODO_DEMO vêm do wrangler.toml; o .dev.vars muda as duas só na sua máquina
 npm run dev:api                      # http://localhost:8788
 ```
 
-Em produção, `DEMO` e `CAPI_MODO_DEMO` vão no deploy pelo `[vars]` do `wrangler.toml`. O `VITE_MODO_DEMO` entra no build: o deploy sobe o `dist/` pronto, então o `npm run build` precisa rodar com o `.env.local` acima. Para desligar depois do hackathon, troque as duas do `wrangler.toml` para `"0"` e apague o `.env.local`.
+Em produção, `DEMO` e `CAPI_MODO_DEMO` vão no deploy pelo `[vars]` do `wrangler.toml`. O `VITE_MODO_DEMO` entra no build: o deploy sobe o `dist/` pronto, então o `npm run build` precisa rodar com o `.env.local` acima. Para desligar depois do hackathon, troque `DEMO` para `"0"` e apague o `.env.local`.
 
 ## Documentação
 
