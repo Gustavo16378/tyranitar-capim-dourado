@@ -11,6 +11,7 @@ const TOKENS = {
   borda: 'line-strong',
   rota: 'marrom',
   voce: 'cerrado',
+  texto: 'ink',
 } as const
 
 export type CoresDoMapa = Record<keyof typeof TOKENS, string>

@@ -44,6 +44,9 @@ for (const tema of ['light', 'dark'] as const) {
       }
       await expect(campo).toBeFocused()
       await page.keyboard.type('perfume')
+      // No celular, Enter quebra a linha: Tab até o botão de enviar e Enter nele.
+      await page.keyboard.press('Tab')
+      await expect(page.getByRole('button', { name: 'Enviar', exact: true })).toBeFocused()
       await page.keyboard.press('Enter')
       const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
       await expect(conversa.getByRole('heading', { name: /Perfume Cerrado/ })).toBeVisible()

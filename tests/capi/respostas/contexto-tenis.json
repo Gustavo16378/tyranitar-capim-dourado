@@ -1,0 +1,27 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "thinking", "thinking": "", "signature": "assinatura-turno-1" },
+      { "type": "tool_use", "id": "toolu_turno1", "name": "buscar_produtos", "input": { "texto": "tênis", "categoria": "calcados" } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Achei dois tênis de corrida na Loja A: o Pulse [produto:p-pulse] e o Run 2 [produto:p-run]. Qual número você usa?" }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Os dois têm o 42: o Pulse [produto:p-pulse] e o Run 2 [produto:p-run]." }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Os dois são pretos. O Pulse [produto:p-pulse] tem só 2 em estoque. Quer que eu separe?" }
+    ]
+  }
+]

@@ -8,6 +8,7 @@ import { onRequestGet as lerConversa } from '../../functions/api/chat'
 import { ANA, chamar } from '../workers/rotas'
 import { modeloQueFalha, modeloQueNaoResponde, modeloSimulado, type RespostaGravada } from './modelo-simulado'
 import buscaTenis from './respostas/busca-tenis.json'
+import contextoTenis from './respostas/contexto-tenis.json'
 import ficha from './respostas/ficha.json'
 import produtoInventado from './respostas/produto-inventado.json'
 import recusa from './respostas/recusa.json'
@@ -258,6 +259,59 @@ describe('Capi com o Claude simulado', () => {
       const vazia = await conversar({ clienteId: 'c-ana', texto: 'tem bicicleta?' }, deps)
       expect(vazia).toEqual({ resposta: RESPOSTA_SALVA_SEM_PRODUTO, produtos: [], acoes: [] })
     })
+  })
+
+  it('TI09: em 3 turnos, a Capi sabe do que se está falando (produtos e resultados das ferramentas)', async () => {
+    const { modelo, chamadas } = modeloSimulado(gravada(contextoTenis))
+    const ana = (texto: string) => conversar({ clienteId: 'c-ana', texto }, { db: env.DB, modelo })
+    await ana('quero um tênis de corrida')
+    await ana('tem no 42?')
+    await ana('e em preto?')
+
+    // O 2º turno leva o 1º inteiro: a pergunta, a busca que a Capi fez, o resultado do banco
+    // (com a numeração dos tênis) e a resposta com os produtos mostrados.
+    const segundo = chamadas[2].messages
+    expect(segundo.map((m) => m.role)).toEqual(['user', 'assistant', 'user', 'assistant', 'user'])
+    expect(segundo[0]).toEqual({ role: 'user', content: 'quero um tênis de corrida' })
+    expect(segundo[1].content).toEqual([
+      { type: 'tool_use', id: 'toolu_turno1', name: 'buscar_produtos', input: { texto: 'tênis', categoria: 'calcados' } },
+    ])
+    const [resultado] = segundo[2].content as { type: string; tool_use_id: string; content: string }[]
+    expect(resultado).toMatchObject({ type: 'tool_result', tool_use_id: 'toolu_turno1' })
+    const doBanco = JSON.parse(resultado.content).produtos as { id: string; atributos: { numeracao: number[] } }[]
+    expect(doBanco.find((p) => p.id === 'p-pulse')?.atributos.numeracao).toContain(42)
+    expect(segundo[3]).toEqual({
+      role: 'assistant',
+      content: 'Achei dois tênis de corrida na Loja A: o Pulse e o Run 2. Qual número você usa? [produto:p-pulse] [produto:p-run]',
+    })
+    expect(segundo[4]).toEqual({ role: 'user', content: [{ type: 'text', text: 'tem no 42?' }] })
+
+    // O 3º turno leva os dois anteriores. Os blocos de raciocínio dos turnos passados não voltam
+    // (só os do turno em andamento valem; tirar os antigos não invalida nada).
+    const terceiro = chamadas[3].messages
+    expect(terceiro.slice(0, 4)).toEqual(segundo.slice(0, 4))
+    // No 2º turno o modelo respondeu sem consultar de novo: as citações dele não viram cartão
+    // (RN14: só produtos das ferramentas do turno; o prompt pede para conferir o estoque de novo).
+    expect(terceiro.slice(4).map((m) => m.content)).toEqual([
+      'tem no 42?',
+      'Os dois têm o 42: o Pulse e o Run 2.',
+      [{ type: 'text', text: 'e em preto?' }],
+    ])
+    expect(JSON.stringify(terceiro)).not.toContain('"thinking"')
+  })
+
+  it('a resposta salva entra no histórico como a busca que ela fez, com os produtos do banco', async () => {
+    const roteiro = modeloSimulado([])
+    await conversar({ clienteId: 'c-ana', texto: 'Tem esse tênis aí no shopping? Uso 42.' }, { db: env.DB, modelo: roteiro.modelo, modoDemo: true })
+    const { modelo, chamadas } = modeloSimulado(gravada(respostaSimples))
+    await conversar({ clienteId: 'c-ana', texto: 'e em preto?' }, { db: env.DB, modelo })
+    const [, troca, resultado] = chamadas[0].messages
+    expect(troca.content).toEqual([
+      expect.objectContaining({ type: 'tool_use', name: 'buscar_produtos', input: { texto: 'tênis', categoria: 'calcados' } }),
+    ])
+    const [bloco] = resultado.content as { type: string; tool_use_id: string; content: string }[]
+    expect(bloco.tool_use_id).toBe((troca.content as { id: string }[])[0].id)
+    expect(JSON.parse(bloco.content).produtos.map((p: { id: string }) => p.id)).toEqual(['p-pulse', 'p-run'])
   })
 
   it('TI08: numa conversa longa, só as últimas mensagens vão para o modelo', async () => {

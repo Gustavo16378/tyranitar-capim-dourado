@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { comoErroApi, contasDeDemonstracao, entrar, entrarComDemo, useDados, useSessao, type ErroApi } from '../api'
 import { Button, CapiMark, Icon } from '../componentes'
 import { APP_NOME } from '../config'
@@ -90,6 +90,12 @@ export default function Entrar() {
         <Button type="submit" variant="primary" block disabled={enviando !== null}>
           {enviando === 'senha' ? 'Entrando…' : 'Entrar'}
         </Button>
+        <p className="text-center text-body-sm text-ink-muted">
+          Ainda não tem conta?{' '}
+          <Link to="/cadastro" className="font-semibold text-marrom-ink underline">
+            Criar conta
+          </Link>
+        </p>
       </form>
 
       {demonstracao.length > 0 && (

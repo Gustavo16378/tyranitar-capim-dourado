@@ -28,3 +28,8 @@ export function entrarComDemo(perfil: Perfil = 'CLIENTE'): Promise<RespostaLogin
   if (perfil !== 'CLIENTE') return falhar(404, 'NAO_ENCONTRADO', 'Essa conta de demonstração não está no banco.')
   return responder(SESSAO_DEMO)
 }
+
+/** Mock de POST /api/auth/cadastro: a conta nova entra logada (no mock, sem guardar nada). */
+export function cadastrar(nome: string): Promise<RespostaLogin> {
+  return responder({ token: 'mock', usuario: { id: 'u-novo', nome, perfil: 'CLIENTE', lojaId: null } })
+}
