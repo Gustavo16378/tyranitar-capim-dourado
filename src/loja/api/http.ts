@@ -23,6 +23,11 @@ export class ErroApi extends Error {
     this.erro = erro
     this.mensagem = mensagem
   }
+
+  /** Vale tentar de novo? Sem conexão ou falha do servidor, sim; erro de regra (4xx), não. */
+  get passageiro() {
+    return this.status === 0 || this.status >= 500
+  }
 }
 
 const SEM_CONEXAO: CorpoErro = {
