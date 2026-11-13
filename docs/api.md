@@ -51,6 +51,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `POST /api/avaliacoes` | CLIENTE | RF15 |
 | `PUT /api/me/favoritos/{produtoId}`, `DELETE ...` | CLIENTE | RF16 |
 | `GET /api/loja/atendimento/{qr}` | LOJISTA | RF18 |
+| `POST /api/loja/atendimento/previa` | LOJISTA | RF19 |
 | `POST /api/loja/compras` | LOJISTA | RF19 |
 | `GET /api/loja/reservas` | LOJISTA | RF20 |
 | `PATCH /api/loja/reservas/{id}` | LOJISTA | RF20 |
@@ -238,13 +239,31 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 
 `ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04).
 
+### `POST /api/loja/atendimento/previa`
+
+Calcula a compra sem gravar nada, para o caixa ver quanto cobrar antes de registrar. Recebe o mesmo corpo de `POST /api/loja/compras` e aplica as mesmas regras.
+
+Resposta `200`: a compra como ficaria, sem `id`.
+
+```json
+{
+  "valorBrutoCentavos": 45980,
+  "descontos": [ { "cupom": "cp1", "centavos": 4598 }, { "cupom": "cp2", "centavos": 2000 } ],
+  "valorPagoCentavos": 39382,
+  "pontosGerados": 393,
+  "reembolsoGerado": { "cupom": "cp2", "centavos": 2000 }
+}
+```
+
+Erros: os mesmos de `POST /api/loja/compras`.
+
 ### `POST /api/loja/compras`
 
 ```json
 { "qrToken": "q-7f3a...", "valorCentavos": 45980, "cupons": ["cp1", "cp2"] }
 ```
 
-Para registrar a retirada de uma reserva, envie também `reservaId`. Se ela foi paga por Pix, a compra entra com o valor da reserva, o caixa não cobra de novo e os pontos são somados na retirada.
+Para registrar a retirada de uma reserva, envie também `reservaId`. Se ela foi paga por Pix, envie `valorCentavos: 0` e nenhum cupom: a compra entra com o valor da reserva, o caixa não cobra de novo e os pontos são somados na retirada.
 
 Resposta `201`:
 
@@ -261,13 +280,39 @@ Resposta `201`:
 
 Erros: `422` (`CUPOM_INVALIDO` por validade, limite ou nível; `CUPONS_INCOMPATIVEIS` para dois cupons da mesma loja), `409` (reserva já retirada).
 
+### `GET /api/loja/reservas`
+
+Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,SEPARADA`; sem ele, todos), `pagina` e `tamanho` (até 100). Vem primeiro a que expira primeiro.
+
+```json
+{
+  "itens": [
+    {
+      "id": "r1",
+      "produto": "Tênis de corrida Pulse",
+      "cliente": "Ana",
+      "quantidade": 1,
+      "status": "SEPARADA",
+      "formaPagamento": "PIX",
+      "pago": true,
+      "precoCentavos": 39990,
+      "expiraEm": "2026-11-14T18:00:00Z",
+      "criadoEm": "2026-11-12T18:00:00Z"
+    }
+  ],
+  "total": 7
+}
+```
+
+`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o preço no momento da reserva.
+
 ### `PATCH /api/loja/reservas/{id}`
 
 ```json
 { "status": "SEPARADA" }
 ```
 
-Segue as transições do diagrama de estados. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`).
+Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`). Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
 
 ### `POST /api/loja/produtos/importar`
 
