@@ -1,7 +1,16 @@
 // Plantas e rotas do mapa (RF10): leitura dos SVGs e menor caminho por Dijkstra.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { chegadaDaLoja, menorCaminho, minutosAPe, montarGrafo, rotaAteALoja, type DadosDeRotas } from '../../src/mapa/grafo'
+import {
+  chegadaDaLoja,
+  menorCaminho,
+  minutosAPe,
+  montarGrafo,
+  pontoNoContorno,
+  rotaAteALoja,
+  trechoDaRota,
+  type DadosDeRotas,
+} from '../../src/mapa/grafo'
 import { lerLojas, lerViewBox } from '../../src/mapa/svg'
 
 const ler = (nome: string) => readFileSync(new URL(`../../src/mapa/${nome}`, import.meta.url), 'utf8')
@@ -55,15 +64,27 @@ describe('menor caminho (Dijkstra)', () => {
   })
 
   it('loja do 2º piso: a rota fica no 2º piso; loja âncora sem porta: chega ao corredor mais perto', () => {
-    const centro = lerLojas(piso2).find((l) => l.mapaId === 'loja-200')!.centro
-    const rota2 = rotaAteALoja(grafo, 'loja-200', 2, centro)!
+    const loja200 = lerLojas(piso2).find((l) => l.mapaId === 'loja-200')!
+    const rota2 = rotaAteALoja(grafo, 'loja-200', 2, loja200)!
     expect(rota2.pontos.every((p) => p.piso === 2)).toBe(true)
     const ancora = lerLojas(piso1).find((l) => l.mapaId === 'loja-pc01a')!
     const chegada = chegadaDaLoja(grafo, 'loja-pc01a', 1, ancora.centro)!
     expect(chegada).toMatchObject({ piso: 1 })
     expect(chegada.tipo).not.toBe('porta')
-    expect(rotaAteALoja(grafo, 'loja-pc01a', 1, ancora.centro)).not.toBeNull()
+    // A âncora fica fora dos corredores: a rota termina na fachada dela, e a distância conta esse trecho.
+    const rotaAncora = rotaAteALoja(grafo, 'loja-pc01a', 1, ancora)!
+    const fachada = rotaAncora.pontos.at(-1)!
+    expect(fachada).toMatchObject({ id: 'fachada-loja-pc01a', loja: 'loja-pc01a' })
+    expect(rotaAncora.metros).toBeGreaterThan(50)
+    expect(pontoNoContorno(ancora.pontos, fachada)).toEqual({ x: fachada.x, y: fachada.y })
     expect(rotaAteALoja(grafo, 'loja-inexistente', 1)).toBeNull()
+  })
+
+  it('corta a rota numa fração do comprimento, para a linha se desenhar', () => {
+    const rota = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }]
+    expect(trechoDaRota(rota, 0.25)).toEqual([{ x: 0, y: 0 }, { x: 5, y: 0 }])
+    expect(trechoDaRota(rota, 0.75)).toEqual([{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 5 }])
+    expect(trechoDaRota(rota, 1)).toEqual(rota)
   })
 
   it('minutos a pé, a 1,2 m/s, com no mínimo 1', () => {

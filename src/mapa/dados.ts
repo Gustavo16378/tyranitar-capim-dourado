@@ -21,5 +21,5 @@ export function acharNaPlanta(mapaId: string) {
 /** A rota da entrada mais próxima até a loja, no piso dela. */
 export function rotaAte(mapaId: string) {
   const achada = acharNaPlanta(mapaId)
-  return achada ? rotaAteALoja(GRAFO, mapaId, achada.piso, achada.loja.centro) : null
+  return achada ? rotaAteALoja(GRAFO, mapaId, achada.piso, achada.loja) : null
 }
