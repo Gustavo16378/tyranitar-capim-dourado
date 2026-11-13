@@ -21,6 +21,7 @@
     "seed:remoto": "node scripts/gerar-seed.mjs --remoto"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@gsap/react": "^2.1.2",
     "gsap": "^3.15.1",
     "jose": "^6.2.17",

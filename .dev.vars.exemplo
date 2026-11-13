@@ -3,6 +3,8 @@
 ANTHROPIC_API_KEY=
 # Pelo menos 32 caracteres aleatórios. Ex.: node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 JWT_SECRET=
+# Modelo da Capi (opcional; padrão claude-sonnet-5-5)
+CAPI_MODELO=
 
 # Senhas dos usuários de teste, usadas só pelo npm run seed:local e npm run seed:remoto
 # (12 caracteres ou mais). O banco guarda só os hashes. Os usuários:

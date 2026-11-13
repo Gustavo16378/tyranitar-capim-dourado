@@ -51,6 +51,17 @@ export async function listarProdutosAtivos(
   return results
 }
 
+/** Categorias com produto ativo hoje, para a Capi corrigir uma categoria que não existe. */
+export async function categoriasComProduto(db: D1Database) {
+  const { results } = await db
+    .prepare(
+      `SELECT DISTINCT p.categoria FROM produto p JOIN loja l ON l.id = p.loja_id
+       WHERE p.ativo = 1 AND l.ativa = 1 ORDER BY p.categoria`,
+    )
+    .all<{ categoria: string }>()
+  return results.map((r) => r.categoria)
+}
+
 export function buscarProdutoAtivo(db: D1Database, id: string) {
   return db.prepare(`${SELECAO} AND p.id = ?1`).bind(id).first<ProdutoLinha>()
 }

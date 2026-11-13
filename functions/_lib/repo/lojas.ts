@@ -15,6 +15,13 @@ export function lojaParaApi(l: LojaLinha) {
   return { id: l.id, nome: l.nome, piso: l.piso, tipo: l.tipo, categorias: lerJson<string[]>(l.categorias, []), mapaId: l.mapa_id }
 }
 
+export function buscarLojaAtiva(db: D1Database, id: string) {
+  return db
+    .prepare('SELECT id, nome, piso, tipo, categorias, mapa_id FROM loja WHERE id = ?1 AND ativa = 1')
+    .bind(id)
+    .first<LojaLinha>()
+}
+
 /** Lojas ativas (as vagas ficam de fora), com filtro opcional por piso e categoria. */
 export async function listarLojas(
   db: D1Database,
