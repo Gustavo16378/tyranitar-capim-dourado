@@ -2,7 +2,8 @@
 // shopping deve à loja pelos vouchers usados aqui (RN11).
 //
 //   TelaExtrato           cabeçalho, filtro de período e GET /api/loja/extrato
-//   └─ ConteudoDoExtrato  os quatro estados, os números do topo e a tabela das compras
+//   └─ ConteudoDoExtrato  os quatro estados, os números do topo e as compras: em tabela a
+//                         partir de 1024 px; abaixo disso, um cartão por compra
 import { useCallback, useState } from 'react'
 import { Badge, formatarNumero, formatarPreco, StatTile } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
@@ -128,6 +129,7 @@ function ExtratoDoPeriodo({
               {formatarPreco(resumo.descontoShoppingCentavos)} em vouchers.
             </p>
           </div>
+          <CartoesDeCompras lancamentos={lancamentos.itens} />
           <TabelaDeCompras lancamentos={lancamentos.itens} />
           <Paginacao pagina={pagina} tamanho={20} total={lancamentos.total} aoMudar={aoMudarPagina} />
         </section>
@@ -138,11 +140,67 @@ function ExtratoDoPeriodo({
 
 const DINHEIRO = 'whitespace-nowrap py-3 pl-4 text-right tabular-nums'
 
+/** O reembolso do voucher usado na compra: pago (com a data) ou a receber; sem voucher, nada. */
+function Reembolso({ reembolso }: { reembolso: LancamentoDoExtrato['reembolso'] }) {
+  if (!reembolso) return null
+  return reembolso.status === 'PAGO' ? (
+    <Badge tone="cerrado" icon="check">
+      Pago{reembolso.pagoEm ? ` em ${formatarData(reembolso.pagoEm)}` : ''}
+    </Badge>
+  ) : (
+    <Badge icon="relogio">A receber</Badge>
+  )
+}
+
+/** Desconto com o sinal de menos; sem desconto, um traço apagado. */
+function Desconto({ centavos }: { centavos: number }) {
+  return centavos ? <>− {formatarPreco(centavos)}</> : <span className="text-ink-muted">—</span>
+}
+
+/** Abaixo de 1024 px: um cartão por compra, com os valores um embaixo do outro. */
+function CartoesDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] }) {
+  return (
+    <ul aria-label="Compras do período, da mais nova para a mais antiga" className="flex flex-col gap-3 lg:hidden">
+      {lancamentos.map((l) => (
+        <li key={l.id} className="flex flex-col gap-3 rounded-md border border-line bg-surface p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <p className="text-label">
+              {l.cliente}
+              {l.retirada && <span className="font-normal text-ink-muted"> · retirada</span>}
+            </p>
+            <p className="text-body-sm text-ink-muted">{formatarDataHora(l.criadoEm)}</p>
+          </div>
+          <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 text-body-sm">
+            <dt className="text-ink-muted">Valor</dt>
+            <dd className="text-right tabular-nums">{formatarPreco(l.brutoCentavos)}</dd>
+            <dt className="text-ink-muted">Cupom da loja</dt>
+            <dd className="text-right tabular-nums">
+              <Desconto centavos={l.descontoLojaCentavos} />
+            </dd>
+            <dt className="text-ink-muted">Voucher do shopping</dt>
+            <dd className="text-right tabular-nums">
+              <Desconto centavos={l.descontoShoppingCentavos} />
+            </dd>
+            <dt className="font-semibold">Cliente pagou</dt>
+            <dd className="text-right font-semibold tabular-nums">{formatarPreco(l.pagoCentavos)}</dd>
+          </dl>
+          {l.reembolso && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+              <span className="text-body-sm text-ink-muted">Reembolso do voucher</span>
+              <Reembolso reembolso={l.reembolso} />
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** A partir de 1024 px: a tabela, uma compra por linha. */
 function TabelaDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] }) {
   return (
-    // Em tela estreita, a tabela rola de lado dentro do cartão; a página não.
-    <div className="-mx-5 overflow-x-auto px-5">
-      <table className="w-full min-w-[760px] border-collapse text-left text-body-sm">
+    <div className="hidden lg:block">
+      <table className="w-full border-collapse text-left text-body-sm">
         <caption className="sr-only">Compras do período, da mais nova para a mais antiga</caption>
         <thead>
           <tr className="border-b border-line text-label">
@@ -164,25 +222,15 @@ function TabelaDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] }
                 {l.retirada && <span className="text-ink-muted"> · retirada</span>}
               </td>
               <td className={DINHEIRO}>{formatarPreco(l.brutoCentavos)}</td>
-              <td className={cx(DINHEIRO, !l.descontoLojaCentavos && 'text-ink-muted')}>
-                {l.descontoLojaCentavos ? `− ${formatarPreco(l.descontoLojaCentavos)}` : '—'}
+              <td className={DINHEIRO}>
+                <Desconto centavos={l.descontoLojaCentavos} />
               </td>
-              <td className={cx(DINHEIRO, !l.descontoShoppingCentavos && 'text-ink-muted')}>
-                {l.descontoShoppingCentavos ? `− ${formatarPreco(l.descontoShoppingCentavos)}` : '—'}
+              <td className={DINHEIRO}>
+                <Desconto centavos={l.descontoShoppingCentavos} />
               </td>
               <td className={cx(DINHEIRO, 'font-semibold')}>{formatarPreco(l.pagoCentavos)}</td>
               <td className="py-3 pl-4">
-                {l.reembolso ? (
-                  l.reembolso.status === 'PAGO' ? (
-                    <Badge tone="cerrado" icon="check">
-                      Pago{l.reembolso.pagoEm ? ` em ${formatarData(l.reembolso.pagoEm)}` : ''}
-                    </Badge>
-                  ) : (
-                    <Badge icon="relogio">A receber</Badge>
-                  )
-                ) : (
-                  <span className="text-ink-muted">—</span>
-                )}
+                {l.reembolso ? <Reembolso reembolso={l.reembolso} /> : <span className="text-ink-muted">—</span>}
               </td>
             </tr>
           ))}
