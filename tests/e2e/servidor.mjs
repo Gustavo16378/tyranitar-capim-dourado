@@ -6,7 +6,8 @@
 // - a Ana com o e-mail da conta de demonstração (POST /api/auth/demo procura por ele) e o QR
 //   fixo da demonstração (o mesmo do botão "Simular leitura" do painel da loja);
 // - o lojista da Loja A com uma senha de verdade, para entrar pelo login;
-// - a Loja A numa loja que existe na planta, para o mapa desenhar a rota.
+// - a Loja A numa loja que existe na planta, para o mapa desenhar a rota;
+// - buscas recentes nas categorias da Loja A, para o Desempenho (TX07) ter o que mostrar.
 // Sem ANTHROPIC_API_KEY: a Capi responde com as respostas salvas (CAPI_MODO_DEMO=1) e, fora do
 // roteiro, como indisponível, e o app cai na busca comum. Nada sai para a internet.
 import { spawn, spawnSync } from 'node:child_process'
@@ -65,6 +66,11 @@ const ajustes = `
 UPDATE usuario SET email = ${aspas(dados.ana.email)}, qr_token = ${aspas(dados.ana.qrToken)} WHERE id = 'c-ana';
 UPDATE usuario SET senha_hash = ${aspas(await hashSenha(dados.lojista.senha))} WHERE email = ${aspas(dados.lojista.email)};
 UPDATE loja SET mapa_id = ${aspas(dados.mapaDaLojaA)} WHERE id = 'loja-a';
+INSERT INTO busca (id, termo, categoria, encontrou, criado_em) VALUES
+  ('b-e2e-1', 'tênis de trilha', 'calcados', 0, datetime('now', '-1 days')),
+  ('b-e2e-2', 'tênis de trilha', 'calcados', 0, datetime('now', '-2 days')),
+  ('b-e2e-3', 'chuteira society', 'calcados', 0, datetime('now', '-3 days')),
+  ('b-e2e-4', 'tênis de corrida', 'calcados', 1, datetime('now', '-1 days'));
 `
 const pasta = mkdtempSync(join(tmpdir(), 'e2e-seed-'))
 const arquivo = join(pasta, 'seed.sql')
