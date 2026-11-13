@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // Mocks da API do painel da loja, no formato de docs/api.md.
 //
 // Como trocar pela API real: quando a rota existir em functions/, apague a linha dela em

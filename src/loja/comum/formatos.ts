@@ -1,5 +1,8 @@
 // Conversões entre o formato da API e o que os componentes e o lojista leem.
-import { formatarPreco, type Nivel } from '../../componentes'
+// Importa dos arquivos .ts dos componentes (não do index, que traz os .tsx) para os testes
+// de unidade, que rodam sem JSX, poderem usar este arquivo.
+import { formatarPreco } from '../../componentes/formatar'
+import type { Nivel } from '../../componentes/nivel'
 import type { NivelApi } from '../../tipos/loja'
 
 /** A API escreve CAPIM; os componentes recebem capim. */

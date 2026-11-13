@@ -1,3 +1,6 @@
+/// <reference types="vite/client" />
+// (A linha acima dá o tipo de import.meta.env também quando os testes compilam este arquivo.)
+//
 // Cliente HTTP do painel da loja. Toda chamada à API passa por requisitar():
 // põe o token, manda JSON, e transforma qualquer erro em ErroApi, no formato
 // { status, erro, mensagem } de docs/api.md.
