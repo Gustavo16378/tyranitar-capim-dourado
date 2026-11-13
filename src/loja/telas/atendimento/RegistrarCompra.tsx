@@ -137,6 +137,9 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
                       {c.titulo} <span className="text-ink-muted">({c.origem === 'LOJA' ? 'loja' : 'shopping'})</span>
                     </Opcao>
                   ))}
+                  {cupons.filter((c) => c.origem === 'LOJA').length > 1 && (
+                    <p className="text-body-sm text-ink-muted">Um cupom da loja por compra; o do shopping vai junto.</p>
+                  )}
                 </fieldset>
               )}
             </>
