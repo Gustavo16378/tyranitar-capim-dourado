@@ -149,6 +149,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA34 | Marcar reembolso como pago e tentar voltar | RF31 | Data preenchida; volta para pendente recusada |
 | TA35 | Tempo das rotas sem IA com o seed | RNF02 | Menos de 500 ms |
 | TA36 | Respostas e build do front | RNF04, RNF07 | Nenhuma resposta contém `senha_hash`; o bundle não contém a chave da IA |
+| TA37 | Trocar o nome e a senha na Minha conta | RF01 | Nome novo na conta; a senha só troca com a atual certa (errada: 400, sem encerrar a sessão) e a nova entra no login |
 
 ### Capi (TI)
 
@@ -219,7 +220,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 
 | Requisito | Testes |
 | --- | --- |
-| RF01 Cadastro e login | TA01, TA02, TA03, TB03, TE01 |
+| RF01 Cadastro e login | TA01, TA02, TA03, TA37, TB03, TE01 |
 | RF02 Conversar com a Capi | TI01, TI08, TE01 |
 | RF03 Foto ou print | TI06, TI09, TE01 |
 | RF04 Link | TI07 |

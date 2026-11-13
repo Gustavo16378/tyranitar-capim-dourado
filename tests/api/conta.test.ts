@@ -1,10 +1,16 @@
-// Conta do cliente (tela Minha conta): GET /api/me, PUT /api/me/consentimento (RF13, RNF06,
-// TA21) e DELETE /api/me (exclusão da conta, LGPD).
+// Conta do cliente (tela Minha conta): GET e PATCH /api/me (nome), PUT /api/me/senha,
+// PUT /api/me/consentimento (RF13, RNF06, TA21) e DELETE /api/me (exclusão da conta, LGPD).
 import { env } from 'cloudflare:test'
 import { describe, expect, it } from 'vitest'
+import { gerarHashSenha } from '../../functions/_lib/auth/senha'
 import { onRequestPost as login } from '../../functions/api/auth/login'
 import { onRequestPut as consentimento } from '../../functions/api/me/consentimento'
-import { onRequestDelete as excluir, onRequestGet as conta } from '../../functions/api/me/index'
+import {
+  onRequestDelete as excluir,
+  onRequestGet as conta,
+  onRequestPatch as mudarNome,
+} from '../../functions/api/me/index'
+import { onRequestPut as trocarSenha } from '../../functions/api/me/senha'
 import { onRequestPost as reservar } from '../../functions/api/reservas/index'
 import { ANA, BRUNO, chamar, LOJISTA_A } from '../workers/rotas'
 
@@ -126,5 +132,93 @@ describe('DELETE /api/me', () => {
 
   it('lojista não exclui pela rota do cliente', async () => {
     expect((await chamar(excluir, { metodo: 'DELETE', url: '/api/me', usuario: LOJISTA_A })).status).toBe(403)
+  })
+})
+
+describe('PATCH /api/me', () => {
+  const renomear = (corpo: unknown, usuario = ANA) => chamar(mudarNome, { metodo: 'PATCH', url: '/api/me', corpo, usuario })
+
+  it('TA37: troca o nome, sem os espaços a mais, e responde a conta atualizada', async () => {
+    const r = await renomear({ nome: '  Ana   Souza  Lima ' })
+    expect(r.status).toBe(200)
+    expect(r.corpo).toMatchObject({ id: 'c-ana', nome: 'Ana Souza Lima', email: 'ana@teste.test' })
+    expect(await um("SELECT nome FROM usuario WHERE id = 'c-ana'")).toEqual({ nome: 'Ana Souza Lima' })
+  })
+
+  it('nome vazio, curto, longo ou fora do formato: 400 e nada muda', async () => {
+    for (const corpo of [{}, { nome: '' }, { nome: ' a ' }, { nome: 'x'.repeat(101) }, { nome: 42 }]) {
+      expect((await renomear(corpo)).status).toBe(400)
+    }
+    expect(await um("SELECT nome FROM usuario WHERE id = 'c-ana'")).toEqual({ nome: 'Ana Souza' })
+  })
+
+  it('sem login 401; lojista 403; conta excluída 401', async () => {
+    expect((await chamar(mudarNome, { metodo: 'PATCH', url: '/api/me', corpo: { nome: 'Outro' } })).status).toBe(401)
+    expect((await renomear({ nome: 'Outro' }, LOJISTA_A)).status).toBe(403)
+    expect(await um("SELECT nome FROM usuario WHERE id = 'l-a'")).toEqual({ nome: 'Equipe da Loja A' })
+    await chamar(excluir, { metodo: 'DELETE', url: '/api/me', usuario: ANA })
+    expect((await renomear({ nome: 'Outro' })).status).toBe(401)
+  })
+})
+
+describe('PUT /api/me/senha', () => {
+  const SENHA = 'senha-antiga-123'
+  // Poucas iterações: o teste confere a troca, não o custo do hash (a verificação lê do hash).
+  const comSenha = async () => {
+    await env.DB.prepare("UPDATE usuario SET senha_hash = ?1 WHERE id = 'c-ana'")
+      .bind(await gerarHashSenha(SENHA, 1000))
+      .run()
+  }
+  const trocar = (corpo: unknown, extra: Partial<Parameters<typeof chamar>[1]> = {}) =>
+    chamar(trocarSenha, { metodo: 'PUT', url: '/api/me/senha', corpo, usuario: ANA, ...extra })
+  const entrar = (senha: string) =>
+    chamar(login, { metodo: 'POST', url: '/api/auth/login', corpo: { email: 'ana@teste.test', senha } })
+  const hash = async () => (await um<{ senha_hash: string }>("SELECT senha_hash FROM usuario WHERE id = 'c-ana'")).senha_hash
+
+  it('TA37: com a senha atual certa, troca: a nova entra e a antiga não', async () => {
+    await comSenha()
+    const r = await trocar({ senhaAtual: SENHA, novaSenha: 'senha-nova-456' })
+    expect(r.status).toBe(204)
+    expect(r.corpo).toBeNull()
+    expect((await entrar('senha-nova-456')).status).toBe(200)
+    expect((await entrar(SENHA)).status).toBe(401)
+  })
+
+  it('senha atual errada: 400 (a sessão continua) e a senha não muda', async () => {
+    await comSenha()
+    const antes = await hash()
+    const r = await trocar({ senhaAtual: 'nao-e-essa', novaSenha: 'senha-nova-456' })
+    expect(r.status).toBe(400)
+    expect(r.corpo).toMatchObject({ erro: 'DADOS_INVALIDOS', mensagem: expect.stringContaining('senha atual') })
+    expect(await hash()).toBe(antes)
+  })
+
+  it('senha nova curta, igual à atual ou campo faltando: 400', async () => {
+    await comSenha()
+    const antes = await hash()
+    for (const corpo of [
+      { senhaAtual: SENHA, novaSenha: 'curta' },
+      { senhaAtual: SENHA, novaSenha: SENHA },
+      { senhaAtual: SENHA },
+      { novaSenha: 'senha-nova-456' },
+    ]) {
+      expect((await trocar(corpo)).status).toBe(400)
+    }
+    expect(await hash()).toBe(antes)
+  })
+
+  it('com a demo ligada, a conta de demonstração não troca de senha', async () => {
+    await comSenha()
+    await env.DB.prepare("UPDATE usuario SET email = 'ana.souza@demo.test' WHERE id = 'c-ana'").run()
+    const antes = await hash()
+    const r = await trocar({ senhaAtual: SENHA, novaSenha: 'senha-nova-456' }, { ambiente: { DEMO: '1' } })
+    expect(r.status).toBe(403)
+    expect(await hash()).toBe(antes)
+  })
+
+  it('sem login 401; lojista 403', async () => {
+    const corpo = { senhaAtual: SENHA, novaSenha: 'senha-nova-456' }
+    expect((await trocar(corpo, { usuario: undefined })).status).toBe(401)
+    expect((await trocar(corpo, { usuario: LOJISTA_A })).status).toBe(403)
   })
 })

@@ -1,4 +1,5 @@
-// SQL da conta do cliente (tela Minha conta): dados, consentimento da ficha e exclusão.
+// SQL da conta do cliente (tela Minha conta): dados, nome, consentimento da ficha e exclusão.
+import { ErroApi } from '../erros'
 import { paraSqlite } from '../regras/datas'
 import { nivelDoCliente } from './fidelidade'
 
@@ -37,6 +38,21 @@ export async function buscarConta(db: D1Database, clienteId: string, agora = new
     pontos: linha.pontos,
     compartilharFicha: linha.consentimento_ficha === 1,
   }
+}
+
+/** A conta logada; se ela foi excluída, o token não vale mais (401: o app volta para o login). */
+export async function contaLogada(db: D1Database, clienteId: string) {
+  const conta = await buscarConta(db, clienteId)
+  if (!conta) throw new ErroApi('NAO_AUTENTICADO', 'Essa conta não existe mais. Entre com outra conta.')
+  return conta
+}
+
+/** A conta de demonstração (POST /api/auth/demo) é de todo mundo que testa o app. */
+const EMAIL_DA_DEMONSTRACAO = 'ana.souza@demo.test'
+
+/** Com a demo ligada, a conta de demonstração não é excluída nem troca de senha. */
+export function ehContaDaDemonstracao(conta: { email: string }, env: Pick<Env, 'DEMO'>) {
+  return env.DEMO === '1' && conta.email.toLowerCase() === EMAIL_DA_DEMONSTRACAO
 }
 
 /**
@@ -88,4 +104,9 @@ export async function excluirConta(db: D1Database, clienteId: string, agora = ne
       )
       .bind(clienteId, `${clienteId}${DOMINIO_EXCLUIDA}`, SEM_SENHA),
   ])
+}
+
+/** Troca o nome do cliente (Minha conta). */
+export async function mudarNome(db: D1Database, clienteId: string, nome: string) {
+  await db.prepare("UPDATE usuario SET nome = ?2 WHERE id = ?1 AND perfil = 'CLIENTE'").bind(clienteId, nome).run()
 }

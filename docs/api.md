@@ -46,7 +46,8 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/reservas/{id}` | CLIENTE | RF08, RF09 |
 | `POST /api/reservas/{id}/pagamento` | CLIENTE | RF09 |
 | `POST /api/reservas/{id}/cancelar` | CLIENTE | RF08 |
-| `GET /api/me`, `DELETE /api/me` | CLIENTE | RF13 |
+| `GET /api/me`, `PATCH /api/me`, `DELETE /api/me` | CLIENTE | RF13 |
+| `PUT /api/me/senha` | CLIENTE | RF01 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
 | `GET /api/me/historico` | CLIENTE | RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
@@ -287,6 +288,22 @@ A conta do cliente, para a tela Minha conta.
 ```
 
 Uma conta excluída responde `401`: o token dela não vale mais.
+
+### `PATCH /api/me`
+
+```json
+{ "nome": "Ana Souza Lima" }
+```
+
+Troca o nome (de 2 a 100 caracteres, sem os espaços a mais, como no cadastro). Resposta `200`: a conta atualizada, no formato de `GET /api/me`. O token continua valendo; o app atualiza o nome guardado na sessão. Erro `400` com nome fora dos limites.
+
+### `PUT /api/me/senha`
+
+```json
+{ "senhaAtual": "minimo8caracteres", "novaSenha": "outros8caracteres" }
+```
+
+Troca a senha, pedindo a atual. Resposta `204`. Erros: `400` (`DADOS_INVALIDOS`) com a senha atual errada (não `401`, que encerraria a sessão no app), a nova com menos de 8 caracteres ou igual à atual; `403` para a conta de demonstração enquanto `DEMO=1`.
 
 ### `DELETE /api/me`
 
