@@ -18,7 +18,8 @@
     "db:migrar": "wrangler d1 migrations apply tyranitar --local",
     "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote",
     "seed:local": "node scripts/gerar-seed.mjs --local",
-    "seed:remoto": "node scripts/gerar-seed.mjs --remoto"
+    "seed:remoto": "node scripts/gerar-seed.mjs --remoto",
+    "demo:reset": "node scripts/demo-reset.mjs --remoto"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

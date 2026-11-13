@@ -58,6 +58,14 @@ npm run dev:api                      # http://localhost:8788
 
 Em produção, `DEMO` e `CAPI_MODO_DEMO` vão no deploy pelo `[vars]` do `wrangler.toml`. O `VITE_MODO_DEMO` entra no build: o deploy sobe o `dist/` pronto, então o `npm run build` precisa rodar com o `.env.local` acima. Para desligar depois do hackathon, troque `DEMO` para `"0"` e apague o `.env.local`.
 
+Entre um ensaio e outro, e antes do pitch:
+
+```bash
+npm run demo:reset   # no D1 de produção; não precisa de deploy
+```
+
+Ele cancela as reservas em aberto da Ana, apaga a conversa dela com a Capi (para a Capi não lembrar dos ensaios) e devolve o estoque do seed, rodando o seed de novo. Por isso precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `produtos.csv` do kit, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
+
 ## Documentação
 
 Fica em [`docs/`](docs/):
