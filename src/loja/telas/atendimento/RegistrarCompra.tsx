@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Button, Icon } from '../../../componentes'
-import type { Atendimento, CupomDoCliente } from '../../../tipos/loja'
+import type { Atendimento, CupomDoCliente, PedidoCompra } from '../../../tipos/loja'
 import { registrarCompra, useAcao } from '../../api'
 import { Campo } from '../../comum/Campo'
 import { Erro } from '../../comum/Estados'
@@ -10,6 +10,7 @@ import { podeRetirar } from '../../comum/reserva'
 import { VALOR_DA_DEMO } from './demo'
 import type { Leitura } from './LeitorQR'
 import { Recibo } from './Recibo'
+import { TotalDaCompra } from './TotalDaCompra'
 
 interface RegistrarCompraProps {
   atendimento: Atendimento
@@ -20,7 +21,8 @@ interface RegistrarCompraProps {
 
 /**
  * O caixa (RF19): valor da compra, cupons do cliente e, se houver, a reserva que ele leva
- * agora. O desconto e os pontos são calculados pela API e aparecem no recibo.
+ * agora. O desconto e os pontos são calculados pela API: antes de registrar, no
+ * TotalDaCompra (prévia), e depois, no Recibo.
  */
 export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar }: RegistrarCompraProps) {
   const { cliente, cupons } = atendimento
@@ -53,21 +55,27 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
     if (centavos) setValor(valorParaCampo(centavos))
   }
 
+  // O pedido sai do que está na tela; null enquanto o valor não é válido. Serve para a
+  // prévia do total e para o registro. Com reserva paga, o valor vai 0 e a API usa o da reserva.
+  const centavos = reservaPaga ? 0 : lerValorEmCentavos(valor)
+  const pedido: PedidoCompra | null =
+    centavos === null || (!reservaPaga && centavos <= 0)
+      ? null
+      : {
+          qrToken: leitura.qr,
+          valorCentavos: centavos,
+          cupons: reservaPaga ? [] : escolhidos,
+          ...(reserva && { reservaId: reserva.id }),
+        }
+
   async function enviar(evento: FormEvent) {
     evento.preventDefault()
-    const centavos = reservaPaga ? 0 : lerValorEmCentavos(valor)
-    if (centavos === null || (!reservaPaga && centavos <= 0)) {
+    if (!pedido) {
       setErroValor('Informe o valor da compra, como 459,80.')
       return
     }
     setErroValor(null)
-    const feita = await compra.executar({
-      qrToken: leitura.qr,
-      valorCentavos: centavos,
-      cupons: reservaPaga ? [] : escolhidos,
-      ...(reserva && { reservaId: reserva.id }),
-    })
-    if (feita) aoRegistrar()
+    if (await compra.executar(pedido)) aoRegistrar()
   }
 
   return (
@@ -147,14 +155,11 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
 
           {compra.erro && <Erro erro={compra.erro} />}
 
-          <div className="flex flex-col gap-2 border-t border-line pt-4">
-            <Button type="submit" variant="confirm" icon="check" block disabled={compra.enviando}>
-              {compra.enviando ? 'Registrando…' : reservaPaga ? 'Registrar retirada' : 'Registrar compra'}
-            </Button>
-            {!reservaPaga && (
-              <p className="text-center text-body-sm text-ink-muted">O valor com desconto aparece no recibo.</p>
-            )}
-          </div>
+          <TotalDaCompra pedido={pedido} cliente={cliente.nome} reservaPaga={reservaPaga} />
+
+          <Button type="submit" variant="confirm" icon="check" block disabled={compra.enviando}>
+            {compra.enviando ? 'Registrando…' : reservaPaga ? 'Registrar retirada' : 'Registrar compra'}
+          </Button>
         </form>
       )}
     </section>
