@@ -213,11 +213,17 @@ const usuarios = [
 ]
 for (const u of usuarios) u.senhaHash = await hashSenha(senhas[u.perfil])
 
+/** QR do cliente: estável pelo e-mail. O da Ana (q-9aa3272102ed0fa6e570fe54) é o do botão
+ *  "Simular leitura" do painel da loja: não mude a regra sem mudar lá. */
+const qrDoCliente = (email) => `q-${sha256(`qr:${email.split('@')[0]}`).toString('hex').slice(0, 24)}`
+
 // ---------- cupons ----------
 
 const lojaCalcados = lojasComProduto.find((l) => l.categorias.includes('calcados')) ?? lojasComProduto[0]
 const cupons = [
   lojaCalcados && { id: uuid('cupom:10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
+  // Segundo cupom da mesma loja: não combina com o de 10% na mesma compra (RN05).
+  lojaCalcados && { id: uuid('cupom:15-camisetas'), mapaId: lojaCalcados.mapaId, titulo: 'R$ 15 em camisetas', tipo: 'VALOR', valor: 1500, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
   { id: uuid('cupom:20-reais-shopping'), mapaId: null, titulo: 'R$ 20 em qualquer loja', tipo: 'VALOR', valor: 2000, nivel: 'SEMENTE', limite: 1, validade: '2026-12-15' },
   { id: uuid('cupom:estacionamento'), mapaId: null, titulo: 'Estacionamento grátis por 2 h', tipo: 'BRINDE', valor: 0, nivel: 'CAPIM', limite: 2, validade: '2026-11-30' },
 ].filter(Boolean)
@@ -270,7 +276,7 @@ ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor;`,
   ...usuarios.map(
     (u) => `INSERT INTO usuario (id, nome, email, senha_hash, perfil, loja_id, qr_token, pontos, consentimento_ficha)
 SELECT ${lista([u.id, u.nome, u.email, u.senhaHash, u.perfil])}, ${u.mapaId ? 'l.id' : 'NULL'}, ${
-      u.perfil === 'CLIENTE' ? v(`q-${sha256(`qr:${u.email}`).toString('hex').slice(0, 24)}`) : 'NULL'
+      u.perfil === 'CLIENTE' ? v(qrDoCliente(u.email)) : 'NULL'
     }, ${u.email === ANA ? pontosDaAna : 0}, ${u.email === ANA ? 1 : 0}
 FROM ${u.mapaId ? `loja l WHERE l.mapa_id = ${v(u.mapaId)}` : '(SELECT 1) WHERE true'}
 ON CONFLICT (email) DO UPDATE SET
