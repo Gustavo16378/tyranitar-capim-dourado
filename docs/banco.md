@@ -30,6 +30,8 @@ erDiagram
 
   loja {
     text id PK
+    text numero UK
+    real area_m2
     text cnpj UK
     int piso
     text categorias
@@ -153,18 +155,20 @@ erDiagram
 
 ### loja
 
-Lojas do térreo e restaurantes da praça de alimentação.
+As unidades da planta: lojas do térreo, restaurantes da praça de alimentação e as unidades vagas (`ativa` 0), que o painel do shopping cruza com a demanda.
 
 | Coluna | Tipo | Regra |
 | --- | --- | --- |
 | `id` | texto | Chave primária |
-| `nome` | texto | Obrigatório |
-| `cnpj` | texto | 14 dígitos, único; identifica a loja na NFC-e (RN09) |
+| `nome` | texto | Obrigatório; `Vaga` numa unidade vaga |
+| `numero` | texto | Número da unidade na planta, sem o "LOJA" (`47`, `48A`, `PC 001C`); único. As telas mostram `LOJA 47`. Vazio só numa unidade gravada sem ele: a API usa o `mapa_id` |
+| `area_m2` | real | Área da unidade em m², da planilha da planta; vazia quando ela não traz. Usada no cruzamento das vagas com a demanda |
+| `cnpj` | texto | 14 dígitos, único; identifica a loja na NFC-e (RN09). Obrigatório na loja ativa e vazio na vaga |
 | `piso` | inteiro | 1 (lojas) ou 2 (praça de alimentação) |
 | `tipo` | texto | `loja` ou `alimentacao` |
 | `categorias` | texto (JSON) | Lista das categorias que a loja vende; filtra a ficha (RN04) |
 | `mapa_id` | texto | Id do elemento da loja no SVG da planta; único |
-| `ativa` | inteiro | 0 ou 1 |
+| `ativa` | inteiro | 0 (unidade vaga) ou 1 |
 
 ### usuario
 
@@ -286,4 +290,4 @@ WHERE id = ?1 AND ativo = 1 AND estoque >= ?2;
 - Cada mudança no banco é um arquivo novo em `migrations/`, numerado em ordem (`0002_...sql`). Um arquivo já aplicado nunca é editado.
 - Local: `npx wrangler d1 migrations apply tyranitar --local`.
 - Produção: `npx wrangler d1 migrations apply tyranitar --remote`, **antes** de mergear o código que depende da mudança.
-- As migrations só têm o esquema. Os dados da demo (lojas da planta, produtos, cupons, usuários de teste e o histórico de compras da Ana) entram pelo seed: `npm run seed:local` e `npm run seed:remoto`. Ele pode rodar de novo sempre que os CSVs mudarem: atualiza lojas por `mapa_id`, usuários por e-mail e produtos e cupons por id fixo, sem duplicar. As senhas dos usuários de teste ficam só no `.dev.vars` de cada um; o banco guarda só os hashes.
+- As migrations só têm o esquema. Os dados da demo (lojas da planta com número e área, produtos, cupons, usuários de teste, o histórico de compras da Ana e as buscas da demonstração, para a demanda do painel do shopping) entram pelo seed: `npm run seed:local` e `npm run seed:remoto`. Ele pode rodar de novo sempre que os CSVs mudarem: atualiza lojas por `mapa_id`, usuários por e-mail e produtos e cupons por id fixo, sem duplicar. As senhas dos usuários de teste ficam só no `.dev.vars` de cada um; o banco guarda só os hashes.
