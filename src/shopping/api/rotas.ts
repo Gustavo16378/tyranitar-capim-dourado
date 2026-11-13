@@ -14,7 +14,10 @@ import type {
   PedidoLoja,
   PedidoLojista,
   Periodo,
+  ReembolsoDoShopping,
+  Reembolsos,
   RespostaLogin,
+  StatusReembolso,
   VagasEDemanda,
   VoucherDoShopping,
 } from '../../tipos/shopping'
@@ -76,4 +79,16 @@ export function buscarDemanda(periodo: Periodo, sinal?: AbortSignal) {
 /** GET /api/shopping/vagas: as lojas vagas cruzadas com a demanda, com a sugestão para cada vaga. */
 export function buscarVagas(periodo: Periodo, sinal?: AbortSignal) {
   return requisitar<VagasEDemanda>('GET', '/api/shopping/vagas', { busca: { periodo }, sinal })
+}
+
+/** GET /api/shopping/reembolsos: o que o shopping deve a cada loja pelos vouchers (RF31, RN11). */
+export function listarReembolsos(status: StatusReembolso | undefined, sinal?: AbortSignal) {
+  return requisitar<Reembolsos>('GET', '/api/shopping/reembolsos', { busca: { status }, sinal })
+}
+
+/** PATCH /api/shopping/reembolsos/{id}: marca como pago. Um reembolso pago não volta para pendente. */
+export function pagarReembolso(id: string) {
+  return requisitar<ReembolsoDoShopping>('PATCH', `/api/shopping/reembolsos/${encodeURIComponent(id)}`, {
+    corpo: { status: 'PAGO' },
+  })
 }

@@ -88,3 +88,12 @@ export function reiniciarReembolsos() {
   reembolsos = iniciais()
   proximo = 1
 }
+
+/** Marca como pago (preenche pagoEm). Devolve o reembolso, ou null se não existe. */
+export function pagarReembolso(id: string, agora = new Date()) {
+  const reembolso = reembolsos.find((r) => r.id === id)
+  if (!reembolso) return null
+  reembolso.status = 'PAGO'
+  reembolso.pagoEm = agora.toISOString()
+  return reembolso
+}
