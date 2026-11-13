@@ -320,14 +320,15 @@ export default function Capi() {
     }
   }
 
+  /** A foto da câmera ou da galeria fica anexada no campo; vai quando a pessoa tocar em enviar. */
   async function aoEscolherFoto(evento: ChangeEvent<HTMLInputElement>) {
     const arquivo = evento.target.files?.[0]
-    // Limpa o seletor para dar para mandar a mesma foto de novo.
+    // Limpa o seletor para dar para escolher a mesma foto de novo.
     evento.target.value = ''
     if (!arquivo) return
     try {
       const { imagem, previa } = await reduzirFoto(arquivo)
-      conversar({ texto: '', imagem, foto: previa })
+      setAnexo({ imagem, previa })
     } catch (falha) {
       avisar(falha instanceof Error ? falha.message : 'Não consegui abrir essa foto. Tente outra.')
     }
@@ -479,13 +480,22 @@ export default function Capi() {
       </div>
 
       <div className="flex-none border-t bg-surface px-4 py-3">
+        {/* A foto anexada (da câmera, da galeria ou da sugestão): prévia com um X para tirar. */}
         {anexo && (
-          <div className="mb-2 flex items-center gap-3">
-            <img src={anexo.previa} alt="Foto anexada" className="size-12 flex-none rounded-sm object-cover" />
-            <span className="flex-1 text-body-sm text-ink-muted">Foto anexada: vai junto com a mensagem.</span>
-            <Button variant="ghost" size="sm" onClick={() => setAnexo(null)}>
-              Remover foto
-            </Button>
+          <div className="mb-3 flex items-center gap-4">
+            <div className="relative flex-none">
+              <img src={anexo.previa} alt="Foto anexada" className="size-14 rounded-sm object-cover" />
+              <button
+                type="button"
+                aria-label="Remover foto"
+                title="Remover foto"
+                onClick={() => setAnexo(null)}
+                className="absolute -right-2.5 -top-2.5 grid size-8 cursor-pointer place-items-center rounded-full border border-line-strong bg-surface-raised text-ink shadow-card"
+              >
+                <Icon name="fechar" className="size-4" />
+              </button>
+            </div>
+            <span className="text-body-sm text-ink-muted">Foto anexada. Escreva junto, se quiser, e toque em enviar.</span>
           </div>
         )}
         <ChatComposer

@@ -1,6 +1,7 @@
 // As correções da Capi achadas no teste como usuário real (docs/evidencias-testes.md): a tela
 // vazia com sugestões que só preenchem o campo (TE17), a conversa salva ao voltar (TE18) e a
-// espera com aviso e tempo limite (TE19).
+// espera com aviso e tempo limite (TE19) e a foto da câmera anexada no campo (TE21).
+import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { aba, comSessaoDaAna, novaConversa, PERGUNTA_DO_ROTEIRO, perguntarPeloTenisDaFoto } from './apoio'
 
@@ -104,4 +105,46 @@ test('TE19: a espera avisa "procurando" depois de 2 s e desiste em 25 s com "Ten
   await expect(conversa.getByRole('heading', { name: /Perfume/ }).first()).toBeVisible()
   await expect(conversa.getByText('Tem perfume amadeirado?')).toHaveCount(1)
   await expect(page.getByRole('button', { name: 'Tentar de novo' })).toHaveCount(0)
+})
+
+test('TE21: a foto da câmera fica anexada com prévia e um X, e só vai quando a pessoa toca em enviar', async ({ page }) => {
+  const FOTO = join(process.cwd(), 'public', 'demo', 'print-tenis.jpg')
+  const enviadas: string[] = []
+  page.on('request', (r) => {
+    if (r.method() === 'POST' && new URL(r.url()).pathname === '/api/chat') enviadas.push(r.url())
+  })
+  await page.goto('/capi')
+  const campo = page.getByRole('textbox', { name: 'Mensagem para a Capi' })
+  const anexada = page.getByRole('img', { name: 'Foto anexada' })
+  async function escolherFoto() {
+    const [seletor] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.getByRole('button', { name: 'Enviar foto ou print' }).click(),
+    ])
+    await seletor.setFiles(FOTO)
+  }
+
+  // Escolher a foto só anexa: aparece a prévia, nada vai para a Capi.
+  await escolherFoto()
+  await expect(anexada).toBeVisible()
+  expect(enviadas).toHaveLength(0)
+
+  // O X tira a foto.
+  await page.getByRole('button', { name: 'Remover foto' }).click()
+  await expect(anexada).toHaveCount(0)
+
+  // Dá para escrever junto: o texto continua no campo quando a foto entra, e os dois vão juntos.
+  await campo.fill('Tem esse tênis no 42?')
+  await escolherFoto()
+  await expect(anexada).toBeVisible()
+  await expect(campo).toHaveValue('Tem esse tênis no 42?')
+  expect(enviadas).toHaveLength(0)
+  await page.getByRole('button', { name: 'Enviar', exact: true }).click()
+
+  const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
+  await expect(conversa.getByRole('img', { name: 'Foto que você enviou' })).toBeVisible()
+  await expect(conversa.getByText('Tem esse tênis no 42?')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sim, separar' })).toBeVisible()
+  expect(enviadas).toHaveLength(1)
+  await expect(anexada).toHaveCount(0)
 })

@@ -15,6 +15,7 @@ export const CAMINHOS = {
   seta: ['M7 17L17 7', 'M9 7h8v8'],
   mais: ['M12 5v14', 'M5 12h14'],
   menos: ['M5 12h14'],
+  fechar: ['M6 6l12 12', 'M18 6L6 18'],
   alvo: [
     'M12 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14z',
     'M12 2v3',
