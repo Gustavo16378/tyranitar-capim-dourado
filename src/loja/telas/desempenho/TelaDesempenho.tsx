@@ -16,9 +16,9 @@ import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
 import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
 import { Segmentos } from '../../../painel/comum/Segmentos'
 import { BarraDasReservas } from './BarraDasReservas'
-import { CartaoGrafico } from './CartaoGrafico'
+import { CartaoGrafico } from '../../../painel/graficos/CartaoGrafico'
 import { partesDasReservas, porcentagem } from './contas'
-import { GraficoRanking } from './GraficoRanking'
+import { GraficoRanking } from '../../../painel/graficos/GraficoRanking'
 
 const PERIODOS: readonly { valor: Periodo; rotulo: string }[] = [
   { valor: '7d', rotulo: '7 dias' },

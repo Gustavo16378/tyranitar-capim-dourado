@@ -1,5 +1,5 @@
 import { Bar, BarChart, LabelList, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
-import { formatarNumero } from '../../../componentes/formatar'
+import { formatarNumero } from '../../componentes/formatar'
 import { COR_DA_SERIE, COR_DA_SERIE_EM_DESTAQUE } from './cores'
 
 export interface LinhaDoRanking {

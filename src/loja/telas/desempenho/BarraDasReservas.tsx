@@ -2,7 +2,8 @@ import { Bar, BarChart, LabelList, Tooltip, XAxis, YAxis, type TooltipContentPro
 import { formatarNumero } from '../../../componentes'
 import type { Relatorio } from '../../../tipos/loja'
 import { partesDasReservas, porcentagem, type Partes } from './contas'
-import { PARTES_DAS_RESERVAS, SUPERFICIE, TEXTO_NO_BLOCO } from './cores'
+import { SUPERFICIE, TEXTO_NO_BLOCO } from '../../../painel/graficos/cores'
+import { PARTES_DAS_RESERVAS } from './cores'
 
 /** Bloco estreito demais para o rótulo fica sem ele; o valor continua no tooltip e na tabela. */
 const LARGURA_MINIMA_DO_ROTULO = 44
