@@ -138,6 +138,25 @@ describe('mock da carteira', () => {
   })
 })
 
+describe('mock da carteira: pontos e nível', () => {
+  it('o nível sai dos pontos (RN08) e a compra soma pontos', async () => {
+    expect(m.carteira.nivelDosPontos(499)).toBe('SEMENTE')
+    expect(m.carteira.nivelDosPontos(500)).toBe('BROTO')
+    expect(m.carteira.nivelDosPontos(5000)).toBe('DOURADO')
+    expect(m.carteira.creditarPontos(393)).toBe(2533)
+    expect(await m.carteira.obterCarteira()).toMatchObject({
+      pontos: 2533,
+      nivel: 'CAPIM',
+      proximoNivel: { nivel: 'DOURADO', faltam: 2467 },
+    })
+  })
+
+  it('no nível mais alto, não há próximo', async () => {
+    m.carteira.creditarPontos(3000)
+    expect(await m.carteira.obterCarteira()).toMatchObject({ pontos: 5140, nivel: 'DOURADO', proximoNivel: null })
+  })
+})
+
 describe('mock da Capi', () => {
   it('a pergunta do roteiro tem a resposta salva, com reservar e rota', async () => {
     const resposta = await m.chat.enviarMensagem({ texto: m.chat.PERGUNTA_DEMO.texto })
