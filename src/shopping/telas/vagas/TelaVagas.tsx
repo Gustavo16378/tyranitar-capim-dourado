@@ -23,6 +23,7 @@ import { GraficoRanking } from '../../../painel/graficos/GraficoRanking'
 import type { Periodo, VagasEDemanda } from '../../../tipos/shopping'
 import { buscarVagas, useConsulta } from '../../api'
 import { CartaoVaga } from './CartaoVaga'
+import { PlantaDasVagas } from './PlantaDasVagas'
 
 export function TelaVagas() {
   const ref = useEntrada<HTMLDivElement>()
@@ -114,14 +115,18 @@ function Cruzamento({ dados, atualizando }: { dados: VagasEDemanda; atualizando:
         </section>
       )}
 
+      <div data-anim>
+        <PlantaDasVagas vagas={vagas} />
+      </div>
+
       <section aria-labelledby="titulo-vagas" className="flex flex-col gap-4">
         <h2 data-anim id="titulo-vagas" className="text-title-sm">
           As vagas e o que buscar para cada uma
         </h2>
         <ul className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {vagas.map((vaga) => (
+          {vagas.map((vaga, i) => (
             <li key={vaga.id} data-anim>
-              <CartaoVaga vaga={vaga} noPeriodo={noPeriodo} />
+              <CartaoVaga vaga={vaga} numero={i + 1} noPeriodo={noPeriodo} />
             </li>
           ))}
         </ul>

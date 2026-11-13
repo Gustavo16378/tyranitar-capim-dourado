@@ -1,10 +1,13 @@
 import { Badge, formatarNumero } from '../../../componentes'
+import { cx } from '../../../componentes/cx'
 import { rotuloDaCategoria } from '../../../painel/comum/categorias'
 import { formatarArea, rotuloDoPiso } from '../../../painel/comum/formatos'
 import type { VagaComSugestao } from '../../../tipos/shopping'
 
 interface CartaoVagaProps {
   vaga: VagaComSugestao
+  /** A ordem de prioridade, a mesma do número na planta. */
+  numero: number
   /** "em 30 dias". */
   noPeriodo: string
 }
@@ -14,7 +17,7 @@ interface CartaoVagaProps {
  * buscas ficaram sem resposta, os termos, por que ela cabe e o que mais caberia.
  * O id permite à planta levar até o cartão (#vaga-loja-47).
  */
-export function CartaoVaga({ vaga, noPeriodo }: CartaoVagaProps) {
+export function CartaoVaga({ vaga, numero, noPeriodo }: CartaoVagaProps) {
   const { sugestao } = vaga
   const onde = [vaga.unidade, rotuloDoPiso(vaga.piso), vaga.areaM2 ? formatarArea(vaga.areaM2) : null].filter(Boolean).join(' · ')
 
@@ -25,7 +28,19 @@ export function CartaoVaga({ vaga, noPeriodo }: CartaoVagaProps) {
       className="flex h-full scroll-mt-6 flex-col gap-3 rounded-md border border-line bg-surface-raised p-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="text-caption font-semibold uppercase tracking-wider text-ink-muted">{onde}</p>
+        <p className="flex items-center gap-2 text-caption font-semibold uppercase tracking-wider text-ink-muted">
+          <span className="sr-only">Prioridade {numero}:</span>
+          <span
+            aria-hidden="true"
+            className={cx(
+              'grid size-6 flex-none place-items-center rounded-full tracking-normal',
+              sugestao ? 'bg-ouro text-on-ouro' : 'bg-surface-sunken text-ink',
+            )}
+          >
+            {numero}
+          </span>
+          {onde}
+        </p>
         {sugestao && (
           <div className="flex flex-wrap gap-1">
             {sugestao.repetida && <Badge>2ª loja do tipo</Badge>}
