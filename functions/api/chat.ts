@@ -3,6 +3,7 @@
 import { conversar } from '../_lib/capi/conversa'
 import { lerEntradaDoChat } from '../_lib/capi/entrada'
 import { modeloClaude } from '../_lib/capi/modelo'
+import { lerPaginaDeProduto } from '../_lib/capi/pagina'
 import { exigirPerfil, type Rota } from '../_lib/contexto'
 import { json, lerCorpo } from '../_lib/http'
 import { ultimasMensagens } from '../_lib/repo/mensagens'
@@ -13,7 +14,7 @@ export const onRequestPost: Rota = async ({ request, env, data }) => {
   const entrada = lerEntradaDoChat(await lerCorpo(request))
   const resposta = await conversar(
     { clienteId: cliente.id, ...entrada },
-    { db: env.DB, modelo: modeloClaude(env), nomeDoModelo: env.CAPI_MODELO || undefined },
+    { db: env.DB, modelo: modeloClaude(env), nomeDoModelo: env.CAPI_MODELO || undefined, lerPagina: lerPaginaDeProduto },
   )
   return json(resposta)
 }

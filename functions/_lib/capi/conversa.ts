@@ -3,10 +3,12 @@
 // em texto. Tudo dentro do prazo de 15 s; passou disso ou o Claude falhou, 503 IA_INDISPONIVEL.
 import type Anthropic from '@anthropic-ai/sdk'
 import { ErroApi } from '../erros'
-import { salvarMensagem, ultimasMensagens } from '../repo/mensagens'
+import { salvarMensagem, ultimasMensagens, type MensagemLinha } from '../repo/mensagens'
 import { produtoParaApi, type ProdutoLinha } from '../repo/produtos'
+import type { TipoDeImagem } from './entrada'
 import { executarFerramenta, FERRAMENTAS, type Acao, type ContextoDasFerramentas } from './ferramentas'
 import type { ModeloCapi, ParametrosDoModelo } from './modelo'
+import { lerPaginaDeProduto, type DadosDaPagina, type LerPagina } from './pagina'
 import {
   MAXIMO_DE_VOLTAS,
   MENSAGENS_NO_CONTEXTO,
@@ -23,6 +25,10 @@ type Mensagem = Anthropic.Beta.BetaMessageParam
 export interface PedidoDaCapi {
   clienteId: string
   texto: string
+  /** Foto ou print do cliente (RF03). */
+  imagem?: { tipo: TipoDeImagem; base64: string }
+  /** Link de um produto (RF04). */
+  link?: string
 }
 
 export interface RespostaDaCapi {
@@ -38,6 +44,8 @@ export interface DependenciasDaCapi {
   nomeDoModelo?: string
   agora?: Date
   prazoMs?: number
+  /** Como abrir a página de um link; os testes passam uma página de exemplo. */
+  lerPagina?: LerPagina
 }
 
 const CARTOES_NO_MAXIMO = 3
@@ -63,8 +71,7 @@ function parametros(nomeDoModelo: string, mensagens: Mensagem[]): ParametrosDoMo
 }
 
 /** Histórico do banco no formato da API: começa no cliente e termina com a mensagem nova. */
-async function montarConversa(db: D1Database, pedido: PedidoDaCapi, conteudoNovo: Anthropic.Beta.BetaContentBlockParam[]) {
-  const anteriores = await ultimasMensagens(db, pedido.clienteId, MENSAGENS_NO_CONTEXTO)
+function montarConversa(anteriores: MensagemLinha[], conteudoNovo: Anthropic.Beta.BetaContentBlockParam[]) {
   const mensagens: Mensagem[] = anteriores.map((m) => ({
     role: m.papel === 'CLIENTE' ? 'user' : 'assistant',
     content: m.conteudo,
@@ -170,11 +177,49 @@ async function comPrazo<T>(ms: number, tarefa: (signal: AbortSignal) => Promise<
   }
 }
 
+function descreverPagina(pagina: DadosDaPagina | null, link: string) {
+  if (!pagina) return `O cliente mandou o link ${link}, mas não consegui abrir a página. Peça a ele o nome do produto.`
+  const preco = pagina.preco ? `${pagina.moeda && pagina.moeda !== 'BRL' ? `${pagina.moeda} ` : 'R$ '}${pagina.preco}` : null
+  return [
+    `O cliente mandou o link de um produto de outra loja: ${link}`,
+    pagina.titulo && `Título da página: ${pagina.titulo}`,
+    preco && `Preço na página: ${preco}`,
+    pagina.descricao && `Descrição: ${pagina.descricao.slice(0, 300)}`,
+    'Procure o mesmo item ou parecidos no shopping com buscar_similares.',
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+/** O conteúdo da mensagem nova: a foto ou a página do link, e o texto do cliente. */
+async function conteudoDoPedido(pedido: PedidoDaCapi, lerPagina: LerPagina, signal: AbortSignal) {
+  const blocos: Anthropic.Beta.BetaContentBlockParam[] = []
+  let texto = pedido.texto
+  if (pedido.imagem) {
+    blocos.push({ type: 'image', source: { type: 'base64', media_type: pedido.imagem.tipo, data: pedido.imagem.base64 } })
+    texto ||= 'Tem isto no shopping?'
+  }
+  if (pedido.link) {
+    const pagina = await lerPagina(pedido.link, signal)
+    if (pagina?.imagem?.startsWith('https://')) blocos.push({ type: 'image', source: { type: 'url', url: pagina.imagem } })
+    texto = `${descreverPagina(pagina, pedido.link)}\n\nMensagem do cliente: ${pedido.texto || 'Tem isto no shopping?'}`
+  }
+  blocos.push({ type: 'text', text: texto })
+  return blocos
+}
+
+/** Como a mensagem do cliente fica no histórico (a foto não é guardada). */
+function textoParaOHistorico(pedido: PedidoDaCapi) {
+  if (pedido.imagem) return `[foto] ${pedido.texto}`.trim()
+  if (pedido.link) return `${pedido.texto} ${pedido.link}`.trim()
+  return pedido.texto
+}
+
 /** Uma mensagem do cliente para a Capi: grava a conversa e devolve resposta, cartões e ações. */
 export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi): Promise<RespostaDaCapi> {
   const { db } = deps
-  const mensagens = await montarConversa(db, pedido, [{ type: 'text', text: pedido.texto }])
-  await salvarMensagem(db, pedido.clienteId, 'CLIENTE', pedido.texto)
+  const anteriores = await ultimasMensagens(db, pedido.clienteId, MENSAGENS_NO_CONTEXTO)
+  await salvarMensagem(db, pedido.clienteId, 'CLIENTE', textoParaOHistorico(pedido))
   if (!deps.modelo) throw iaIndisponivel()
 
   const ctx: ContextoDasFerramentas = {
@@ -185,9 +230,11 @@ export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi):
     reservasFeitas: 0,
   }
   const modelo = deps.modelo
-  const resposta = await comPrazo(deps.prazoMs ?? PRAZO_MS, (signal) =>
-    rodarLoop(modelo, deps.nomeDoModelo ?? MODELO_PADRAO, mensagens, ctx, signal),
-  )
+  // A leitura do link conta dentro dos mesmos 15 s.
+  const resposta = await comPrazo(deps.prazoMs ?? PRAZO_MS, async (signal) => {
+    const conteudo = await conteudoDoPedido(pedido, deps.lerPagina ?? lerPaginaDeProduto, signal)
+    return rodarLoop(modelo, deps.nomeDoModelo ?? MODELO_PADRAO, montarConversa(anteriores, conteudo), ctx, signal)
+  })
   await salvarMensagem(db, pedido.clienteId, 'CAPI', resposta.resposta)
   return resposta
 }
