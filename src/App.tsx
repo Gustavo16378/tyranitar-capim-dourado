@@ -16,8 +16,8 @@ export default function App() {
 function EmMontagem({ titulo }: { titulo: string }) {
   return (
     <main className="grid min-h-dvh place-content-center gap-2 p-6 text-center">
-      <h1 className="text-2xl font-semibold">{titulo}</h1>
-      <p>Em montagem.</p>
+      <h1 className="text-title-lg">{titulo}</h1>
+      <p className="text-ink-muted">Em montagem.</p>
     </main>
   )
 }
@@ -25,8 +25,8 @@ function EmMontagem({ titulo }: { titulo: string }) {
 function NaoEncontrada() {
   return (
     <main className="grid min-h-dvh place-content-center gap-2 p-6 text-center">
-      <h1 className="text-2xl font-semibold">Página não encontrada</h1>
-      <Link to="/" className="underline">
+      <h1 className="text-title-lg">Página não encontrada</h1>
+      <Link to="/" className="text-label text-marrom-ink underline">
         Voltar para o início
       </Link>
     </main>

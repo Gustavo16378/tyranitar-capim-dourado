@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-surface text-ink;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply text-body;
+  }
+
+  /* Foco do teclado: anel sólido de 2px em focus-ring, afastado 2px do controle. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
