@@ -1,8 +1,16 @@
-# Jornada de compra integrada · Capim Dourado Shopping
+<p align="center">
+  <img src="docs/img/banner.svg" width="100%" alt="Capi · Capim Dourado Shopping. Equipe Tyranitar · HackaRun 2026">
+</p>
 
-[![CI](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml"><img src="https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.9">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
+  <a href="https://tyranitar-capim-dourado.pages.dev"><img src="https://img.shields.io/badge/Cloudflare-Pages-F38020?logo=cloudflarepages&logoColor=white" alt="Cloudflare Pages"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue" alt="Licença MIT"></a>
+</p>
 
-Solução da equipe Tyranitar para o tema 04 do hackathon: integração da jornada de compra digital e física.
+Solução da equipe Tyranitar para o tema 04 do HackaRun 2026: a jornada de compra integrada, digital e física, do Capim Dourado Shopping.
 
 ## Primeira entrega
 
