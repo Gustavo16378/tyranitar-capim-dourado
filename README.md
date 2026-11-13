@@ -16,6 +16,7 @@ Solução da equipe Tyranitar para o tema 04 do HackaRun 2026: a jornada de comp
 
 - [Documento da primeira entrega (PDF)](docs/Capi_Tyranitar_Primeira_Entrega.pdf)
 - [Onde está cada item pedido](docs/primeira-entrega.md)
+- [Evidências de testes (Missão 2)](docs/evidencias-testes.md): a bateria, o CI e os bugs corrigidos com o teste de cada um
 - [Design system publicado](https://tyranitar-capim-dourado.pages.dev/design-system)
 - [App no ar](https://tyranitar-capim-dourado.pages.dev)
 
