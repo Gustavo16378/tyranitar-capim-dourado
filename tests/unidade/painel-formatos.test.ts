@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatarArea,
+  formatarCnpj,
   formatarData,
   formatarDataHora,
   formatarDia,
   lerValorEmCentavos,
   paraNivel,
   prazoRestante,
+  rotuloDoPiso,
   valorParaCampo,
 } from '../../src/painel/comum/formatos'
 import { podeMudar, podeRetirar } from '../../src/loja/comum/reserva'
@@ -50,6 +53,19 @@ describe('datas em Palmas (UTC-3)', () => {
     expect(prazoRestante('2026-11-13T15:10:00Z', agora)).toBe('Expira em 3 h')
     expect(prazoRestante('2026-11-16T12:00:00Z', agora)).toBe('Expira em 3 dias')
     expect(prazoRestante('2026-11-13T11:59:00Z', agora)).toBe('Prazo vencido')
+  })
+})
+
+describe('formatos do shopping', () => {
+  it('escreve área, piso e CNPJ', () => {
+    expect(formatarArea(229.9)).toBe('229,9 m²')
+    expect(formatarArea(311.55)).toBe('311,6 m²')
+    expect(formatarArea(35)).toBe('35 m²')
+    expect(rotuloDoPiso(1)).toBe('Térreo')
+    expect(rotuloDoPiso(2)).toBe('2º piso')
+    expect(formatarCnpj('12345678000190')).toBe('12.345.678/0001-90')
+    expect(formatarCnpj('12.345.678/0001-90')).toBe('12.345.678/0001-90')
+    expect(formatarCnpj('123')).toBe('123')
   })
 })
 

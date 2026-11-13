@@ -21,7 +21,7 @@ export function CabecalhoTela({ titulo, descricao, children }: CabecalhoTelaProp
         <h1 className="text-title-lg">{titulo}</h1>
         {descricao && <p className="text-body-sm text-ink-muted">{descricao}</p>}
       </div>
-      {children && <div className="flex flex-wrap gap-3">{children}</div>}
+      {children && <div className="flex flex-wrap items-start gap-3">{children}</div>}
     </header>
   )
 }

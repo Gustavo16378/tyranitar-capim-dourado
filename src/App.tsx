@@ -5,6 +5,7 @@ import { APP_NOME } from './config'
 // Página pública do design system, carregada só quando alguém abre /design-system.
 const PaginaDesignSystem = lazy(() => import('./design-system/PaginaDesignSystem'))
 const RotasLoja = lazy(() => import('./loja/RotasLoja')) // painel da loja, também sob demanda
+const RotasShopping = lazy(() => import('./shopping/RotasShopping')) // painel do shopping, idem
 
 // As três interfaces do site. Cada uma ganha suas telas nas próximas fases.
 export default function App() {
@@ -12,7 +13,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<EmMontagem titulo={APP_NOME} />} />
       <Route path="/loja/*" element={<Suspense fallback={null}><RotasLoja /></Suspense>} />
-      <Route path="/shopping/*" element={<EmMontagem titulo="Painel do shopping" />} />
+      <Route path="/shopping/*" element={<Suspense fallback={null}><RotasShopping /></Suspense>} />
       <Route
         path="/design-system"
         element={

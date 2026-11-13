@@ -68,6 +68,25 @@ export function prazoRestante(iso: string, agora: number) {
   return `Expira em ${Math.floor(horas / 24)} dias`
 }
 
+const AREA = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+
+/** 229.9 → "229,9 m²". */
+export function formatarArea(m2: number) {
+  return `${AREA.format(m2)} m²`
+}
+
+/** 1 → "Térreo", 2 → "2º piso". */
+export function rotuloDoPiso(piso: number) {
+  return piso === 1 ? 'Térreo' : `${piso}º piso`
+}
+
+/** "12345678000190" (ou já com pontos) → "12.345.678/0001-90". Incompleto volta só com os dígitos. */
+export function formatarCnpj(cnpj: string) {
+  const d = cnpj.replace(/\D/g, '')
+  if (d.length !== 14) return d
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`
+}
+
 /** 45980 → "459,80": o valor no campo, sem o "R$" (que já está no prefixo). */
 export function valorParaCampo(centavos: number) {
   return formatarPreco(centavos).replace('R$ ', '')
