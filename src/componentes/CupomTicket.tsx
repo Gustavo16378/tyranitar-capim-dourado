@@ -38,7 +38,9 @@ export function CupomTicket({ origem = 'loja', titulo, loja, desconto, validade,
       >
         <div>
           <strong className="block text-title-md">{desconto}</strong>
-          <span className="text-caption font-semibold">{shopping ? 'do shopping' : 'na loja'}</span>
+          <span className="whitespace-nowrap text-caption font-semibold tracking-normal">
+            {shopping ? 'do shopping' : 'na loja'}
+          </span>
         </div>
       </div>
       <div className="flex flex-col gap-1 px-4 py-3">
