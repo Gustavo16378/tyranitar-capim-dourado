@@ -43,6 +43,9 @@ export interface ReservaCompleta {
   produto_id: string
   produto_nome: string
   loja_id: string
+  loja_nome: string
+  loja_piso: 1 | 2
+  loja_mapa_id: string
   quantidade: number
   preco_centavos: number
   status: StatusReserva
@@ -54,8 +57,9 @@ export interface ReservaCompleta {
 
 const SELECAO = `
   SELECT r.id, r.cliente_id, u.nome AS cliente_nome, r.produto_id, p.nome AS produto_nome, r.loja_id,
-         r.quantidade, r.preco_centavos, r.status, r.forma_pagamento, r.pago, r.expira_em, r.criado_em
-  FROM reserva r JOIN produto p ON p.id = r.produto_id JOIN usuario u ON u.id = r.cliente_id`
+         l.nome AS loja_nome, l.piso AS loja_piso, l.mapa_id AS loja_mapa_id, r.quantidade, r.preco_centavos, r.status, r.forma_pagamento, r.pago, r.expira_em, r.criado_em
+  FROM reserva r JOIN produto p ON p.id = r.produto_id JOIN usuario u ON u.id = r.cliente_id
+  JOIN loja l ON l.id = r.loja_id`
 
 export function buscarReserva(db: D1Database, id: string) {
   return db.prepare(`${SELECAO} WHERE r.id = ?1`).bind(id).first<ReservaCompleta>()

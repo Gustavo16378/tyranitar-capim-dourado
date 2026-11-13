@@ -250,9 +250,20 @@ Cancela e devolve o estoque (RN03). Só funciona em reservas `PENDENTE`, `CONFIR
     { "id": "cp1", "titulo": "10% em calçados", "loja": "Loja de esportes", "validade": "2026-12-31", "tipo": "PERCENTUAL", "valor": 10, "nivelMinimo": "SEMENTE" },
     { "id": "cp2", "titulo": "R$ 20 em qualquer loja", "loja": null, "validade": "2026-12-15", "tipo": "VALOR", "valor": 2000, "nivelMinimo": "SEMENTE" }
   ],
-  "reservasAtivas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "status": "SEPARADA" } ]
+  "reservasAtivas": [
+    {
+      "id": "r1",
+      "produto": "Tênis de corrida Pulse",
+      "status": "SEPARADA",
+      "pago": true,
+      "expiraEm": "2026-11-15T18:00:00Z",
+      "loja": { "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" }
+    }
+  ]
 }
 ```
+
+As reservas em aberto (`PENDENTE`, `CONFIRMADA` ou `SEPARADA`), as que vencem primeiro na frente, trazem a loja para o botão "Como chegar" (`mapaId` abre o mapa nela).
 
 Cada cupom traz `tipo` (`PERCENTUAL`, `VALOR` ou `BRINDE`), `valor` (a porcentagem, ou centavos no `VALOR`) e `nivelMinimo`, para o app montar o canhoto ("10%", "R$ 20") e o selo de nível. `loja` vem `null` no voucher do shopping.
 
