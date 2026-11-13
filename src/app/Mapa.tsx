@@ -81,7 +81,7 @@ function MapaAte({
       : `Mapa do ${nomeDoPiso(piso).toLowerCase()} do Capim Dourado Shopping.`
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-6">
+    <div className="flex flex-col gap-4 px-4 py-6 md:h-full">
       <title>{nome ? `Rota até ${nome} · ${APP_NOME}` : `Mapa · ${APP_NOME}`}</title>
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -114,11 +114,11 @@ function MapaAte({
         </div>
       </header>
 
-      <div id="planta" role="tabpanel" aria-labelledby={`aba-piso-${piso}`} className="relative">
+      <div id="planta" role="tabpanel" aria-labelledby={`aba-piso-${piso}`} className="relative md:min-h-0 md:flex-1">
         <div
           role="img"
           aria-label={descricao}
-          className="h-[58dvh] min-h-[300px] overflow-hidden rounded-lg bg-surface-sunken"
+          className="h-[58dvh] min-h-[300px] overflow-hidden rounded-lg bg-surface-sunken md:h-full"
         >
           <Mapa3D piso={piso} destino={destino} nomes={nomes} onSelecionarLoja={aoEscolher} controle={controle} />
         </div>
