@@ -69,18 +69,18 @@ function distanciaDoMeio(areaM2: number, perfil: PerfilDeLoja) {
 
 const faixa = (perfil: PerfilDeLoja) => `${perfil.areaMinM2} a ${perfil.areaMaxM2} m²`
 
-function motivo(vaga: VagaParaCruzar, perfil: PerfilDeLoja, demanda: DemandaDaCategoria, qual: Encaixe, repetida: boolean) {
+/** Por que a categoria serve para a vaga: o tamanho e o piso (as buscas vêm em outro campo). */
+function motivo(vaga: VagaParaCruzar, perfil: PerfilDeLoja, qual: Encaixe, repetida: boolean) {
   const nome = rotuloDaCategoria(perfil.categoria)
   const area = formatarArea(vaga.areaM2 ?? 0)
-  const procura = `${demanda.buscas.toLocaleString('pt-BR')} buscas sem resultado`
   const tamanho =
     qual === 'IDEAL'
       ? `${area} é o tamanho típico de ${nome} (${faixa(perfil)})`
       : `${area} é ${(vaga.areaM2 ?? 0) < perfil.areaMinM2 ? 'um pouco menos' : 'um pouco mais'} que o típico de ${nome} (${faixa(perfil)}), mas cabe`
   const onde = vaga.piso === 2 ? ' Fica na praça de alimentação.' : ''
   return repetida
-    ? `Segunda loja de ${nome}: a procura (${procura}) dá para mais de uma loja, e ${tamanho}.${onde}`
-    : `${procura} no período, e ${tamanho}.${onde}`
+    ? `Segunda loja de ${nome}: a procura dá para mais de uma, e ${tamanho}.${onde}`
+    : `A unidade serve: ${tamanho}.${onde}`
 }
 
 export function sugerirVagas(
@@ -130,7 +130,7 @@ export function sugerirVagas(
             buscas: escolha.demanda.buscas,
             termos: escolha.demanda.termos,
             encaixe: escolha.encaixe,
-            motivo: motivo(vaga, perfilDe(escolha.demanda.categoria)!, escolha.demanda, escolha.encaixe, escolha.repetida),
+            motivo: motivo(vaga, perfilDe(escolha.demanda.categoria)!, escolha.encaixe, escolha.repetida),
             repetida: escolha.repetida,
           }
         : null,

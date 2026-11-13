@@ -7,9 +7,11 @@ import { TelaLojas } from './telas/lojas/TelaLojas'
 
 // Telas com gráficos (recharts) vêm sob demanda; o Suspense fica no LayoutPainel.
 const TelaDemanda = lazy(() => import('./telas/demanda/TelaDemanda').then((m) => ({ default: m.TelaDemanda })))
+const TelaVagas = lazy(() => import('./telas/vagas/TelaVagas').then((m) => ({ default: m.TelaVagas })))
 
 export const TELAS_DO_SHOPPING: readonly TelaDoPainel[] = [
   { caminho: 'lojas', rotulo: 'Lojas', Tela: TelaLojas },
   { caminho: 'fidelidade', rotulo: 'Fidelidade e campanhas', Tela: TelaFidelidade },
   { caminho: 'demanda', rotulo: 'Demanda', Tela: TelaDemanda },
+  { caminho: 'vagas', rotulo: 'Lojas vagas e demanda', Tela: TelaVagas },
 ]

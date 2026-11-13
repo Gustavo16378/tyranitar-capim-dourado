@@ -1,18 +1,25 @@
-import { Bar, BarChart, LabelList, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
+import { Bar, BarChart, Cell, LabelList, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
 import { formatarNumero } from '../../componentes/formatar'
-import { COR_DA_SERIE, COR_DA_SERIE_EM_DESTAQUE } from './cores'
+import { COR_DA_SERIE, COR_DA_SERIE_EM_DESTAQUE, COR_DE_CONTEXTO } from './cores'
 
 export interface LinhaDoRanking {
   rotulo: string
   valor: number
   /** Linha extra no tooltip: "R$ 3.685,90 vendidos". */
   detalhe?: string
+  /** Com legenda: a barra é o assunto (ouro) ou contexto (neutro). */
+  destaque?: boolean
 }
 
 interface GraficoRankingProps {
   linhas: LinhaDoRanking[]
   /** Valor com a unidade, para o tooltip: "41 unidades". Na ponta da barra vai só o número. */
   formatarValor: (valor: number) => string
+  /**
+   * Gráfico de destaque: as linhas com destaque em ouro, as outras em neutro, e a legenda
+   * com o nome dos dois grupos. Sem legenda, é uma série só, num tom só.
+   */
+  legenda?: { destaque: string; contexto: string }
 }
 
 // Barras de no máximo 24 px (aqui 20), com 20 px de ar entre elas.
@@ -25,8 +32,8 @@ const LARGURA_DO_ROTULO = 184
  * legenda: o título do cartão diz o que é). O número vai na ponta de cada barra; o tooltip
  * traz o valor com a unidade e o detalhe. Sem animação do recharts: a entrada é a cascata do GSAP.
  */
-export function GraficoRanking({ linhas, formatarValor }: GraficoRankingProps) {
-  return (
+export function GraficoRanking({ linhas, formatarValor, legenda }: GraficoRankingProps) {
+  const grafico = (
     <BarChart
       layout="vertical"
       data={linhas}
@@ -53,9 +60,11 @@ export function GraficoRanking({ linhas, formatarValor }: GraficoRankingProps) {
         barSize={ESPESSURA}
         // Ponta arredondada de 4 px; o lado da linha de base fica reto.
         radius={[0, 4, 4, 0]}
-        activeBar={{ fill: COR_DA_SERIE_EM_DESTAQUE }}
+        // Ao passar o mouse, a barra escurece; no gráfico de destaque, só clareia um pouco.
+        activeBar={legenda ? { fillOpacity: 0.8 } : { fill: COR_DA_SERIE_EM_DESTAQUE }}
         isAnimationActive={false}
       >
+        {legenda && linhas.map((linha) => <Cell key={linha.rotulo} fill={linha.destaque ? COR_DA_SERIE : COR_DE_CONTEXTO} />)}
         <LabelList
           dataKey="valor"
           content={({ x, y, width, height, value }) => (
@@ -71,6 +80,22 @@ export function GraficoRanking({ linhas, formatarValor }: GraficoRankingProps) {
         />
       </Bar>
     </BarChart>
+  )
+  if (!legenda) return grafico
+  return (
+    <div className="flex flex-col gap-3">
+      {grafico}
+      <ul aria-label="Legenda" className="flex flex-wrap gap-x-5 gap-y-1 text-body-sm text-ink-muted">
+        <li className="flex items-center gap-2">
+          <span aria-hidden="true" className="size-3 rounded-sm bg-ouro" />
+          {legenda.destaque}
+        </li>
+        <li className="flex items-center gap-2">
+          <span aria-hidden="true" className="size-3 rounded-sm bg-line" />
+          {legenda.contexto}
+        </li>
+      </ul>
+    </div>
   )
 }
 
