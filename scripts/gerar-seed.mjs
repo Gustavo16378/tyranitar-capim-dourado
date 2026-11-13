@@ -1,5 +1,6 @@
-// Dados da demo no D1: as lojas da planta, os produtos, cupons de exemplo, os usuários de teste
-// e o histórico de compras da Ana. Não é migration: as migrations só têm o esquema.
+// Dados da demo no D1: as lojas da planta (com número e área da unidade), os produtos, cupons de
+// exemplo, os usuários de teste, o histórico de compras da Ana e as buscas da demonstração.
+// Não é migration: as migrations só têm o esquema.
 //
 //   npm run seed:local               aplica no D1 local (.wrangler/)
 //   npm run seed:remoto              aplica no D1 de produção
@@ -141,19 +142,31 @@ const idDaLoja = (mapaId) => `(SELECT id FROM loja WHERE mapa_id = ${v(mapaId)})
 
 const PLACEHOLDER = 'LOJA 000'
 const cnpjs = new Set()
+/** Área da planilha: "116,1" ou "58.81" (m²); vazia vira null. */
+function areaEmM2(texto, linha) {
+  if (!texto) return null
+  const area = Number(texto.replace(',', '.'))
+  return Number.isFinite(area) && area > 0 ? area : falhar(`lojas.csv linha ${linha}: área "${texto}"`)
+}
+
 const lojas = lerCsv('lojas.csv').map((l) => {
   const piso = /t[ée]rreo/i.test(l.piso) ? 1 : /2/.test(l.piso) ? 2 : falhar(`lojas.csv linha ${l.numero}: piso "${l.piso}"`)
+  const vaga = l.situacao.toUpperCase() === 'VAGA'
   const cnpj = /^\d{14}$/.test(l.cnpj ?? '') ? l.cnpj : null
   return {
     codigo: l.loja,
     id: uuid(`loja:${l.loja}`),
-    nome: l.nome_da_marca || l.loja.replace(/^LOJA\b/i, 'Loja'),
-    cnpj: cnpj ?? cnpjFicticio(l.id_mapa, cnpjs),
+    nome: l.nome_da_marca || (vaga ? 'Vaga' : l.loja.replace(/^LOJA\b/i, 'Loja')),
+    // "LOJA 48A" → "48A": o número da unidade na planta (as telas mostram "LOJA 48A").
+    numero: l.loja.replace(/^LOJA\s+/i, '').trim().toUpperCase(),
+    areaM2: areaEmM2(l.area_m2, l.numero),
+    // Unidade vaga não tem CNPJ (migration 0003).
+    cnpj: vaga ? null : (cnpj ?? cnpjFicticio(l.id_mapa, cnpjs)),
     piso,
     tipo: piso === 2 ? 'alimentacao' : 'loja',
     categorias: [],
     mapaId: l.id_mapa,
-    ativa: l.situacao.toUpperCase() === 'VAGA' ? 0 : 1,
+    ativa: vaga ? 0 : 1,
   }
 })
 const lojaPorCodigo = new Map(lojas.map((l) => [l.codigo.toUpperCase(), l]))
@@ -243,17 +256,55 @@ const compras = [
 ].map((c, i) => ({ ...c, id: uuid(`compra:ana:${i + 1}`), mapaId: lojasDoHistorico[i % lojasDoHistorico.length].mapaId, pontos: Math.floor(c.valor / 100) }))
 const pontosDaAna = compras.reduce((soma, c) => soma + c.pontos, 0)
 
+// ---------- buscas da demonstração ----------
+
+// O que os clientes buscaram no app e com a Capi, sem identificar ninguém (RN12), para a
+// Demanda e as Lojas vagas do painel do shopping terem o que mostrar antes do uso de verdade.
+// [termo, categoria, buscas em 30 dias]; elas se repetem iguais pelos 90 dias anteriores ao
+// primeiro seed. As sem resultado são o que falta no shopping: a base do cruzamento com as vagas.
+const BUSCAS_SEM_RESULTADO = [
+  ['fone bluetooth', 'eletronicos', 96], ['carregador turbo', 'eletronicos', 71], ['smartwatch', 'eletronicos', 58], ['caixa de som', 'eletronicos', 44],
+  ['roupa de bebê', 'infantil', 88], ['carrinho de bebê', 'infantil', 52], ['brinquedo educativo', 'infantil', 47],
+  ['tênis de trilha', 'calcados', 120], ['chuteira society', 'calcados', 39], ['bota de couro', 'calcados', 22],
+  ['comida árabe', 'alimentacao', 64], ['açaí', 'alimentacao', 58], ['poke', 'alimentacao', 33], ['comida vegana', 'alimentacao', 21],
+  ['ração', 'pet', 61], ['petshop', 'pet', 49], ['coleira', 'pet', 20],
+  ['bicicleta', 'esportes', 41], ['raquete de beach tennis', 'esportes', 34], ['halteres', 'esportes', 26],
+  ['jogo de cama', 'casa', 37], ['panela elétrica', 'casa', 29], ['luminária', 'casa', 18],
+  ['luva de academia', 'acessorios', 31], ['tornozeleira', 'acessorios', 22], ['viseira', 'acessorios', 15],
+  ['lente de contato', 'otica', 34], ['óculos de grau', 'otica', 21],
+  ['livro infantil', 'livraria', 28], ['material escolar', 'livraria', 25],
+  ['legging feminina', 'roupas', 47],
+  ['perfume importado', 'perfumaria', 24], ['maquiagem profissional', 'perfumaria', 18],
+  ['aliança de prata', 'joias', 12], ['piercing', 'joias', 7],
+]
+const BUSCAS_COM_RESULTADO = [
+  ['tênis de corrida', 'calcados', 214], ['camiseta dry-fit', 'roupas', 156], ['perfume', 'perfumaria', 133],
+  ['hambúrguer', 'alimentacao', 118], ['garrafa térmica', 'esportes', 88], ['sandália', 'calcados', 84],
+  ['calça jeans', 'roupas', 82], ['café', 'alimentacao', 80], ['mochila', 'acessorios', 78], ['hidratante', 'perfumaria', 75],
+  ['jaqueta', 'roupas', 72], ['pizza', 'alimentacao', 70], ['tênis branco', 'calcados', 68], ['protetor solar', 'perfumaria', 64],
+  ['boné', 'acessorios', 62], ['sorvete', 'alimentacao', 60], ['vestido', 'roupas', 58], ['óculos de sol', 'acessorios', 55],
+  ['chinelo', 'calcados', 52], ['batom', 'perfumaria', 50], ['camisa polo', 'roupas', 48], ['pastel', 'alimentacao', 45],
+  ['presente', null, 70],
+]
+const buscas = [
+  ...BUSCAS_SEM_RESULTADO.map(([termo, categoria, em30]) => ({ termo, categoria, em30, encontrou: 0 })),
+  ...BUSCAS_COM_RESULTADO.map(([termo, categoria, em30]) => ({ termo, categoria, em30, encontrou: 1 })),
+].map((b) => ({ ...b, chave: sha256(`busca:${b.termo}:${b.encontrou}`).toString('hex').slice(0, 12) }))
+
 // ---------- SQL ----------
 
 const sql = [
   '-- Seed da demo (scripts/gerar-seed.mjs). Arquivo temporário: contém hashes de senha.',
   'PRAGMA defer_foreign_keys = true;',
 
-  `INSERT INTO loja (id, nome, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES\n${lojas
-    .map((l) => `  (${lista([l.id, l.nome, l.cnpj, l.piso, l.tipo, JSON.stringify(l.categorias), l.mapaId, l.ativa])})`)
+  // A unidade que o seed deixa vaga perde o CNPJ; a que fica ativa mantém o que já tinha.
+  `INSERT INTO loja (id, nome, numero, area_m2, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES\n${lojas
+    .map((l) => `  (${lista([l.id, l.nome, l.numero, l.areaM2, l.cnpj, l.piso, l.tipo, JSON.stringify(l.categorias), l.mapaId, l.ativa])})`)
     .join(',\n')}
 ON CONFLICT (mapa_id) DO UPDATE SET
-  nome = excluded.nome, piso = excluded.piso, tipo = excluded.tipo, ativa = excluded.ativa,
+  nome = excluded.nome, numero = excluded.numero, area_m2 = excluded.area_m2, piso = excluded.piso,
+  tipo = excluded.tipo, ativa = excluded.ativa,
+  cnpj = CASE WHEN excluded.ativa = 1 THEN COALESCE(loja.cnpj, excluded.cnpj) END,
   categorias = CASE WHEN excluded.categorias <> '[]' THEN excluded.categorias ELSE loja.categorias END;`,
 
   ...produtos.map(
@@ -316,6 +367,15 @@ SELECT ${v(c.id)}, u.id, ${idDaLoja(c.mapaId)}, ${c.valor}, 'CAIXA', ${c.pontos}
 FROM usuario u WHERE u.email = ${v(ANA)};`,
   ),
 
+  // Buscas da demonstração: entram uma vez, com id fixo, espalhadas pelos 90 dias (3 × as de 30).
+  ...buscas.map(
+    (b) => `INSERT OR IGNORE INTO busca (id, cliente_id, termo, categoria, encontrou, criado_em)
+WITH RECURSIVE n(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM n WHERE i < ${b.em30 * 3 - 1})
+SELECT ${v(`seed-busca-${b.chave}-`)} || i, NULL, ${lista([b.termo, b.categoria, b.encontrou])},
+       datetime('now', printf('-%.4f days', (i + ${(parseInt(b.chave.slice(0, 4), 16) / 0x10000).toFixed(3)}) * 30.0 / ${b.em30}))
+FROM n;`,
+  ),
+
   'PRAGMA defer_foreign_keys = false;',
   '',
 ].join('\n\n')
@@ -343,5 +403,6 @@ try {
 for (const aviso of avisos) console.warn(`aviso: ${aviso}`)
 console.log(
   `seed ${destino}: ${lojas.length} lojas (${lojas.filter((l) => !l.ativa).length} vagas), ${produtos.length} produtos, ` +
-    `${cupons.length} cupons, ${usuarios.length} usuários e ${compras.length} compras da Ana (${pontosDaAna} pontos).`,
+    `${cupons.length} cupons, ${usuarios.length} usuários e ${compras.length} compras da Ana (${pontosDaAna} pontos), ` +
+    `${buscas.reduce((soma, b) => soma + b.em30 * 3, 0)} buscas da demonstração em 90 dias.`,
 )
