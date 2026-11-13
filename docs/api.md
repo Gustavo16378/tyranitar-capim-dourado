@@ -34,7 +34,8 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | --- | --- | --- |
 | `POST /api/auth/cadastro` | Público | RF01 |
 | `POST /api/auth/login` | Público | RF01, RF17 |
-| `POST /api/auth/demo` | Público | RF01 |
+| `GET /api/auth/demo` | Público (só com `DEMO=1`) | RF01 |
+| `POST /api/auth/demo` | Público (só com `DEMO=1`) | RF01 |
 | `GET /api/lojas` | Público | RF07, RF10 |
 | `GET /api/produtos` | Público | RF05 |
 | `GET /api/produtos/{id}` | Público | RF07 |
@@ -103,13 +104,39 @@ Resposta `200`:
 
 Erro `401` com a mesma mensagem para e-mail inexistente e senha errada, para não revelar quais e-mails existem.
 
-### `POST /api/auth/demo`
+### `GET /api/auth/demo` e `POST /api/auth/demo`
 
-Entra com a conta de demonstração, a cliente Ana do seed, sem senha. É o botão "Entrar com a conta de demonstração" da tela de login, para a banca testar o app sem cadastro. Não tem corpo.
+As contas de demonstração, para a banca testar o app e os dois painéis sem cadastro: são os botões da tela de login (`/entrar`). São três usuários fixos do seed, um por perfil, e nenhum outro entra por aqui:
 
-Só existe com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README). Sempre devolve um token de `CLIENTE`: não abre os painéis.
+| Perfil | Conta | Abre |
+| --- | --- | --- |
+| `CLIENTE` | `ana.souza@demo.test` (Ana) | o app |
+| `LOJISTA` | `lojista.loja-pc01a@demo.test` (Loja PC01A) | o painel da loja |
+| `ADMIN_SHOPPING` | `admin@demo.test` | o painel do shopping |
 
-Resposta `200`: o mesmo formato do login, com o token da Ana (perfil `CLIENTE`, vale 12 horas como qualquer outro). Erro `404` (`NAO_ENCONTRADO`) com `DEMO` desligado ou se a conta de demonstração não estiver no banco.
+As duas rotas só existem com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README); desligado, respondem `404` (`NAO_ENCONTRADO`) e a tela de login não mostra os botões.
+
+O `GET` diz quais contas estão no banco, para a tela mostrar um botão por conta (`loja` só no lojista, e o lojista só aparece se a loja dele estiver ativa):
+
+```json
+{
+  "contas": [
+    { "perfil": "CLIENTE", "nome": "Ana Souza", "loja": null },
+    { "perfil": "LOJISTA", "nome": "Equipe da Loja PC01A", "loja": "Loja PC01A" },
+    { "perfil": "ADMIN_SHOPPING", "nome": "Administração do shopping", "loja": null }
+  ]
+}
+```
+
+O `POST` entra com a conta do perfil pedido, sem senha:
+
+```json
+{ "perfil": "LOJISTA" }
+```
+
+Sem corpo, entra como a Ana (`CLIENTE`). Resposta `200`: o mesmo formato do login, com o token do perfil da conta (vale 12 horas como qualquer outro). Erros: `400` (`DADOS_INVALIDOS`, perfil que não é um dos três) e `404` (`DEMO` desligado, ou a conta não está no banco com esse perfil).
+
+**Login único.** O app e os painéis entram pela mesma tela, `/entrar`. Depois do login (com senha ou pelos botões), ela segue pelo perfil do token: `CLIENTE` para o Início (ou a tela que pediu o login), `LOJISTA` para `/loja` e `ADMIN_SHOPPING` para `/shopping`. Cada perfil guarda a sessão dele no navegador, então dá para ter o app numa aba e um painel em outra. `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela depois do login.
 
 ## Catálogo
 
