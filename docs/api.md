@@ -270,13 +270,21 @@ Resposta `201`:
 
 Erros: `422` (`CUPOM_INVALIDO` por validade, limite ou nível; `CUPONS_INCOMPATIVEIS` para dois cupons da mesma loja), `409` (reserva já retirada).
 
+### `POST /api/loja/compras/previa`
+
+O mesmo corpo de `POST /api/loja/compras`, mas não grava nada: devolve `valorBrutoCentavos`, `descontos`, `valorPagoCentavos`, `pontosGerados` e `reembolsoGerado` (sem `id`), com os mesmos erros. Serve para o caixa mostrar "Cliente paga" enquanto o vendedor marca os cupons.
+
+### `GET /api/loja/reservas`
+
+Parâmetros `status` (um ou mais, separados por vírgula; padrão: todos), `pagina` e `tamanho`. As que vencem primeiro vêm na frente. Cada item: `{ id, produto, cliente, quantidade, status, formaPagamento, pago, precoCentavos, expiraEm, criadoEm }`, com o cliente só pelo primeiro nome e `precoCentavos` pelo total da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido.
+
 ### `PATCH /api/loja/reservas/{id}`
 
 ```json
 { "status": "SEPARADA" }
 ```
 
-Segue as transições do diagrama de estados. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`).
+Segue as transições do diagrama de estados. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`). A loja pode pedir `CONFIRMADA`, `SEPARADA`, `RETIRADA` e `CANCELADA`; cancelar devolve o estoque e separar avisa o cliente. Reserva de outra loja: `403`. Resposta: a reserva no formato da lista.
 
 ### `POST /api/loja/produtos/importar`
 
