@@ -4,7 +4,8 @@ import { paraErroApi, type ErroApi } from './http'
 export type Consulta<T> = { recarregar: () => void } & (
   | { estado: 'carregando' }
   | { estado: 'erro'; erro: ErroApi }
-  | { estado: 'pronto'; dados: T }
+  /** `atualizando`: estes dados são da busca anterior e a nova ainda não chegou. */
+  | { estado: 'pronto'; dados: T; atualizando: boolean }
 )
 
 type Resultado<T> = { origem: unknown; versao: number } & (
@@ -21,8 +22,10 @@ type Resultado<T> = { origem: unknown; versao: number } & (
  *   if (consulta.estado === 'erro') return <Erro erro={consulta.erro} aoTentarDeNovo={consulta.recarregar} />
  *   return <Lista itens={consulta.dados.itens} />
  *
- * Passe a função dentro de um useCallback: quando ela muda (outro qr), a consulta refaz.
- * Uma resposta que chega depois de a tela sair, ou de o qr mudar, é descartada.
+ * Passe a função dentro de um useCallback: quando ela muda (outro qr, outro filtro), a
+ * consulta refaz. Enquanto refaz, os dados anteriores continuam na tela com
+ * `atualizando: true` (deixe-os mais claros, sem esqueleto); o esqueleto é só da primeira
+ * carga. Uma resposta que chega depois de a tela sair, ou de a busca mudar, é descartada.
  */
 export function useConsulta<T>(buscar: (sinal: AbortSignal) => Promise<T>): Consulta<T> {
   const [versao, setVersao] = useState(0)
@@ -45,11 +48,10 @@ export function useConsulta<T>(buscar: (sinal: AbortSignal) => Promise<T>): Cons
 
   const recarregar = useCallback(() => setVersao((v) => v + 1), [])
 
-  // O resultado guardado só vale para a busca e a versão atuais; senão, ainda está carregando.
-  if (!resultado || resultado.origem !== buscar || resultado.versao !== versao) {
-    return { estado: 'carregando', recarregar }
+  const atual = resultado?.origem === buscar && resultado.versao === versao
+  if (resultado?.estado === 'pronto') {
+    return { estado: 'pronto', dados: resultado.dados, atualizando: !atual, recarregar }
   }
-  return resultado.estado === 'pronto'
-    ? { estado: 'pronto', dados: resultado.dados, recarregar }
-    : { estado: 'erro', erro: resultado.erro, recarregar }
+  if (resultado?.estado === 'erro' && atual) return { estado: 'erro', erro: resultado.erro, recarregar }
+  return { estado: 'carregando', recarregar }
 }
