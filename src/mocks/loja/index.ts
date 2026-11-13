@@ -9,6 +9,7 @@
 // perfil), mas a API real recusa o token do mock.
 import { entrar } from './auth'
 import { buscarAtendimento, calcularPrevia, registrarCompra } from './atendimento'
+import { criarProduto, editarProduto, importarProdutos, listarProdutos } from './produtos'
 import { listarReservas, mudarStatusReserva } from './reservas'
 import type { Manipulador } from './resposta'
 
@@ -21,6 +22,10 @@ export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'POST /api/loja/compras': registrarCompra,
   'GET /api/loja/reservas': listarReservas,
   'PATCH /api/loja/reservas/:id': mudarStatusReserva,
+  'GET /api/loja/produtos': listarProdutos,
+  'POST /api/loja/produtos': criarProduto,
+  'PUT /api/loja/produtos/:id': editarProduto,
+  'POST /api/loja/produtos/importar': importarProdutos,
 }
 
 /** Demora de uma rede de verdade, para os estados de carregando aparecerem. */
@@ -45,13 +50,15 @@ export interface PedidoHttp {
   metodo: string
   /** Caminho com a busca: /api/loja/reservas?status=SEPARADA */
   url: string
-  /** Corpo em JSON, como vai pela rede. */
+  /** Corpo como vai pela rede: JSON, ou texto (CSV) quando o tipo não é JSON. */
   corpo?: string
+  /** Content-Type do corpo. Sem ele, JSON. */
+  tipo?: string
   token: string | null
 }
 
 /** Responde como a API se a rota estiver mockada; senão devolve null e o http.ts chama a API. */
-export async function responderMock({ metodo, url, corpo, token }: PedidoHttp): Promise<Response | null> {
+export async function responderMock({ metodo, url, corpo, tipo, token }: PedidoHttp): Promise<Response | null> {
   const endereco = new URL(url, 'http://mock.local')
   for (const [rota, manipular] of Object.entries(ROTAS_MOCKADAS)) {
     const params = casar(rota, metodo, endereco.pathname)
@@ -60,7 +67,7 @@ export async function responderMock({ metodo, url, corpo, token }: PedidoHttp): 
     if (ATRASO_MS) await new Promise((fim) => setTimeout(fim, ATRASO_MS))
     let lido: unknown
     try {
-      lido = corpo === undefined ? undefined : JSON.parse(corpo)
+      lido = corpo === undefined || (tipo && !tipo.includes('json')) ? corpo : JSON.parse(corpo)
     } catch {
       return paraResponse(400, { status: 400, erro: 'DADOS_INVALIDOS', mensagem: 'O corpo não é um JSON válido.' })
     }

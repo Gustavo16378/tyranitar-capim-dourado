@@ -4,14 +4,18 @@
 import type {
   Atendimento,
   Compra,
+  FiltroProdutos,
   FiltroReservas,
   Pagina,
   PedidoCompra,
   PedidoLogin,
   PedidoPrevia,
+  PedidoProduto,
   PreviaCompra,
+  ProdutoDaLoja,
   ReservaDaLoja,
   RespostaLogin,
+  ResultadoImportacao,
   StatusPedidoPelaLoja,
 } from '../../tipos/loja'
 import { requisitar } from './http'
@@ -48,5 +52,30 @@ export function listarReservas(filtro: FiltroReservas = {}, sinal?: AbortSignal)
 export function mudarStatusReserva(id: string, status: StatusPedidoPelaLoja) {
   return requisitar<ReservaDaLoja>('PATCH', `/api/loja/reservas/${encodeURIComponent(id)}`, {
     corpo: { status },
+  })
+}
+
+/** GET /api/loja/produtos: o catálogo da loja, ativos e inativos (RF21). */
+export function listarProdutos(filtro: FiltroProdutos = {}, sinal?: AbortSignal) {
+  return requisitar<Pagina<ProdutoDaLoja>>('GET', '/api/loja/produtos', {
+    busca: { q: filtro.q, pagina: filtro.pagina, tamanho: filtro.tamanho },
+    sinal,
+  })
+}
+
+/** POST /api/loja/produtos */
+export function criarProduto(produto: PedidoProduto) {
+  return requisitar<ProdutoDaLoja>('POST', '/api/loja/produtos', { corpo: produto })
+}
+
+/** PUT /api/loja/produtos/{id} */
+export function editarProduto(id: string, produto: PedidoProduto) {
+  return requisitar<ProdutoDaLoja>('PUT', `/api/loja/produtos/${encodeURIComponent(id)}`, { corpo: produto })
+}
+
+/** POST /api/loja/produtos/importar: a planilha CSV inteira; linhas com erro não são salvas (RF22). */
+export function importarProdutos(csv: string) {
+  return requisitar<ResultadoImportacao>('POST', '/api/loja/produtos/importar', {
+    texto: { conteudo: csv, tipo: 'text/csv' },
   })
 }

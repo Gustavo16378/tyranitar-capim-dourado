@@ -262,7 +262,7 @@ describe('mocks: reservas da loja', () => {
 
 describe('mocks: rotas fora da tabela', () => {
   it('devolve null para o http.ts chamar a API real', async () => {
-    expect(await responderMock({ metodo: 'GET', url: '/api/loja/cupons', token })).toBeNull()
+    expect(await responderMock({ metodo: 'GET', url: '/api/loja/extrato', token })).toBeNull()
     expect(await responderMock({ metodo: 'DELETE', url: '/api/loja/reservas/r1', token })).toBeNull()
   })
 })

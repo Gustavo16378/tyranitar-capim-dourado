@@ -7,7 +7,7 @@ import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom, UsuarioLogado }
 export const LOJA = {
   id: 'loja-esportes',
   nome: 'Loja de esportes',
-  /** Categorias que a loja vende: filtram a ficha do cliente (RN04). */
+  /** Categorias iniciais da loja; as atuais ficam em banco.categorias e filtram a ficha (RN04). */
   categorias: ['calcados', 'roupas', 'acessorios'],
 }
 
@@ -193,6 +193,8 @@ function estadoInicial() {
   for (const p of produtos) p.descricao = `${p.nome} da ${LOJA.nome}.`
 
   return {
+    /** Categorias que a loja vende agora: crescem quando ela cadastra produto de outra. */
+    categorias: [...LOJA.categorias],
     clientes: [ana, bruno],
     cupons,
     reservas,

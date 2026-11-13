@@ -5,7 +5,7 @@
 import type { Atendimento, Compra, PedidoCompra, PreviaCompra } from '../../tipos/loja'
 import { podeRetirar, STATUS_ATIVOS } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
-import { banco, hojeEmPalmas, LOJA, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
+import { banco, hojeEmPalmas, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
 import {
   dadosInvalidos,
   erro,
@@ -49,7 +49,7 @@ export function buscarAtendimento(pedido: PedidoMock): RespostaMock {
   const atendimento: Atendimento = {
     cliente: { nome: cliente.nome, nivel: cliente.nivel },
     ficha: cliente.consentimentoFicha
-      ? cliente.interesses.filter((i) => LOJA.categorias.includes(i.categoria)).map((i) => i.detalhe)
+      ? cliente.interesses.filter((i) => banco.categorias.includes(i.categoria)).map((i) => i.detalhe)
       : [],
     reservas: banco.reservas
       .filter((r) => r.clienteId === cliente.id && STATUS_ATIVOS.includes(r.status))

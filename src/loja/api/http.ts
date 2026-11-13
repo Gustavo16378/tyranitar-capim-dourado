@@ -51,6 +51,8 @@ export type Metodo = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export interface OpcoesRequisicao {
   /** Vai como JSON no corpo. */
   corpo?: unknown
+  /** Corpo em texto, no lugar do JSON: { conteudo: csv, tipo: 'text/csv' } na importação. */
+  texto?: { conteudo: string; tipo: string }
   /** Vira ?chave=valor; valores undefined ficam de fora. */
   busca?: Record<string, string | number | undefined>
   /** Para cancelar a chamada quando a tela sai (o useConsulta já passa um). */
@@ -59,18 +61,19 @@ export interface OpcoesRequisicao {
 
 export async function requisitar<T>(metodo: Metodo, caminho: string, opcoes: OpcoesRequisicao = {}): Promise<T> {
   const url = caminho + montarBusca(opcoes.busca)
-  const corpo = opcoes.corpo === undefined ? undefined : JSON.stringify(opcoes.corpo)
+  const corpo = opcoes.texto?.conteudo ?? (opcoes.corpo === undefined ? undefined : JSON.stringify(opcoes.corpo))
+  const tipo = opcoes.texto?.tipo ?? 'application/json'
   const token = lerSessao()?.token ?? null
 
   if (MOCKS_LIGADOS) {
     // Import dinâmico: os mocks ficam num pedaço separado do bundle.
     const { responderMock } = await import('../../mocks/loja')
-    const resposta = await responderMock({ metodo, url, corpo, token })
+    const resposta = await responderMock({ metodo, url, corpo, tipo, token })
     if (resposta) return tratar<T>(resposta)
   }
 
   const cabecalhos: Record<string, string> = { Accept: 'application/json' }
-  if (corpo !== undefined) cabecalhos['Content-Type'] = 'application/json'
+  if (corpo !== undefined) cabecalhos['Content-Type'] = tipo
   if (token) cabecalhos.Authorization = `Bearer ${token}`
 
   let resposta: Response
