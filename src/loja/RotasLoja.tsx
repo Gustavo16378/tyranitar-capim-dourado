@@ -1,28 +1,30 @@
-// Rotas do painel da loja, montadas em /loja/* pelo App. Carregado sob demanda: quem
-// abre o app do cliente não baixa o painel.
-import { Navigate, Route, Routes } from 'react-router'
-import { ExigirLojista } from './layout/ExigirLojista'
-import { LayoutLoja } from './layout/LayoutLoja'
-import { URL_INICIAL } from './enderecos'
+// O painel da loja, montado em /loja/* pelo App (carregado sob demanda: quem abre o app do
+// cliente não baixa o painel). Login, guarda de perfil, barra lateral e rotas vêm do
+// RotasDoPainel; aqui fica só o que é da loja.
+import { RotasDoPainel } from '../painel/RotasDoPainel'
+import type { ConfigDoPainel } from '../painel/painel'
+import { entrar, MOCKS_LIGADOS, sessao } from './api'
+import { BASE_DA_LOJA } from './enderecos'
 import { TELAS_DA_LOJA } from './navegacao'
-import { TelaEntrar } from './telas/entrar/TelaEntrar'
+
+const PAINEL_DA_LOJA: ConfigDoPainel = {
+  nome: 'Painel da loja',
+  base: BASE_DA_LOJA,
+  perfil: 'LOJISTA',
+  telas: TELAS_DA_LOJA,
+  sessao,
+  entrar,
+  mocksLigados: MOCKS_LIGADOS,
+  chamadaDoLogin: 'Entre com o e-mail e a senha da sua loja.',
+  dicaComMocks: (
+    <>
+      Com os dados de exemplo, entre com qualquer e-mail no formato{' '}
+      <strong className="font-semibold text-ink">lojista.loja-19@demo.test</strong> e uma senha de 8 caracteres ou
+      mais.
+    </>
+  ),
+}
 
 export default function RotasLoja() {
-  return (
-    <Routes>
-      <Route path="entrar" element={<TelaEntrar />} />
-      <Route
-        element={
-          <ExigirLojista>
-            <LayoutLoja />
-          </ExigirLojista>
-        }
-      >
-        {TELAS_DA_LOJA.map(({ caminho, Tela }) => (
-          <Route key={caminho} path={caminho} element={<Tela />} />
-        ))}
-        <Route path="*" element={<Navigate to={URL_INICIAL} replace />} />
-      </Route>
-    </Routes>
-  )
+  return <RotasDoPainel painel={PAINEL_DA_LOJA} />
 }
