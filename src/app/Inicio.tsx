@@ -24,13 +24,23 @@ export default function Inicio() {
       <div ref={topo} className="flex flex-col gap-5">
         <header data-anim className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-body-sm text-ink-muted">
-              {saudacao()}
-              {usuario && `, ${primeiroNome(usuario.nome)}`}
-            </p>
-            <h1 className="mt-0.5 text-title-lg">O que você procura hoje?</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-body-sm text-ink-muted">
+                {saudacao()}
+                {usuario && `, ${primeiroNome(usuario.nome)}`}
+              </p>
+              {carteira.tipo === 'ok' && <NivelBadge nivel={paraNivel(carteira.dados.nivel)} />}
+            </div>
+            <h1 className="mt-1 text-title-lg">O que você procura hoje?</h1>
           </div>
-          {carteira.tipo === 'ok' && <NivelBadge nivel={paraNivel(carteira.dados.nivel)} />}
+          {/* O avatar abre a Minha conta. */}
+          <Link
+            to="/conta"
+            aria-label="Minha conta"
+            className="grid size-11 flex-none place-items-center rounded-full bg-terra text-title-sm text-on-terra"
+          >
+            <span aria-hidden="true">{usuario ? primeiroNome(usuario.nome).charAt(0).toUpperCase() : '?'}</span>
+          </Link>
         </header>
 
         <Link
