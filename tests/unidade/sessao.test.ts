@@ -103,7 +103,7 @@ describe('Minha conta: nome novo e arquivo dos dados', () => {
   })
 
   it('o arquivo dos dados leva a data em que foi gerado', async () => {
-    const { nomeDoArquivoDeDados } = await import('../../src/app/arquivo')
+    const { nomeDoArquivoDeDados } = await import('../../src/app/formatos')
     expect(nomeDoArquivoDeDados('2026-11-13T15:10:00.000Z')).toBe('meus-dados-2026-11-13.json')
   })
 })

@@ -1,10 +1,5 @@
 // Salvar um arquivo no aparelho a partir de dados que o app já tem (o navegador baixa).
 
-/** Nome do arquivo de GET /api/me/dados: "meus-dados-2026-11-13.json", pela data em que foi gerado. */
-export function nomeDoArquivoDeDados(geradoEm: string) {
-  return `meus-dados-${geradoEm.slice(0, 10)}.json`
-}
-
 /** Baixa `dados` como um arquivo JSON legível (com recuo), com o nome dado. */
 export function salvarJson(nome: string, dados: unknown) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' }))

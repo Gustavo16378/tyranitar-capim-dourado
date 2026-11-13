@@ -66,3 +66,8 @@ export function partesDoLink(link: string) {
     return { site: link, caminho: '' }
   }
 }
+
+/** Nome do arquivo de GET /api/me/dados: "meus-dados-2026-11-13.json", pela data em que foi gerado. */
+export function nomeDoArquivoDeDados(geradoEm: string) {
+  return `meus-dados-${geradoEm.slice(0, 10)}.json`
+}

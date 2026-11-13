@@ -5,13 +5,13 @@ import { Button, formatarNumero, Icon, NivelBadge } from '../componentes'
 import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
 import type { Conta } from '../tipos'
-import { nomeDoArquivoDeDados, salvarJson } from './arquivo'
+import { salvarJson } from './arquivo'
 import { Campo } from './Campo'
 import { Carregando, ErroTela, Esqueleto } from './Estados'
 import { FichaDaConta } from './FichaDaConta'
 import { Folha } from './Folha'
 import { FolhaSenha } from './FolhaSenha'
-import { paraNivel } from './formatos'
+import { nomeDoArquivoDeDados, paraNivel } from './formatos'
 
 /** Mensagem de erro de um bloco da tela, com o ícone de alerta. */
 function Problema({ erro }: { erro: ErroApi | null }) {
