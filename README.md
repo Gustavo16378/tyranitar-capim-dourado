@@ -4,6 +4,13 @@
 
 Solução da equipe Tyranitar para o tema 04 do hackathon: integração da jornada de compra digital e física.
 
+## Primeira entrega
+
+- [Documento da primeira entrega (PDF)](docs/Capi_Tyranitar_Primeira_Entrega.pdf)
+- [Onde está cada item pedido](docs/primeira-entrega.md)
+- [Design system publicado](https://tyranitar-capim-dourado.pages.dev/design-system)
+- [App no ar](https://tyranitar-capim-dourado.pages.dev)
+
 O cliente pergunta à **Capi**, a assistente de IA do shopping, por texto, foto ou link. Ela acha o produto nas lojas, o cliente reserva e segue a rota no mapa. No balcão, o vendedor lê o QR da carteira e já sabe o que o cliente procura. A compra vira pontos de fidelidade e dados para lojistas e para o shopping.
 
 Um site só, com três interfaces:

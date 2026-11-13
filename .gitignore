@@ -25,8 +25,9 @@ kit/
 .claude/
 CLAUDE.md
 
-# Planta oficial do shopping (PDF): nunca versionar
+# Planta oficial do shopping (PDF): nunca versionar. Só os PDFs da documentação entram.
 *.pdf
+!docs/*.pdf
 
 # Testes
 playwright-report/
