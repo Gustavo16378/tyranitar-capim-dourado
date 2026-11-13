@@ -13,7 +13,15 @@ export const LOJISTA_B: UsuarioSessao = { id: 'l-b', nome: 'Equipe da Loja B', p
 
 export async function chamar(
   rota: Rota<string>,
-  pedido: { metodo?: string; url: string; corpo?: unknown; params?: Record<string, string>; usuario?: UsuarioSessao },
+  pedido: {
+    metodo?: string
+    url: string
+    corpo?: unknown
+    params?: Record<string, string>
+    usuario?: UsuarioSessao
+    /** Variáveis a mais só para esta chamada, como { DEMO: '1' }. */
+    ambiente?: Partial<Env>
+  },
 ) {
   const cabecalhos = new Headers({ 'content-type': 'application/json' })
   if (pedido.usuario) cabecalhos.set('Authorization', `Bearer ${await emitirToken(pedido.usuario, env.JWT_SECRET)}`)
@@ -27,7 +35,7 @@ export async function chamar(
   const contexto = (i: number): Parameters<Rota<string>>[0] =>
     ({
       request,
-      env,
+      env: { ...env, ...pedido.ambiente },
       params: pedido.params ?? {},
       data,
       functionPath: pedido.url,
