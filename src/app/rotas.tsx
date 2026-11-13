@@ -2,6 +2,7 @@
 import { Route } from 'react-router'
 import Abertura from './Abertura'
 import Capi from './Capi'
+import Carteira from './Carteira'
 import Inicio from './Inicio'
 import LayoutApp from './LayoutApp'
 import Mapa from './Mapa'
@@ -17,6 +18,7 @@ export const rotasDoApp = (
       <Route path="/produto/:id" element={<Produto />} />
       <Route path="/reserva/:id" element={<Reserva />} />
       <Route path="/mapa" element={<Mapa />} />
+      <Route path="/carteira" element={<Carteira />} />
     </Route>
   </>
 )
