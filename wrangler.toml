@@ -4,10 +4,9 @@ compatibility_date = "2026-11-01"
 pages_build_output_dir = "dist"
 
 # Banco D1. Localmente o wrangler cria o banco em .wrangler/ (fora do Git).
-# Antes do primeiro deploy: rode `npx wrangler d1 create tyranitar` e troque o
-# database_id abaixo pelo id que o comando imprimir.
+# Migrations: npx wrangler d1 migrations apply tyranitar --local (ou --remote, em produção).
 [[d1_databases]]
 binding = "DB"
 database_name = "tyranitar"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "be85546f-df5d-4364-bd06-a2acf6b3a1a2"
 migrations_dir = "migrations"
