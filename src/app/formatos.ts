@@ -1,7 +1,7 @@
 // Como os dados da API aparecem nas telas do app (português, fuso de Palmas: RNF11).
 import { formatarPreco } from '../componentes/formatar'
 import type { Nivel } from '../componentes/nivel'
-import type { Cupom, NivelApi, Piso } from '../tipos'
+import type { NivelApi, Piso, TipoCupom } from '../tipos'
 
 /** Palmas (TO) fica em UTC-3 o ano todo. */
 const FUSO = 'America/Araguaina'
@@ -31,7 +31,7 @@ export function dataCurta(data: string) {
 }
 
 /** O que vai no canhoto do cupom: "10%", "R$ 20", "Grátis". */
-export function descontoDoCupom({ tipo, valor }: Pick<Cupom, 'tipo' | 'valor'>) {
+export function descontoDoCupom({ tipo, valor }: { tipo: TipoCupom; valor: number }) {
   if (tipo === 'PERCENTUAL') return `${valor}%`
   if (tipo === 'VALOR') return formatarPreco(valor).replace(/,00$/, '')
   return 'Grátis'

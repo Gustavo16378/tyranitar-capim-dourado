@@ -36,7 +36,8 @@ describe('mock de produtos', () => {
 
   it('GET /api/produtos/{id} traz outras lojas e 404 quando não existe', async () => {
     const produto = await m.produtos.obterProduto('p-pulse')
-    expect(produto.outrasLojas[0]).toMatchObject({ id: 'p-run', mesmoItem: false })
+    expect(produto.outrasLojas[0]).toMatchObject({ id: 'p-run', loja: { nome: 'Calçados' } })
+    expect(produto.avaliacao).toEqual({ media: 5, total: 1 })
     await expect(m.produtos.obterProduto('nao-existe')).rejects.toMatchObject({ status: 404, erro: 'NAO_ENCONTRADO' })
   })
 })

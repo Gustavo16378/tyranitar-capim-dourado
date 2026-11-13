@@ -1,6 +1,6 @@
 // GET /api/me/carteira (docs/api.md › Área do cliente).
 import type { NivelApi } from './comum'
-import type { Cupom } from './cupom'
+import type { CupomCarteira } from './cupom'
 import type { StatusReserva } from './reserva'
 
 export interface Carteira {
@@ -10,6 +10,6 @@ export interface Carteira {
   nivel: NivelApi
   /** null no nível mais alto. */
   proximoNivel: { nivel: NivelApi; faltam: number } | null
-  cupons: Cupom[]
+  cupons: CupomCarteira[]
   reservasAtivas: { id: string; produto: string; status: StatusReserva }[]
 }

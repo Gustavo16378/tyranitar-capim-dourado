@@ -9,6 +9,11 @@ import { Carregando, ErroTela, Esqueleto } from './Estados'
 import { FolhaReserva } from './FolhaReserva'
 import { nomeDoPiso } from './formatos'
 
+/** A API manda primeiro o mesmo item (mesmo nome) e depois os parecidos da mesma categoria. */
+function mesmoItem(nome: string, outro: string) {
+  return nome.localeCompare(outro, 'pt-BR', { sensitivity: 'accent' }) === 0
+}
+
 function SeloEstoque({ estoque }: { estoque: number }) {
   if (estoque === 0)
     return (
@@ -119,7 +124,7 @@ export default function Produto() {
                       <span>
                         <strong className="block text-label">{outro.loja.nome}</strong>
                         <span className="text-body-sm text-ink-muted">
-                          {outro.nome} · {outro.mesmoItem ? 'mesmo item' : 'parecido'}
+                          {outro.nome} · {mesmoItem(outro.nome, produto.dados.nome) ? 'mesmo item' : 'parecido'}
                         </span>
                       </span>
                       <span className="whitespace-nowrap text-price">{formatarPreco(outro.precoCentavos)}</span>

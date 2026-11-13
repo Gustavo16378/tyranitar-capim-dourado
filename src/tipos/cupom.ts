@@ -1,22 +1,37 @@
-// Cupom como aparece em GET /api/ofertas e em GET /api/me/carteira (docs/api.md).
+// Cupons em GET /api/ofertas e em GET /api/me/carteira (docs/api.md).
 import type { NivelApi } from './comum'
 
 export type TipoCupom = 'PERCENTUAL' | 'VALOR' | 'BRINDE'
 
-/**
- * O exemplo da carteira no api.md traz { id, titulo, loja, validade }. O app precisa também de
- * tipo e valor (para o canhoto: "10%", "R$ 20") e do nível mínimo; os três são colunas da
- * tabela cupom. Cupom com loja null é voucher do shopping.
- */
-export interface Cupom {
+/** Item de GET /api/ofertas, como a rota de functions/api/ofertas/index.ts devolve. */
+export interface Oferta {
   id: string
   titulo: string
-  /** Nome da loja; null quando é voucher do shopping. */
-  loja: string | null
-  /** Data final de uso, "2026-12-31". */
-  validade: string
   tipo: TipoCupom
   /** PERCENTUAL: 1 a 100. VALOR: centavos. BRINDE: 0. */
+  valor: number
+  origem: 'LOJA' | 'SHOPPING'
+  /** null quando é voucher do shopping. */
+  loja: { id: string; nome: string; mapaId: string } | null
+  categoriaAlvo: string | null
+  nivelMinimo: NivelApi
+  /** Data final de uso, "2026-12-31". */
+  validade: string
+  /** Cupom de uma categoria da ficha do cliente. */
+  destaque: boolean
+}
+
+/**
+ * Cupom da carteira. O exemplo do api.md traz { id, titulo, loja, validade }; o app precisa
+ * também de tipo e valor (para o canhoto: "10%", "R$ 20") e do nível mínimo, que são colunas
+ * da tabela cupom. loja null é voucher do shopping.
+ */
+export interface CupomCarteira {
+  id: string
+  titulo: string
+  loja: string | null
+  validade: string
+  tipo: TipoCupom
   valor: number
   nivelMinimo: NivelApi
 }

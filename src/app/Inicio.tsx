@@ -78,9 +78,9 @@ export default function Inicio() {
                     {ofertas.dados.itens.map((cupom) => (
                       <div key={cupom.id} className="w-[300px] flex-none">
                         <CupomTicket
-                          origem={cupom.loja ? 'loja' : 'shopping'}
+                          origem={cupom.origem === 'SHOPPING' ? 'shopping' : 'loja'}
                           titulo={cupom.titulo}
-                          loja={cupom.loja ?? undefined}
+                          loja={cupom.loja?.nome}
                           desconto={descontoDoCupom(cupom)}
                           validade={dataCurta(cupom.validade)}
                           nivel={cupom.nivelMinimo === 'SEMENTE' ? undefined : paraNivel(cupom.nivelMinimo)}

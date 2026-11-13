@@ -1,5 +1,5 @@
-// Mock de GET /api/produtos e GET /api/produtos/{id}. Os mapaId batem com a planta ilustrativa
-// de src/mapa/planta.ts.
+// Mock de GET /api/produtos e GET /api/produtos/{id}, no formato das rotas de functions/api/produtos.
+// Os mapaId batem com a planta ilustrativa de src/mapa/planta.ts.
 import type { FiltroProdutos, Lista, LojaDoProduto, ProdutoDetalhe, ProdutoResumo } from '../../tipos'
 import { falhar, responder } from './atraso'
 
@@ -14,9 +14,9 @@ const LOJAS = {
 type ProdutoMock = Omit<ProdutoDetalhe, 'outrasLojas'> & { parecidos: string[] }
 
 function produto(
-  dados: Omit<ProdutoMock, 'foto' | 'fotos' | 'media' | 'avaliacoes'> & Partial<ProdutoMock>,
+  dados: Omit<ProdutoMock, 'foto' | 'fotos' | 'avaliacao' | 'avaliacoes'> & Partial<ProdutoMock>,
 ): ProdutoMock {
-  return { foto: null, fotos: [], media: null, avaliacoes: [], ...dados }
+  return { foto: null, fotos: [], avaliacao: { media: null, total: 0 }, avaliacoes: [], ...dados }
 }
 
 /** O catálogo do mock. O estoque muda com as reservas (RN03). */
@@ -30,9 +30,14 @@ export const CATALOGO: ProdutoMock[] = [
     loja: LOJAS.esportes,
     descricao: 'Tênis de corrida com amortecimento leve, cabedal em tela respirável.',
     atributos: { numeracao: [38, 39, 40, 41, 42, 43], cor: 'preto' },
-    media: 4.6,
+    avaliacao: { media: 5, total: 1 },
     avaliacoes: [
-      { nota: 5, comentario: 'Leve e confortável desde o primeiro treino.', criadaEm: '2026-10-28T14:00:00Z' },
+      {
+        nota: 5,
+        comentario: 'Leve e confortável desde o primeiro treino.',
+        criadoEm: '2026-10-28T14:00:00Z',
+        autor: 'Carla',
+      },
     ],
     parecidos: ['p-run'],
   }),
@@ -137,11 +142,11 @@ export function listarProdutos(filtro?: FiltroProdutos): Promise<Lista<ProdutoRe
 
 export function obterProduto(id: string): Promise<ProdutoDetalhe> {
   const achado = acharProduto(id)
-  if (!achado) return falhar(404, 'NAO_ENCONTRADO', 'Esse produto não está mais no catálogo.')
+  if (!achado) return falhar(404, 'NAO_ENCONTRADO', 'Esse produto não está mais disponível.')
   const { parecidos, ...detalhe } = achado
   const outrasLojas = parecidos.flatMap((idParecido) => {
     const outro = acharProduto(idParecido)
-    return outro ? [{ ...resumo(outro), mesmoItem: false }] : []
+    return outro ? [resumo(outro)] : []
   })
   return responder({ ...detalhe, outrasLojas })
 }
