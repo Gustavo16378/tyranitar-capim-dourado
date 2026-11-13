@@ -18,8 +18,8 @@ const TelaDesempenho = lazy(() =>
 export const TELAS_DA_LOJA: readonly TelaDoPainel[] = [
   { caminho: 'atendimento', rotulo: 'Atendimento', Tela: TelaAtendimento },
   { caminho: 'reservas', rotulo: 'Reservas', Tela: TelaReservas },
-  // Produtos, Cupons e Desempenho ainda respondem com mocks (src/mocks/loja): a API não tem as rotas.
-  { caminho: 'produtos', rotulo: 'Produtos', Tela: TelaProdutos, dadosDeExemplo: MOCKS_LIGADOS },
+  { caminho: 'produtos', rotulo: 'Produtos', Tela: TelaProdutos },
+  // Cupons e Desempenho ainda respondem com mocks (src/mocks/loja): a API não tem as rotas.
   { caminho: 'cupons', rotulo: 'Cupons', Tela: TelaCupons, dadosDeExemplo: MOCKS_LIGADOS },
   { caminho: 'desempenho', rotulo: 'Desempenho', Tela: TelaDesempenho, dadosDeExemplo: MOCKS_LIGADOS },
   { caminho: 'extrato', rotulo: 'Extrato', Tela: TelaExtrato },

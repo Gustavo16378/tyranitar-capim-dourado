@@ -453,9 +453,9 @@ O catálogo da loja, ativos e inativos (os inativos não aparecem na busca nem p
 
 ### `POST /api/loja/produtos` e `PUT /api/loja/produtos/{id}`
 
-O corpo é um item de `GET /api/loja/produtos` sem o `id`. `categoria` é uma das categorias do shopping (`calcados`, `roupas`, `acessorios`, `perfumaria`); uma categoria nova no catálogo passa a valer para o filtro da ficha (RN04). Os atributos mudam por categoria: `numeracao` (lista de números) e `cor` em calçados, `tamanhos` (lista) e `cor` em roupas, `cor` e `material` em acessórios, `ml` (número) e `familia` em perfumaria.
+O corpo é um item de `GET /api/loja/produtos` sem o `id`. `categoria` é uma das categorias do shopping (`calcados`, `roupas`, `acessorios`, `perfumaria`, `eletronicos`, `infantil`, `alimentacao`, `pet`, `casa`, `otica`, `livraria`, `esportes`, `joias`); uma categoria nova no catálogo passa a valer para o filtro da ficha (RN04). `fotos` aceita até 8 endereços, cada um com `https://` ou um caminho do próprio site, como `/produtos/tenis-de-corrida.webp`; a primeira é a capa. Os atributos mudam por categoria: `numeracao` (lista de números) e `cor` em calçados, `tamanhos` (lista) e `cor` em roupas, `cor` e `material` em acessórios, `ml` (número) e `familia` em perfumaria.
 
-Resposta: `201` (criar) ou `200` (editar) com o produto. Erros: `400` (`DADOS_INVALIDOS`: nome de 2 a 120 caracteres, preço maior que zero, estoque inteiro de zero ou mais, categoria conhecida), `404` (produto de outra loja ou inexistente).
+Resposta: `201` (criar) ou `200` (editar) com o produto. Erros: `400` (`DADOS_INVALIDOS`: nome de 2 a 120 caracteres, preço maior que zero, estoque inteiro de zero ou mais, categoria conhecida, foto com endereço aceito), `404` (produto de outra loja ou inexistente).
 
 ### `POST /api/loja/produtos/importar`
 
@@ -465,7 +465,7 @@ Recebe um CSV (`text/csv`) com as colunas `nome,descricao,categoria,preco,estoqu
 { "importados": 12, "erros": [ { "linha": 4, "mensagem": "O preço precisa estar em reais, como 399,90." } ] }
 ```
 
-Erro `400` quando falta alguma das colunas.
+Erro `400` quando falta alguma das colunas ou a planilha passa de 1.000 produtos ou 1 MB.
 
 ### `GET /api/loja/cupons`
 

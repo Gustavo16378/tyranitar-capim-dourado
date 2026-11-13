@@ -18,18 +18,20 @@ export async function chamar(
     metodo?: string
     url: string
     corpo?: unknown
+    /** Corpo em texto, no lugar do JSON, como o CSV da importação: { conteudo, tipo: 'text/csv' }. */
+    texto?: { conteudo: string; tipo: string }
     params?: Record<string, string>
     usuario?: UsuarioSessao
     /** Variáveis a mais só para esta chamada, como { DEMO: '1' }. */
     ambiente?: Partial<Env>
   },
 ) {
-  const cabecalhos = new Headers({ 'content-type': 'application/json' })
+  const cabecalhos = new Headers({ 'content-type': pedido.texto?.tipo ?? 'application/json' })
   if (pedido.usuario) cabecalhos.set('Authorization', `Bearer ${await emitirToken(pedido.usuario, env.JWT_SECRET)}`)
   const request = new Request(`https://teste.local${pedido.url}`, {
     method: pedido.metodo ?? 'GET',
     headers: cabecalhos,
-    body: pedido.corpo === undefined ? undefined : JSON.stringify(pedido.corpo),
+    body: pedido.texto ? pedido.texto.conteudo : pedido.corpo === undefined ? undefined : JSON.stringify(pedido.corpo),
   })
   const cadeia = [...middleware, rota]
   const data: Dados = {}

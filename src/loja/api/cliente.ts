@@ -4,7 +4,7 @@ import { criarRequisitar } from '../../painel/api/http'
 import { sessaoDaLoja } from '../../painel/api/sessoes'
 
 /**
- * Mocks de src/mocks/loja ligados: só produtos, cupons e relatórios, que a API ainda não tem.
+ * Mocks de src/mocks/loja ligados: só cupons e relatórios, que a API ainda não tem.
  * Para ver essas telas contra a API real (e o 404 delas): VITE_LOJA_MOCKS=0.
  */
 export const MOCKS_LIGADOS = import.meta.env.VITE_LOJA_MOCKS !== '0'

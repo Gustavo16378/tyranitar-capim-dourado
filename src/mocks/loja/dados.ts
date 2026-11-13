@@ -1,5 +1,5 @@
-// Banco de mentira das telas do painel da loja que a API ainda não tem: Produtos, Cupons e
-// Desempenho (/api/loja/produtos, /cupons e /relatorios). As outras telas já usam a API real.
+// Banco de mentira das telas do painel da loja que a API ainda não tem: Cupons e Desempenho
+// (/api/loja/cupons e /relatorios). Os produtos ficam aqui porque o relatório de mentira usa.
 // Fica na memória: recarregar a página volta tudo ao início. Os testes chamam reiniciarMocks().
 import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom } from '../../tipos/loja'
 import { hojeEmPalmas } from '../../painel/comum/formatos'

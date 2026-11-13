@@ -18,6 +18,15 @@ interface FormularioProdutoProps {
   aoVoltar: () => void
 }
 
+/** Igual à API: https:// de outro site ou um caminho do próprio site, como /produtos/tenis.webp. */
+function fotoValida(foto: string) {
+  if (foto.length > 500 || /\s/.test(foto)) return false
+  if (foto.startsWith('/')) return !foto.startsWith('//')
+  return /^https:\/\/[^/]+/.test(foto)
+}
+
+const MAXIMO_DE_FOTOS = 8
+
 /** Erro de cada campo: nome, preco, estoque, fotos ou a chave de um atributo. */
 type Erros = Record<string, string>
 
@@ -44,7 +53,9 @@ export function FormularioProduto({ produto, aoSalvar, aoVoltar }: FormularioPro
     if (!precoCentavos) erros.preco = 'Informe o preço, como 399,90.'
     if (!/^\d+$/.test(estoque.trim())) erros.estoque = 'Informe quantas unidades há na loja, como 3.'
     const listaDeFotos = fotos.split('\n').map((f) => f.trim()).filter(Boolean)
-    if (listaDeFotos.some((f) => !/^https?:\/\//.test(f))) erros.fotos = 'Use endereços que começam com https://.'
+    if (listaDeFotos.some((f) => !fotoValida(f))) {
+      erros.fotos = 'Use endereços que começam com https:// ou um caminho do site, como /produtos/tenis.webp.'
+    } else if (listaDeFotos.length > MAXIMO_DE_FOTOS) erros.fotos = `Até ${MAXIMO_DE_FOTOS} fotos por produto.`
     const lidos = textoParaAtributos(campos, atributos)
     if ('erro' in lidos) erros[lidos.chave] = lidos.erro
     if ('erro' in lidos || !precoCentavos || Object.keys(erros).length) return { erros }
@@ -154,7 +165,7 @@ export function FormularioProduto({ produto, aoSalvar, aoVoltar }: FormularioPro
           value={fotos}
           onChange={(e) => setFotos(e.target.value)}
           erro={erros.fotos}
-          dica="Um endereço por linha. A primeira é a capa."
+          dica="Um endereço por linha, com https:// ou um caminho do site (/produtos/...). A primeira é a capa."
           placeholder="https://"
         />
       </div>
