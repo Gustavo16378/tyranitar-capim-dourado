@@ -344,12 +344,12 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 {
   "cliente": { "nome": "Ana", "nivel": "CAPIM" },
   "ficha": [ "Tênis de corrida, número 42, até R$ 400, prefere preto", "Camisetas dry-fit" ],
-  "reservas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "status": "SEPARADA", "pago": true } ],
+  "reservas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "foto": "/produtos/tenis-pulse.webp", "status": "SEPARADA", "pago": true } ],
   "cupons": [ { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" }, { "id": "cp2", "titulo": "R$ 20 do shopping", "origem": "SHOPPING" } ]
 }
 ```
 
-`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04).
+`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `foto` é a primeira foto do produto (a miniatura no balcão), ou `null` quando ele não tem.
 
 ### `POST /api/loja/compras/previa`
 

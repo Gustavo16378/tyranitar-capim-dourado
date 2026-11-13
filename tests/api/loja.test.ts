@@ -27,12 +27,14 @@ describe('GET /api/loja/atendimento/{qr}', () => {
   it('TA23: ficha filtrada pelas categorias da loja, reservas ativas e cupons que valem aqui', async () => {
     await reserva('r-sep', 'SEPARADA', { pago: 1, forma: 'PIX' })
     await reserva('r-outra-loja', 'SEPARADA', { loja: 'loja-b', produto: 'p-perfume' })
+    // A primeira foto do produto vai junto, para a miniatura no balcão.
+    await env.DB.prepare(`UPDATE produto SET fotos = '["/produtos/pulse.webp","/produtos/pulse-2.webp"]' WHERE id = 'p-pulse'`).run()
     const r = await chamar(atendimento, { url: '/api/loja/atendimento/q-ana', params: { qr: 'q-ana' }, usuario: LOJISTA_A })
     expect(r.status).toBe(200)
     expect(r.corpo).toEqual({
       cliente: { nome: 'Ana', nivel: 'CAPIM' },
       ficha: ['Tênis de corrida, número 42, até R$ 400', 'Camisetas dry-fit'],
-      reservas: [{ id: 'r-sep', produto: 'Tênis de corrida Pulse', status: 'SEPARADA', pago: true }],
+      reservas: [{ id: 'r-sep', produto: 'Tênis de corrida Pulse', foto: '/produtos/pulse.webp', status: 'SEPARADA', pago: true }],
       cupons: [
         { id: 'cp-a-10', titulo: '10% em calçados', origem: 'LOJA' },
         { id: 'cp-a-15', titulo: 'R$ 15 em camisetas', origem: 'LOJA' },

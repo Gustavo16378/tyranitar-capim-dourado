@@ -42,6 +42,8 @@ export interface ReservaCompleta {
   cliente_nome: string
   produto_id: string
   produto_nome: string
+  /** JSON com as fotos do produto. */
+  produto_fotos: string
   loja_id: string
   loja_nome: string
   loja_piso: 1 | 2
@@ -56,7 +58,7 @@ export interface ReservaCompleta {
 }
 
 const SELECAO = `
-  SELECT r.id, r.cliente_id, u.nome AS cliente_nome, r.produto_id, p.nome AS produto_nome, r.loja_id,
+  SELECT r.id, r.cliente_id, u.nome AS cliente_nome, r.produto_id, p.nome AS produto_nome, p.fotos AS produto_fotos, r.loja_id,
          l.nome AS loja_nome, l.piso AS loja_piso, l.mapa_id AS loja_mapa_id, r.quantidade, r.preco_centavos, r.status, r.forma_pagamento, r.pago, r.expira_em, r.criado_em
   FROM reserva r JOIN produto p ON p.id = r.produto_id JOIN usuario u ON u.id = r.cliente_id
   JOIN loja l ON l.id = r.loja_id`

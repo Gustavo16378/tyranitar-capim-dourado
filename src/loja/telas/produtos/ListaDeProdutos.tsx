@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Badge, Button, formatarPreco, type BadgeProps } from '../../../componentes'
+import { Badge, Button, formatarPreco, MiniaturaProduto, type BadgeProps } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
 import { useEntrada } from '../../../movimento'
 import type { ProdutoDaLoja } from '../../../tipos/loja'
@@ -116,15 +116,7 @@ function LinhaProduto({ produto, aoEditar }: { produto: ProdutoDaLoja; aoEditar:
         !produto.ativo && 'bg-surface',
       )}
     >
-      <div className="grid size-14 flex-none place-items-center overflow-hidden rounded-sm bg-surface-sunken">
-        {produto.fotos[0] ? (
-          <img src={produto.fotos[0]} alt="" className="size-full object-cover" />
-        ) : (
-          <span aria-hidden="true" className="text-title-sm text-ink-muted">
-            {produto.nome.charAt(0)}
-          </span>
-        )}
-      </div>
+      <MiniaturaProduto foto={produto.fotos[0]} />
       <div className="flex min-w-[180px] flex-1 flex-col gap-0.5">
         <h3 className={cx('text-label', !produto.ativo && 'text-ink-muted')}>{produto.nome}</h3>
         <p className="text-body-sm text-ink-muted">{detalhes.join(' · ')}</p>

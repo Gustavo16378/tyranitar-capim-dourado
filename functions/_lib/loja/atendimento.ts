@@ -51,7 +51,13 @@ export async function montarAtendimento(db: D1Database, lojaId: string, qr: stri
     // Só o primeiro nome; o vendedor nunca vê a conversa com a Capi (RNF06).
     cliente: { nome: cliente.nome.split(' ')[0], nivel },
     ficha: filtrarFicha(interesses, categorias, cliente.consentimento_ficha === 1),
-    reservas: reservas.map((r) => ({ id: r.id, produto: r.produto_nome, status: r.status, pago: r.pago === 1 })),
+    reservas: reservas.map((r) => ({
+      id: r.id,
+      produto: r.produto_nome,
+      foto: lerJson<string[]>(r.produto_fotos, [])[0] ?? null,
+      status: r.status,
+      pago: r.pago === 1,
+    })),
     cupons: cupons.map((c) => ({ id: c.id, titulo: c.titulo, origem: c.loja_id === null ? 'SHOPPING' : 'LOJA' })),
   }
 }

@@ -31,6 +31,8 @@ export interface Atendimento {
 export interface ReservaDoCliente {
   id: string
   produto: string
+  /** A primeira foto do produto; null quando ele não tem. */
+  foto: string | null
   status: StatusReserva
   pago: boolean
 }

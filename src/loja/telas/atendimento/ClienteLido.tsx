@@ -92,7 +92,7 @@ function AtendimentoDoCliente({ atendimento, leitura, aoRegistrar, aoTerminar }:
             <Vazio>{cliente.nome} não tem reservas nesta loja.</Vazio>
           ) : (
             reservas.map((r) => (
-              <ReservaStatus key={r.id} produto={r.produto} loja={situacao(r)} status={r.status} pago={r.pago} />
+              <ReservaStatus key={r.id} produto={r.produto} foto={r.foto} loja={situacao(r)} status={r.status} pago={r.pago} />
             ))
           )}
         </section>
