@@ -1,10 +1,11 @@
-// GET /api/loja/atendimento/{qr} e POST /api/loja/compras, com as regras que a API real
-// aplica (requisitos.md): ficha filtrada (RN04), cupons combináveis (RN05), limite de uso
+// GET /api/loja/atendimento/{qr}, POST /api/loja/atendimento/previa e POST /api/loja/compras,
+// com as regras da API real (functions/_lib/regras/cupons.ts): ficha filtrada (RN04), um
+// cupom da loja e um voucher do shopping por compra (RN05), validade, nível e limite de uso
 // (RN06), 1 ponto por real pago (RN07) e reembolso do voucher do shopping (RN11).
-import type { Atendimento, Compra, PedidoCompra } from '../../tipos/loja'
+import type { Atendimento, Compra, PedidoCompra, PreviaCompra } from '../../tipos/loja'
 import { podeRetirar, STATUS_ATIVOS } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
-import { banco, LOJA, type ClienteMock, type CupomMock } from './dados'
+import { banco, hojeEmPalmas, LOJA, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
 import {
   dadosInvalidos,
   erro,
@@ -21,12 +22,21 @@ function clienteDoQr(qr: string) {
   return banco.clientes.find((c) => c.qrToken === qr)
 }
 
-function usosDoCupom(cupom: CupomMock, cliente: ClienteMock) {
-  return banco.usos.filter((u) => u.cupomId === cupom.id && u.clienteId === cliente.id).length
+export function usosDoCupom(cupom: CupomMock, clienteId?: string) {
+  return banco.usos.filter((u) => u.cupomId === cupom.id && (!clienteId || u.clienteId === clienteId))
 }
 
-function cuponsDisponiveis(cliente: ClienteMock) {
-  return banco.cupons.filter((c) => usosDoCupom(c, cliente) < c.limitePorCliente)
+/** Por que o cupom não vale para o cliente agora, ou null se vale. */
+function motivoCupomInvalido(cupom: CupomMock, cliente: ClienteMock) {
+  if (!cupom.ativo) return `O cupom "${cupom.titulo}" não está mais ativo.`
+  if (hojeEmPalmas() > cupom.validade) return `O cupom "${cupom.titulo}" já venceu.`
+  if (!nivelAtende(cliente.nivel, cupom.nivelMinimo)) {
+    return `O cupom "${cupom.titulo}" é para clientes do nível ${cupom.nivelMinimo} ou acima.`
+  }
+  if (usosDoCupom(cupom, cliente.id).length >= cupom.limitePorCliente) {
+    return `O cliente já usou o cupom "${cupom.titulo}" o número de vezes permitido.`
+  }
+  return null
 }
 
 export function buscarAtendimento(pedido: PedidoMock): RespostaMock {
@@ -44,7 +54,9 @@ export function buscarAtendimento(pedido: PedidoMock): RespostaMock {
     reservas: banco.reservas
       .filter((r) => r.clienteId === cliente.id && STATUS_ATIVOS.includes(r.status))
       .map(({ id, produto, status, pago }) => ({ id, produto, status, pago })),
-    cupons: cuponsDisponiveis(cliente).map(({ id, titulo, origem }) => ({ id, titulo, origem })),
+    cupons: banco.cupons
+      .filter((c) => !motivoCupomInvalido(c, cliente))
+      .map(({ id, titulo, origem }) => ({ id, titulo, origem })),
   }
   return ok(atendimento)
 }
@@ -64,19 +76,26 @@ function lerPedidoCompra(corpo: unknown): PedidoCompra | RespostaMock {
   if (reservaId !== undefined && typeof reservaId !== 'string') {
     return dadosInvalidos('A reserva veio em formato errado.')
   }
-  return { qrToken, valorCentavos, cupons: [...new Set(cupons as string[])], reservaId }
+  return { qrToken, valorCentavos, cupons: cupons as string[], reservaId }
 }
 
-export function registrarCompra(pedido: PedidoMock): RespostaMock {
+interface Calculo {
+  cliente: ClienteMock
+  reserva?: ReservaMock
+  usados: CupomMock[]
+  previa: PreviaCompra
+}
+
+/** O cálculo da compra, igual para a prévia e para o registro. Não grava nada. */
+function calcular(pedido: PedidoMock): Calculo | RespostaMock {
   const negado = exigirLojista(pedido)
   if (negado) return negado
-
   const lido = lerPedidoCompra(pedido.corpo)
   if ('status' in lido) return lido
   const cliente = clienteDoQr(lido.qrToken)
   if (!cliente) return naoEncontrado(QR_DESCONHECIDO)
 
-  // Retirada de reserva: só da própria loja e do próprio cliente, e só se já pode sair.
+  // Retirada de reserva: só do próprio cliente nesta loja, e só se já pode sair.
   const reserva = lido.reservaId ? banco.reservas.find((r) => r.id === lido.reservaId) : undefined
   if (lido.reservaId && (!reserva || reserva.clienteId !== cliente.id)) {
     return naoEncontrado('Essa reserva não é deste cliente nesta loja.')
@@ -91,52 +110,74 @@ export function registrarCompra(pedido: PedidoMock): RespostaMock {
     return erro(409, 'TRANSICAO_INVALIDA', mensagem)
   }
 
-  // Reserva paga com Pix: a compra entra com o valor da reserva e o caixa não cobra de novo.
+  // Reserva paga com Pix: o valorCentavos (0) é ignorado; a compra entra com o valor da reserva.
   const pagaComPix = Boolean(reserva?.pago)
   if (pagaComPix && lido.cupons.length > 0) {
     return erro(422, 'CUPOM_INVALIDO', 'A reserva já foi paga com Pix. Os cupons ficam para a próxima compra.')
   }
   const bruto = pagaComPix && reserva ? reserva.precoCentavos * reserva.quantidade : lido.valorCentavos
-  if (bruto <= 0) return dadosInvalidos('Informe o valor da compra.')
+  if (bruto <= 0) return dadosInvalidos('O valor da compra precisa ser maior que zero.')
 
-  const disponiveis = cuponsDisponiveis(cliente)
+  if (new Set(lido.cupons).size !== lido.cupons.length) {
+    return erro(422, 'CUPONS_INCOMPATIVEIS', 'O mesmo cupom foi informado duas vezes.')
+  }
   const usados: CupomMock[] = []
   for (const id of lido.cupons) {
-    const cupom = disponiveis.find((c) => c.id === id)
-    if (!cupom) return erro(422, 'CUPOM_INVALIDO', 'Um dos cupons não vale mais para este cliente. Leia o QR de novo.')
+    const cupom = banco.cupons.find((c) => c.id === id)
+    if (!cupom) return erro(422, 'CUPOM_INVALIDO', 'Um dos cupons não existe mais. Leia o QR de novo.')
+    const motivo = motivoCupomInvalido(cupom, cliente)
+    if (motivo) return erro(422, 'CUPOM_INVALIDO', motivo)
     usados.push(cupom)
   }
-  if (usados.filter((c) => c.origem === 'LOJA').length > 1) {
-    return erro(422, 'CUPONS_INCOMPATIVEIS', 'Só um cupom da loja por compra. O voucher do shopping pode ir junto.')
+  const daLoja = usados.filter((c) => c.origem === 'LOJA')
+  const doShopping = usados.filter((c) => c.origem === 'SHOPPING')
+  if (daLoja.length > 1) return erro(422, 'CUPONS_INCOMPATIVEIS', 'Só dá para usar um cupom da loja por compra.')
+  if (doShopping.length > 1) {
+    return erro(422, 'CUPONS_INCOMPATIVEIS', 'Só dá para usar um voucher do shopping por compra.')
   }
 
-  // Percentuais sobre o valor bruto, depois os valores fixos, sem passar do que falta pagar.
-  let falta = bruto
-  const descontos = [...usados]
-    .sort((a, b) => (a.tipo === b.tipo ? 0 : a.tipo === 'PERCENTUAL' ? -1 : 1))
-    .map((cupom) => {
-      const centavos = Math.min(
-        falta,
-        cupom.tipo === 'PERCENTUAL' ? Math.floor((bruto * cupom.valor) / 100) : cupom.valor,
-      )
-      falta -= centavos
-      return { cupom: cupom.id, centavos }
-    })
-  const voucher = descontos.find((d) => usados.find((c) => c.id === d.cupom)?.origem === 'SHOPPING')
+  // O cupom da loja calcula sobre o valor bruto; o voucher do shopping, sobre o que sobrou.
+  let restante = bruto
+  const descontos = [...daLoja, ...doShopping].map((cupom) => {
+    const base = cupom.origem === 'SHOPPING' ? restante : bruto
+    const cheio = cupom.tipo === 'PERCENTUAL' ? Math.floor((base * cupom.valor) / 100) : cupom.tipo === 'VALOR' ? cupom.valor : 0
+    const centavos = Math.min(cheio, restante)
+    restante -= centavos
+    return { cupom: cupom.id, centavos }
+  })
+  const voucher = descontos.find((d) => d.centavos > 0 && doShopping.some((c) => c.id === d.cupom))
+
+  return {
+    cliente,
+    reserva,
+    usados,
+    previa: {
+      valorBrutoCentavos: bruto,
+      descontos,
+      valorPagoCentavos: restante,
+      pontosGerados: Math.floor(restante / 100),
+      reembolsoGerado: voucher ?? null,
+    },
+  }
+}
+
+export function calcularPrevia(pedido: PedidoMock): RespostaMock {
+  const calculo = calcular(pedido)
+  return 'status' in calculo ? calculo : ok(calculo.previa)
+}
+
+export function registrarCompra(pedido: PedidoMock): RespostaMock {
+  const calculo = calcular(pedido)
+  if ('status' in calculo) return calculo
+  const { cliente, reserva, usados, previa } = calculo
 
   banco.compras += 1
-  const compra: Compra = {
-    id: `co${banco.compras}`,
-    valorBrutoCentavos: bruto,
-    descontos,
-    valorPagoCentavos: falta,
-    pontosGerados: Math.floor(falta / 100),
-    reembolsoGerado: voucher && voucher.centavos > 0 ? voucher : null,
-  }
-
+  const compra: Compra = { id: novoId('co'), ...previa }
   cliente.pontos += compra.pontosGerados
-  for (const cupom of usados) banco.usos.push({ cupomId: cupom.id, clienteId: cliente.id, compraId: compra.id })
+  for (const cupom of usados) {
+    const centavos = compra.descontos.find((d) => d.cupom === cupom.id)?.centavos ?? 0
+    banco.usos.push({ cupomId: cupom.id, clienteId: cliente.id, compraId: compra.id, centavos })
+  }
   if (reserva) reserva.status = 'RETIRADA'
-
   return ok(compra, 201)
 }

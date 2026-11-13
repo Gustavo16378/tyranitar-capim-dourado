@@ -118,6 +118,27 @@ describe('mocks: POST /api/loja/compras', () => {
     expect(corpo).toMatchObject({ erro: 'CUPONS_INCOMPATIVEIS' })
   })
 
+  it('recusa cupom vencido e cupom de nível acima do cliente (RN06)', async () => {
+    const vencido = await chamar('POST', '/api/loja/compras', { qrToken: QR_DA_ANA, valorCentavos: 10000, cupons: ['cp4'] })
+    expect(vencido.corpo).toMatchObject({ status: 422, erro: 'CUPOM_INVALIDO', mensagem: expect.stringMatching(/venceu/) })
+    const dourado = await chamar('POST', '/api/loja/compras', { qrToken: QR_DA_ANA, valorCentavos: 10000, cupons: ['cp5'] })
+    expect(dourado.corpo).toMatchObject({ status: 422, erro: 'CUPOM_INVALIDO', mensagem: expect.stringMatching(/DOURADO/) })
+  })
+
+  it('desconta o voucher do shopping sobre o que sobrou depois do cupom da loja', async () => {
+    const { corpo } = await chamar<Compra>('POST', '/api/loja/compras', {
+      qrToken: QR_DA_ANA,
+      valorCentavos: 1800,
+      cupons: ['cp2', 'cp3'],
+    })
+    // R$ 18,00 - R$ 15,00 da loja = R$ 3,00; o voucher de R$ 20 só cobre os R$ 3,00 que sobraram.
+    expect(corpo.descontos).toEqual([
+      { cupom: 'cp3', centavos: 1500 },
+      { cupom: 'cp2', centavos: 300 },
+    ])
+    expect(corpo).toMatchObject({ valorPagoCentavos: 0, pontosGerados: 0, reembolsoGerado: { cupom: 'cp2', centavos: 300 } })
+  })
+
   it('recusa cupom que o cliente não tem', async () => {
     const { status, corpo } = await chamar('POST', '/api/loja/compras', {
       qrToken: QR_DA_ANA,

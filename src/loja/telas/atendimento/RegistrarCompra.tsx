@@ -40,11 +40,11 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
 
   function alternarCupom(cupom: CupomDoCliente, marcado: boolean) {
     setEscolhidos((atuais) => {
-      const sem = atuais.filter((id) => id !== cupom.id)
-      if (!marcado) return sem
-      // RN05: um cupom da loja por compra. Marcar outro da loja desmarca o anterior.
-      const daLoja = (id: string) => cupons.find((c) => c.id === id)?.origem === 'LOJA'
-      return [...(cupom.origem === 'LOJA' ? sem.filter((id) => !daLoja(id)) : sem), cupom.id]
+      // RN05: um cupom da loja e um voucher do shopping por compra. Marcar outro da mesma
+      // origem desmarca o anterior.
+      const outraOrigem = (id: string) => cupons.find((c) => c.id === id)?.origem !== cupom.origem
+      const sem = atuais.filter((id) => id !== cupom.id && (!marcado || outraOrigem(id)))
+      return marcado ? [...sem, cupom.id] : sem
     })
   }
 
@@ -137,8 +137,8 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
                       {c.titulo} <span className="text-ink-muted">({c.origem === 'LOJA' ? 'loja' : 'shopping'})</span>
                     </Opcao>
                   ))}
-                  {cupons.filter((c) => c.origem === 'LOJA').length > 1 && (
-                    <p className="text-body-sm text-ink-muted">Um cupom da loja por compra; o do shopping vai junto.</p>
+                  {cupons.length > 2 && (
+                    <p className="text-body-sm text-ink-muted">Um cupom da loja e um do shopping por compra.</p>
                   )}
                 </fieldset>
               )}
@@ -161,8 +161,8 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
   )
 }
 
-/** Os cupons já vêm marcados, como no protótipo, com no máximo um da loja (RN05). */
+/** Os cupons já vêm marcados, como no protótipo: o primeiro da loja e o primeiro do shopping (RN05). */
 function cuponsIniciais(cupons: CupomDoCliente[]) {
-  const primeiroDaLoja = cupons.find((c) => c.origem === 'LOJA')
-  return cupons.filter((c) => c.origem === 'SHOPPING' || c === primeiroDaLoja).map((c) => c.id)
+  const primeiros = [cupons.find((c) => c.origem === 'LOJA'), cupons.find((c) => c.origem === 'SHOPPING')]
+  return primeiros.filter((c) => c !== undefined).map((c) => c.id)
 }
