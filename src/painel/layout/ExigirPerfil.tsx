@@ -1,14 +1,17 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
-import { urlNoPainel, usePainel } from '../painel'
+import { usePainel } from '../painel'
 
-/** Sem sessão com o perfil do painel, vai para o login e volta para a mesma tela depois de entrar. */
+/**
+ * Sem a sessão do perfil do painel, vai para o login único (/entrar), que volta para a mesma
+ * tela depois de entrar (src/app/destinoDoLogin.ts).
+ */
 export function ExigirPerfil({ children }: { children: ReactNode }) {
   const painel = usePainel()
   const atual = painel.sessao.useSessao()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   if (atual?.usuario.perfil !== painel.perfil) {
-    return <Navigate to={urlNoPainel(painel, 'entrar')} replace state={{ voltarPara: pathname }} />
+    return <Navigate to="/entrar" replace state={{ de: pathname + search, perfil: painel.perfil }} />
   }
   return children
 }

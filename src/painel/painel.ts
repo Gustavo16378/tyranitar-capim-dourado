@@ -1,8 +1,9 @@
-// O que define um painel (o da loja, o do shopping): nome, endereço, perfil que entra,
-// telas, sessão e login. Cada painel monta a sua configuração (src/loja/RotasLoja.tsx) e o
-// RotasDoPainel faz o resto: login, guarda de perfil, barra lateral e rotas das telas.
-import { createContext, useContext, type ComponentType, type ReactNode } from 'react'
-import type { PedidoLogin, Perfil, RespostaLogin } from '../tipos'
+// O que define um painel (o da loja, o do shopping): nome, endereço, perfil que entra, telas e
+// sessão. Cada painel monta a sua configuração (src/loja/RotasLoja.tsx) e o RotasDoPainel faz
+// o resto: guarda de perfil, barra lateral e rotas das telas. O login é o único do app
+// (/entrar), que grava a sessão do perfil (src/painel/api/sessoes.ts).
+import { createContext, useContext, type ComponentType } from 'react'
+import type { Perfil } from '../tipos'
 import type { ArmazemDeSessao } from './api/sessao'
 
 export interface TelaDoPainel {
@@ -14,22 +15,17 @@ export interface TelaDoPainel {
 }
 
 export interface ConfigDoPainel {
-  /** "Painel da loja": aparece na barra lateral, no login e no título da aba. */
+  /** "Painel da loja": aparece na barra lateral e no título da aba. */
   nome: string
   /** Onde o painel está montado no App: "/loja". */
   base: string
-  /** Só entra quem tem este perfil. */
+  /** Só entra quem tem este perfil; sem a sessão dele, a guarda manda para /entrar. */
   perfil: Perfil
   /** Na ordem da barra lateral; a primeira é a tela inicial. */
   telas: readonly TelaDoPainel[]
   sessao: ArmazemDeSessao
-  entrar: (pedido: PedidoLogin) => Promise<RespostaLogin>
-  /** Mostra o selo "Dados de exemplo" e a dica de login. */
+  /** Mostra o selo "Dados de exemplo": alguma tela ainda responde com mocks. */
   mocksLigados: boolean
-  /** A frase do login: "Entre com o e-mail e a senha da sua loja." */
-  chamadaDoLogin: string
-  /** Que e-mail usar enquanto os mocks respondem. */
-  dicaComMocks: ReactNode
 }
 
 export const ContextoDoPainel = createContext<ConfigDoPainel | null>(null)

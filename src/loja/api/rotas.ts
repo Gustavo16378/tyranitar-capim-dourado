@@ -11,7 +11,6 @@ import type {
   Lista,
   PedidoCompra,
   PedidoCupom,
-  PedidoLogin,
   PedidoPrevia,
   PedidoProduto,
   Periodo,
@@ -19,16 +18,10 @@ import type {
   ProdutoDaLoja,
   Relatorio,
   ReservaDaLoja,
-  RespostaLogin,
   ResultadoImportacao,
   StatusPedidoPelaLoja,
 } from '../../tipos/loja'
 import { requisitar } from './cliente'
-
-/** POST /api/auth/login */
-export function entrar(pedido: PedidoLogin) {
-  return requisitar<RespostaLogin>('POST', '/api/auth/login', { corpo: pedido })
-}
 
 /** GET /api/loja/atendimento/{qr}: ficha, reservas e cupons do cliente do QR (RF18). */
 export function buscarAtendimento(qr: string, sinal?: AbortSignal) {

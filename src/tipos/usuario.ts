@@ -20,3 +20,10 @@ export interface RespostaLogin {
   token: string
   usuario: Usuario
 }
+
+/** Item de GET /api/auth/demo: uma conta de demonstração (só com DEMO=1). loja: só no lojista. */
+export interface ContaDeDemonstracao {
+  perfil: Perfil
+  nome: string
+  loja: string | null
+}

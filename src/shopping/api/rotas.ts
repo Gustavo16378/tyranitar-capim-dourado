@@ -9,24 +9,17 @@ import type {
   LojistaCriado,
   LojistaDaLoja,
   Lista,
-  PedidoLogin,
   PedidoCupom,
   PedidoLoja,
   PedidoLojista,
   Periodo,
   ReembolsoDoShopping,
   Reembolsos,
-  RespostaLogin,
   StatusReembolso,
   VagasEDemanda,
   VoucherDoShopping,
 } from '../../tipos/shopping'
 import { requisitar } from './cliente'
-
-/** POST /api/auth/login */
-export function entrar(pedido: PedidoLogin) {
-  return requisitar<RespostaLogin>('POST', '/api/auth/login', { corpo: pedido })
-}
 
 /** GET /api/shopping/lojas: as unidades da planta, com a loja de cada uma ou vaga (RF27). */
 export function listarLojas(filtro: FiltroLojas = {}, sinal?: AbortSignal) {
