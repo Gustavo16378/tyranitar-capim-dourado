@@ -99,9 +99,16 @@ export interface Compra {
   reembolsoGerado: { cupom: string; centavos: number } | null
 }
 
+// ---------- POST /api/loja/atendimento/previa ----------
+
+/** O mesmo corpo de POST /api/loja/compras; a API calcula e não grava nada. */
+export type PedidoPrevia = PedidoCompra
+
+/** A compra como ficaria, sem id: o que o caixa cobra e os pontos que o cliente ganha. */
+export type PreviaCompra = Omit<Compra, 'id'>
+
 // ---------- GET /api/loja/reservas e PATCH /api/loja/reservas/{id} ----------
-// O contrato fixa a paginação e as transições; os campos de cada item abaixo são a
-// proposta do painel. Se a API devolver outro formato, ajuste aqui e no mock.
+// Formato registrado em docs/api.md.
 
 export interface ReservaDaLoja {
   id: string
@@ -130,4 +137,91 @@ export type StatusPedidoPelaLoja = 'CONFIRMADA' | 'SEPARADA' | 'RETIRADA' | 'CAN
 
 export interface PedidoMudarStatus {
   status: StatusPedidoPelaLoja
+}
+
+// ---------- /api/loja/produtos (RF21, RF22) ----------
+
+export interface ProdutoDaLoja {
+  id: string
+  nome: string
+  descricao: string
+  /** calcados, roupas, acessorios... A ficha e a busca usam a categoria. */
+  categoria: string
+  precoCentavos: number
+  /** Nunca negativo; a reserva desconta (RN03). */
+  estoque: number
+  /** Endereços das fotos; a primeira é a capa. */
+  fotos: string[]
+  /** Campos que mudam por categoria: { numeracao: [40, 41], cor: 'preto' }. */
+  atributos: Record<string, unknown>
+  /** Inativo some da busca e da Capi, mas continua no painel. */
+  ativo: boolean
+}
+
+/** Corpo de POST /api/loja/produtos e de PUT /api/loja/produtos/{id}. */
+export type PedidoProduto = Omit<ProdutoDaLoja, 'id'>
+
+export interface FiltroProdutos {
+  /** Texto no nome. */
+  q?: string
+  pagina?: number
+  tamanho?: number
+}
+
+/** Resposta de POST /api/loja/produtos/importar: as linhas com erro não são salvas. */
+export interface ResultadoImportacao {
+  importados: number
+  /** `linha` conta o cabeçalho como linha 1, como numa planilha. */
+  erros: { linha: number; mensagem: string }[]
+}
+
+// ---------- /api/loja/cupons (RF23) ----------
+
+export type TipoCupom = 'PERCENTUAL' | 'VALOR' | 'BRINDE'
+
+export interface CupomDaLoja {
+  id: string
+  titulo: string
+  tipo: TipoCupom
+  /** PERCENTUAL: 1 a 100. VALOR: centavos. BRINDE: 0. */
+  valor: number
+  /** Se preenchido, o cupom só aparece para quem tem interesse nessa categoria. */
+  categoriaAlvo: string | null
+  nivelMinimo: NivelApi
+  limitePorCliente: number
+  /** Último dia de uso, em Palmas: "2026-12-31". */
+  validade: string
+  ativo: boolean
+  /** Quantas compras usaram o cupom. */
+  usos: number
+  /** Soma dos descontos dados com ele. */
+  descontoCentavos: number
+}
+
+/** Corpo de POST /api/loja/cupons. */
+export type PedidoCupom = Pick<
+  CupomDaLoja,
+  'titulo' | 'tipo' | 'valor' | 'categoriaAlvo' | 'nivelMinimo' | 'limitePorCliente' | 'validade'
+>
+
+// ---------- GET /api/loja/relatorios (RF24) ----------
+
+export type Periodo = '7d' | '30d' | '90d'
+
+export interface Relatorio {
+  periodo: Periodo
+  maisVendidos: { produtoId: string; nome: string; quantidade: number; valorCentavos: number }[]
+  maisBuscados: { termo: string; buscas: number }[]
+  /** Buscados nas categorias da loja sem resultado em nenhuma loja (RN12). */
+  naoEncontrados: { termo: string; buscas: number }[]
+  parados: { produtoId: string; nome: string; estoque: number; diasSemVenda: number }[]
+  /** diaDaSemana: 0 é domingo. hora: 0 a 23, em Palmas. */
+  picos: { diaDaSemana: number; hora: number; compras: number }[]
+  cupons: { cupomId: string; titulo: string; usos: number; descontoCentavos: number }[]
+  /** null quando não houve compra com (ou sem) ficha no período. */
+  ticketMedio: { comFichaCentavos: number | null; semFichaCentavos: number | null }
+  /** null com menos de 3 lojas na categoria (RN13). */
+  comparativoCategoria: { categoria: string; ticketMedioLojaCentavos: number; ticketMedioCategoriaCentavos: number }[] | null
+  /** O que aconteceu com as reservas feitas no período: quantas viraram retirada. */
+  reservas: { feitas: number; retiradas: number; emAberto: number; canceladas: number; expiradas: number }
 }
