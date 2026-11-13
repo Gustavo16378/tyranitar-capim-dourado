@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { Badge } from '../../componentes'
 import { cx } from '../../componentes/cx'
 import { apagarSessao, MOCKS_LIGADOS, useSessao } from '../api'
+import { Carregando, Esqueleto } from '../comum/Estados'
 import { urlDaTela } from '../enderecos'
 import { TELAS_DA_LOJA } from '../navegacao'
 
@@ -46,7 +48,17 @@ export function LayoutLoja() {
       </aside>
 
       <main className="mx-auto w-full max-w-[1120px] px-4 py-6 md:px-8 md:py-8">
-        <Outlet />
+        {/* Para as telas carregadas sob demanda (navegacao.ts). */}
+        <Suspense
+          fallback={
+            <Carregando rotulo="Carregando a tela" className="flex flex-col gap-6">
+              <Esqueleto className="h-16 max-w-[480px]" />
+              <Esqueleto className="h-64" />
+            </Carregando>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )
