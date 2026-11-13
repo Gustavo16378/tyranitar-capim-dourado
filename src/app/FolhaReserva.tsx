@@ -4,18 +4,12 @@ import { gsap } from 'gsap'
 import { comoErroApi, criarReserva, type ErroApi } from '../api'
 import { Badge, Icon } from '../componentes'
 import { comMovimento, DURACAO, EASE, useGSAP } from '../movimento'
-import type { FormaPagamento, ProdutoResumo, Reserva } from '../tipos'
+import type { FormaPagamento, ProdutoResumo } from '../tipos'
 
 export interface FolhaReservaProps {
   produto: ProdutoResumo
   aberta: boolean
   onFechar: () => void
-}
-
-/** O que a tela de Reserva recebe pela navegação (não há GET de uma reserva no contrato). */
-export interface EstadoReserva {
-  reserva: Reserva
-  produto: ProdutoResumo
 }
 
 const OPCOES: { forma: FormaPagamento; titulo: string; detalhe: string; selo?: string }[] = [
@@ -65,9 +59,8 @@ export function FolhaReserva({ produto, aberta, onFechar }: FolhaReservaProps) {
     setErro(null)
     try {
       const reserva = await criarReserva({ produtoId: produto.id, quantidade: 1, formaPagamento: forma })
-      const { id, nome, categoria, precoCentavos, estoque, foto, loja } = produto
-      const estado: EstadoReserva = { reserva, produto: { id, nome, categoria, precoCentavos, estoque, foto, loja } }
-      navigate(`/reserva/${reserva.id}`, { state: estado })
+      // A tela da reserva lê tudo pelo id (GET /api/reservas/{id}), então também abre pelo link.
+      navigate(`/reserva/${reserva.id}`)
     } catch (falha) {
       setErro(comoErroApi(falha))
       setEnviando(null)

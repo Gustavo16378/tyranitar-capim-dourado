@@ -1,67 +1,68 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { QRCodeSVG } from 'qrcode.react'
-import { comoErroApi, ErroApi, pagarReserva } from '../api'
+import { comoErroApi, obterReserva, pagarReserva, useDados, type ErroApi } from '../api'
 import { Button, formatarPreco, Icon, ReservaStatus } from '../componentes'
 import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
-import { ErroTela } from './Estados'
-import type { EstadoReserva } from './FolhaReserva'
+import type { Reserva as RespostaReserva, ReservaDetalhe } from '../tipos'
+import { Carregando, ErroTela, Esqueleto } from './Estados'
 import { nomeDoPiso, prazoDaReserva } from './formatos'
-
-function ehEstadoReserva(estado: unknown): estado is EstadoReserva {
-  return typeof estado === 'object' && estado !== null && 'reserva' in estado && 'produto' in estado
-}
-
-const SEM_DADOS = new ErroApi({
-  status: 404,
-  erro: 'NAO_ENCONTRADO',
-  mensagem:
-    'Os detalhes desta reserva não estão abertos neste aparelho. Ela continua valendo: mostre o QR da carteira no balcão.',
-})
 
 /**
  * Reserva: o Pix simulado (quando o cliente escolheu pagar agora) e depois a reserva confirmada,
- * com o status e os próximos passos. Os dados chegam da folha de reserva pela navegação.
+ * com o status e os próximos passos. Abre pelo link (/reserva/{id}), lendo GET /api/reservas/{id}.
  */
 export default function Reserva() {
-  const location = useLocation()
+  const { id = '' } = useParams()
   const navigate = useNavigate()
-  const inicial = ehEstadoReserva(location.state) ? location.state : null
-  const [reserva, setReserva] = useState(inicial?.reserva ?? null)
+  const lida = useDados(() => obterReserva(id), id)
+  // A resposta do pagamento atualiza a reserva lida sem carregar tudo de novo.
+  const [paga, setPaga] = useState<RespostaReserva | null>(null)
   const [pagando, setPagando] = useState(false)
   const [erro, setErro] = useState<ErroApi | null>(null)
-  const produto = inicial?.produto
+  const reserva: ReservaDetalhe | null =
+    lida.tipo === 'ok' ? { ...lida.dados, ...(paga?.id === lida.dados.id ? paga : {}) } : null
   const esperandoPix = reserva?.formaPagamento === 'PIX' && !reserva.pago
-  const tela = useEntrada<HTMLDivElement>([esperandoPix])
+  const tela = useEntrada<HTMLDivElement>([lida.tipo, esperandoPix])
 
-  if (!reserva || !produto) {
-    return (
-      <div className="flex flex-col gap-5 px-4 py-6">
-        <title>{`Reserva · ${APP_NOME}`}</title>
-        <h1 className="text-title-lg">Sua reserva</h1>
-        <ErroTela erro={SEM_DADOS} />
-        <Button variant="primary" onClick={() => navigate('/carteira')}>
-          Abrir carteira
-        </Button>
-      </div>
-    )
-  }
-
-  const pagar = async (id: string) => {
+  async function pagar(idReserva: string) {
     setPagando(true)
     setErro(null)
     try {
-      const paga = await pagarReserva(id)
-      setReserva(paga)
-      // Guarda no histórico, para recarregar a página não voltar para o Pix.
-      navigate(location.pathname, { replace: true, state: { reserva: paga, produto } satisfies EstadoReserva })
+      setPaga(await pagarReserva(idReserva))
     } catch (falha) {
       setErro(comoErroApi(falha))
     } finally {
       setPagando(false)
     }
   }
+
+  if (!reserva) {
+    return (
+      <div className="flex flex-col gap-5 px-4 py-6">
+        <title>{`Reserva · ${APP_NOME}`}</title>
+        <h1 className="text-title-lg">Sua reserva</h1>
+        {lida.tipo === 'carregando' && (
+          <Carregando className="flex flex-col gap-5">
+            <Esqueleto className="h-5 w-2/3" />
+            <Esqueleto className="h-[164px]" />
+          </Carregando>
+        )}
+        {lida.tipo === 'erro' && (
+          <>
+            {/* Reserva que não existe (ou é de outra pessoa) não volta tentando de novo. */}
+            <ErroTela erro={lida.erro} onTentar={lida.erro.status === 404 ? undefined : lida.recarregar} />
+            <Button variant="primary" onClick={() => navigate('/inicio')}>
+              Ir para o início
+            </Button>
+          </>
+        )}
+      </div>
+    )
+  }
+
+  const { produto } = reserva
 
   if (esperandoPix) {
     return (
@@ -99,15 +100,19 @@ export default function Reserva() {
 
   if (reserva.status === 'CANCELADA' || reserva.status === 'EXPIRADA') {
     return (
-      <div className="flex flex-col gap-5 px-4 py-6">
+      <div ref={tela} className="flex flex-col gap-5 px-4 py-6">
         <title>{`Reserva · ${APP_NOME}`}</title>
-        <h1 className="text-title-lg">{reserva.status === 'CANCELADA' ? 'Reserva cancelada' : 'Reserva expirada'}</h1>
-        <p className="text-body-sm text-ink-muted">
-          O produto voltou para o estoque da loja. Você pode reservar de novo.
+        <h1 data-anim className="text-title-lg">
+          {reserva.status === 'CANCELADA' ? 'Reserva cancelada' : 'Reserva expirada'}
+        </h1>
+        <p data-anim className="text-body-sm text-ink-muted">
+          {produto.nome} voltou para o estoque da loja. Você pode reservar de novo.
         </p>
-        <Button variant="primary" onClick={() => navigate(`/produto/${produto.id}`)}>
-          Ver o produto
-        </Button>
+        <div data-anim>
+          <Button variant="primary" onClick={() => navigate(`/produto/${produto.id}`)}>
+            Ver o produto
+          </Button>
+        </div>
       </div>
     )
   }
