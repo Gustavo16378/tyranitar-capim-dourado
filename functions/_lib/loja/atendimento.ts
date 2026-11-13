@@ -1,15 +1,16 @@
 // O que o vendedor vê ao ler o QR do cliente (RF18): nome e nível, a ficha filtrada pelas
 // categorias da loja (RN04), as reservas dele nesta loja e os cupons que ele pode usar aqui.
 import { ErroApi } from '../erros'
-import { usosDoCliente, cuponsVigentesNaLoja } from '../repo/cupons'
+import { cuponsVigentesNaLoja, paraVisibilidade, usosDoCliente } from '../repo/cupons'
 import { nivelDoCliente } from '../repo/fidelidade'
 import { categoriasDaFicha, interessesDoCliente } from '../repo/fichas'
 import { buscarLojaAtiva } from '../repo/lojas'
 import { expirarVencidas, reservasAtivasDoCliente } from '../repo/reservas'
 import { buscarClientePorQr, type UsuarioLinha } from '../repo/usuarios'
 import { dataEmPalmas } from '../regras/datas'
+import { clienteVeCupom } from '../regras/cupons'
 import { filtrarFicha } from '../regras/ficha'
-import { nivelAtende, type NivelFidelidade } from '../regras/niveis'
+import type { NivelFidelidade } from '../regras/niveis'
 import { lerJson } from '../texto'
 
 export const QR_DESCONHECIDO = 'Não achamos esse QR. Peça para o cliente abrir a carteira de novo.'
@@ -33,12 +34,7 @@ export async function cuponsDoClienteNaLoja(db: D1Database, cliente: UsuarioLinh
     usosDoCliente(db, cliente.id),
     categoriasDaFicha(db, cliente.id),
   ])
-  return cupons.filter(
-    (c) =>
-      nivelAtende(nivel, c.nivel_minimo) &&
-      (usos[c.id] ?? 0) < c.limite_por_cliente &&
-      (c.categoria_alvo === null || categorias.includes(c.categoria_alvo)),
-  )
+  return cupons.filter((c) => clienteVeCupom(paraVisibilidade(c), { nivel, usos, categorias }))
 }
 
 export async function montarAtendimento(db: D1Database, lojaId: string, qr: string, agora = new Date()) {

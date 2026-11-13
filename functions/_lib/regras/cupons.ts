@@ -39,6 +39,21 @@ export interface ResultadoCupons {
   reembolsos: Desconto[]
 }
 
+/**
+ * Se o cliente vê o cupom (vitrine, carteira e balcão): do nível dele, dentro do limite de uso
+ * (RN06) e, quando tem categoria-alvo, só se a ficha dele tem essa categoria.
+ */
+export function clienteVeCupom(
+  cupom: { id: string; nivelMinimo: NivelFidelidade; limitePorCliente: number; categoriaAlvo: string | null },
+  cliente: { nivel: NivelFidelidade; usos: Record<string, number>; categorias: Iterable<string> },
+) {
+  return (
+    nivelAtende(cliente.nivel, cupom.nivelMinimo) &&
+    (cliente.usos[cupom.id] ?? 0) < cupom.limitePorCliente &&
+    (cupom.categoriaAlvo === null || new Set(cliente.categorias).has(cupom.categoriaAlvo))
+  )
+}
+
 /** Por que o cupom não vale nesta compra, ou null se vale (RN06 e nível mínimo). */
 export function motivoCupomInvalido(cupom: Cupom, ctx: ContextoCompra): string | null {
   if (!cupom.ativo) return `O cupom "${cupom.titulo}" não está mais ativo.`

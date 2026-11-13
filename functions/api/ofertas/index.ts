@@ -3,11 +3,12 @@
 // pode usar (RN06), os de categoria-alvo da ficha dele, e destaque para as categorias da ficha.
 import type { Rota } from '../../_lib/contexto'
 import { json, paginacao } from '../../_lib/http'
-import { listarCuponsVigentes, usosDoCliente, type CupomLinha } from '../../_lib/repo/cupons'
+import { listarCuponsVigentes, paraVisibilidade, usosDoCliente, type CupomLinha } from '../../_lib/repo/cupons'
 import { nivelDoCliente } from '../../_lib/repo/fidelidade'
 import { categoriasDaFicha } from '../../_lib/repo/fichas'
+import { clienteVeCupom } from '../../_lib/regras/cupons'
 import { dataEmPalmas } from '../../_lib/regras/datas'
-import { nivelAtende, type NivelFidelidade } from '../../_lib/regras/niveis'
+import type { NivelFidelidade } from '../../_lib/regras/niveis'
 import { lerJson } from '../../_lib/texto'
 
 interface Cliente {
@@ -27,11 +28,7 @@ async function lerCliente(db: D1Database, id: string): Promise<Cliente> {
 
 function visivel(c: CupomLinha, cliente: Cliente | null) {
   if (!cliente) return c.categoria_alvo === null
-  return (
-    nivelAtende(cliente.nivel, c.nivel_minimo) &&
-    (cliente.usos[c.id] ?? 0) < c.limite_por_cliente &&
-    (c.categoria_alvo === null || cliente.categorias.has(c.categoria_alvo))
-  )
+  return clienteVeCupom(paraVisibilidade(c), cliente)
 }
 
 function emDestaque(c: CupomLinha, cliente: Cliente | null) {

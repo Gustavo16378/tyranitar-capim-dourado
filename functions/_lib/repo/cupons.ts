@@ -24,6 +24,11 @@ const SELECAO = `
          l.nome AS loja_nome, l.mapa_id AS loja_mapa_id, l.categorias AS loja_categorias
   FROM cupom c LEFT JOIN loja l ON l.id = c.loja_id`
 
+/** Os campos que clienteVeCupom (regras/cupons.ts) usa. */
+export function paraVisibilidade(c: CupomLinha) {
+  return { id: c.id, nivelMinimo: c.nivel_minimo, limitePorCliente: c.limite_por_cliente, categoriaAlvo: c.categoria_alvo }
+}
+
 /** Cupom do banco no formato das regras (regras/cupons.ts). */
 export function paraRegra(c: CupomLinha): Cupom {
   return {
