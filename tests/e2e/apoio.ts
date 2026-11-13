@@ -39,6 +39,16 @@ export async function tokenDoLojista(request: APIRequestContext) {
   return ((await resposta.json()) as { token: string }).token
 }
 
+/** Abre uma tela do painel da loja pelo login único: o painel manda para /entrar e volta. */
+export async function entrarNoPainelDaLoja(page: Page, caminho = '/loja/atendimento') {
+  await page.goto(caminho)
+  await expect(page).toHaveURL(/\/entrar$/)
+  await page.getByLabel('E-mail').fill(dados.lojista.email)
+  await page.getByLabel('Senha').fill(dados.lojista.senha)
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL((url) => url.pathname === caminho)
+}
+
 /** Espera a Capi terminar o roteiro da demonstração (o botão de separar aparece no fim). */
 export async function esperarRoteiroDaCapi(page: Page) {
   const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
