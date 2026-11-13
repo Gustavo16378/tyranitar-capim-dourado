@@ -11,6 +11,7 @@ Um site só, com três interfaces:
 | `/` | Cliente, no celular (PWA) |
 | `/loja` | Lojista |
 | `/shopping` | Administração do shopping |
+| `/design-system` | Design system: tokens, componentes e movimentos nos temas claro e escuro |
 
 O app ainda não tem nome definitivo: o nome vem da constante `APP_NOME`, em `src/config.ts`.
 

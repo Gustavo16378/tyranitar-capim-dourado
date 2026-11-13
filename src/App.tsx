@@ -2,10 +2,8 @@ import { lazy, Suspense } from 'react'
 import { Link, Route, Routes } from 'react-router'
 import { APP_NOME } from './config'
 
-// Conferência do design system: só em desenvolvimento, fica fora do build de produção.
-const PaginaDesignSystem = import.meta.env.DEV
-  ? lazy(() => import('./design-system/PaginaDesignSystem'))
-  : null
+// Página pública do design system, carregada só quando alguém abre /design-system.
+const PaginaDesignSystem = lazy(() => import('./design-system/PaginaDesignSystem'))
 
 // As três interfaces do site. Cada uma ganha suas telas nas próximas fases.
 export default function App() {
@@ -14,16 +12,14 @@ export default function App() {
       <Route path="/" element={<EmMontagem titulo={APP_NOME} />} />
       <Route path="/loja/*" element={<EmMontagem titulo="Painel da loja" />} />
       <Route path="/shopping/*" element={<EmMontagem titulo="Painel do shopping" />} />
-      {PaginaDesignSystem && (
-        <Route
-          path="/design-system"
-          element={
-            <Suspense fallback={null}>
-              <PaginaDesignSystem />
-            </Suspense>
-          }
-        />
-      )}
+      <Route
+        path="/design-system"
+        element={
+          <Suspense fallback={null}>
+            <PaginaDesignSystem />
+          </Suspense>
+        }
+      />
       <Route path="*" element={<NaoEncontrada />} />
     </Routes>
   )

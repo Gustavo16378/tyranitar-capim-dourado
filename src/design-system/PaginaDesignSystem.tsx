@@ -1,5 +1,5 @@
-// Página de conferência do design system (/design-system). Só existe em desenvolvimento:
-// o App só registra a rota com import.meta.env.DEV, e ela fica fora do build.
+// Página pública do design system (/design-system): cores, tipografia, os 13 componentes,
+// Icon e CapiMark nos temas claro e escuro, e os quatro movimentos da marca.
 import { useRef, useState, type ReactNode } from 'react'
 import { APP_NOME } from '../config'
 import {
@@ -46,14 +46,14 @@ const CLASSE_DO_ESTILO: Record<string, string> = {
 export default function PaginaDesignSystem() {
   return (
     <div className="min-h-dvh bg-surface text-ink">
+      <title>{`Design system · ${APP_NOME}`}</title>
       <header className="mx-auto flex max-w-[1240px] flex-col gap-2 px-4 pb-6 pt-8">
-        <p className="text-caption font-semibold uppercase tracking-widest text-marrom-ink">
-          Design system · só em desenvolvimento
-        </p>
+        <p className="text-caption font-semibold uppercase tracking-widest text-marrom-ink">Design system</p>
         <h1 className="text-display">{APP_NOME}</h1>
         <p className="max-w-[64ch] text-ink-muted">
-          Os componentes de <code>src/componentes</code> com os tokens de{' '}
-          <code>src/design-system/tokens.json</code>, nos temas claro e escuro lado a lado.
+          A base visual do app do cliente e dos painéis da loja e do shopping. Cores, tipografia, espaços e
+          movimentos saem de um único arquivo de tokens (<code>tokens.json</code>), que vira variáveis CSS e
+          classes do Tailwind. Abaixo, os componentes em React nos temas claro e escuro, lado a lado.
         </p>
       </header>
       <main className="mx-auto flex max-w-[1240px] flex-col gap-8 px-4 pb-12">
