@@ -22,6 +22,13 @@ export async function salvarMensagem(
     .run()
 }
 
+/** "Nova conversa": apaga a conversa do cliente com a Capi. Devolve quantas mensagens saíram. */
+export async function apagarConversa(db: D1Database, clienteId: string) {
+  const { n } = (await db.prepare('SELECT count(*) AS n FROM mensagem WHERE cliente_id = ?1').bind(clienteId).first<{ n: number }>())!
+  await db.prepare('DELETE FROM mensagem WHERE cliente_id = ?1').bind(clienteId).run()
+  return n
+}
+
 /** As últimas mensagens do cliente, da mais antiga para a mais nova. */
 export async function ultimasMensagens(db: D1Database, clienteId: string, limite: number) {
   const { results } = await db

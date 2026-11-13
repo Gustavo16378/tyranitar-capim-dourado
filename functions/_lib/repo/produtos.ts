@@ -93,6 +93,16 @@ export function buscarProdutoQualquer(db: D1Database, id: string) {
     .first<ProdutoLinha>()
 }
 
+/** Os produtos ativos destes ids, de uma vez (os cartões do histórico da Capi). */
+export async function produtosAtivosPorIds(db: D1Database, ids: string[]) {
+  if (!ids.length) return []
+  const { results } = await db
+    .prepare(`${SELECAO} AND p.id IN (SELECT value FROM json_each(?1))`)
+    .bind(JSON.stringify(ids))
+    .all<ProdutoLinha>()
+  return results
+}
+
 export function buscarProdutoAtivo(db: D1Database, id: string) {
   return db.prepare(`${SELECAO} AND p.id = ?1`).bind(id).first<ProdutoLinha>()
 }

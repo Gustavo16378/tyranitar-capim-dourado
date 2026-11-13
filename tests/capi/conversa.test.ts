@@ -4,11 +4,12 @@ import { describe, expect, it } from 'vitest'
 import { conversar } from '../../functions/_lib/capi/conversa'
 import { RESPOSTA_SALVA_SEM_PRODUTO, sha256DaImagem } from '../../functions/_lib/capi/demonstracao'
 import { RESPOSTA_RECUSA, SISTEMA } from '../../functions/_lib/capi/prompt'
-import { onRequestGet as lerConversa } from '../../functions/api/chat'
+import { onRequestDelete as apagarConversa, onRequestGet as lerConversa } from '../../functions/api/chat'
 import { ANA, chamar } from '../workers/rotas'
 import { modeloQueFalha, modeloQueNaoResponde, modeloSimulado, type RespostaGravada } from './modelo-simulado'
 import buscaTenis from './respostas/busca-tenis.json'
 import contextoTenis from './respostas/contexto-tenis.json'
+import fotoTenis from './respostas/foto-tenis.json'
 import ficha from './respostas/ficha.json'
 import produtoInventado from './respostas/produto-inventado.json'
 import recusa from './respostas/recusa.json'
@@ -163,7 +164,7 @@ describe('Capi com o Claude simulado', () => {
     expect(r).toEqual({ resposta: RESPOSTA_RECUSA, produtos: [], acoes: [] })
   })
 
-  it('foto: vai como imagem em base64 junto com o texto; o histórico guarda só "[foto]"', async () => {
+  it('foto: vai como imagem em base64 junto com o texto; o histórico guarda a marca da foto, não a imagem', async () => {
     const { modelo, chamadas } = modeloSimulado(gravada(respostaSimples))
     await conversar(
       { clienteId: 'c-ana', texto: '', imagem: { tipo: 'image/png', base64: 'iVBORw0KGgo=' } },
@@ -176,7 +177,10 @@ describe('Capi com o Claude simulado', () => {
         { type: 'text', text: 'Tem isto no shopping?' },
       ],
     })
-    expect(await umValor("SELECT conteudo FROM mensagem WHERE papel = 'CLIENTE'")).toEqual({ conteudo: '[foto]' })
+    // Sem consulta, a descrição é a primeira frase da resposta (o que a Capi disse ao ver a foto).
+    expect(await umValor("SELECT conteudo FROM mensagem WHERE papel = 'CLIENTE'")).toEqual({
+      conteudo: '[foto: Oi, posso ajudar a achar algo no shopping.]',
+    })
   })
 
   it('TI07: link: o modelo recebe título, preço e a imagem da página', async () => {
@@ -259,6 +263,61 @@ describe('Capi com o Claude simulado', () => {
       const vazia = await conversar({ clienteId: 'c-ana', texto: 'tem bicicleta?' }, deps)
       expect(vazia).toEqual({ resposta: RESPOSTA_SALVA_SEM_PRODUTO, produtos: [], acoes: [] })
     })
+  })
+
+  it('TI10: a foto fica no histórico pela descrição que a Capi fez; depois de "não gostei", ela sabe que viu o tênis', async () => {
+    const { modelo, chamadas } = modeloSimulado(gravada(fotoTenis))
+    const foto = { tipo: 'image/jpeg' as const, base64: 'iVBORw0KGgo=' }
+    await conversar({ clienteId: 'c-ana', texto: 'Tem esse tênis aí?', imagem: foto }, { db: env.DB, modelo })
+    const r = await conversar({ clienteId: 'c-ana', texto: 'não gostei' }, { db: env.DB, modelo })
+    expect(r.resposta).toBe('Entendi, esse tênis preto não te agradou. O que você quer mudar: a cor, o modelo ou o preço?')
+
+    // O histórico guarda o que a Capi viu (o que ela mandou buscar em buscar_similares), não a imagem.
+    const descricao = 'tênis de corrida preto com sola branca, cor preto, estilo esportivo, categoria calcados'
+    expect(await umValor("SELECT conteudo FROM mensagem WHERE papel = 'CLIENTE' AND conteudo LIKE '[foto%'")).toEqual({
+      conteudo: `[foto: ${descricao}] Tem esse tênis aí?`,
+    })
+    // No "não gostei", o Claude recebe a foto como uma mensagem que ele viu, com a descrição dele,
+    // e a regra do prompt: nunca dizer que não viu uma foto que está no histórico.
+    const segundo = chamadas[2]
+    expect(segundo.messages[0]).toEqual({
+      role: 'user',
+      content: `[Foto que o cliente mandou nesta mensagem. Você viu a foto e a descreveu assim: ${descricao}. A imagem não é reenviada.]\nTem esse tênis aí?`,
+    })
+    expect(JSON.stringify(segundo.messages)).not.toContain('iVBORw0KGgo=')
+    expect(SISTEMA).toContain('Você viu essa foto: nunca diga que não viu nem peça para mandar de novo')
+    expect(SISTEMA).toContain('continue no mesmo item e pergunte o que ele quer mudar')
+    expect(segundo.messages.at(-1)).toEqual({ role: 'user', content: [{ type: 'text', text: 'não gostei' }] })
+
+    // O app reabre a conversa sabendo que a primeira mensagem tinha foto (sem a marca no texto).
+    const historico = await chamar(lerConversa, { url: '/api/chat', usuario: ANA })
+    expect(historico.corpo.itens[0]).toMatchObject({ papel: 'CLIENTE', conteudo: 'Tem esse tênis aí?', foto: true })
+    expect(historico.corpo.itens[2]).toMatchObject({ papel: 'CLIENTE', conteudo: 'não gostei', foto: false })
+  })
+
+  it('a foto do roteiro, respondida pela resposta salva, entra no histórico com a descrição do print', async () => {
+    const foto = { tipo: 'image/png' as const, base64: 'iVBORw0KGgo=' }
+    const respostasSalvas = [
+      { id: 'roteiro', textos: ['tem esse tenis'], imagensSha256: [], resposta: 'Achei parecidos.', busca: { texto: 'tênis' }, foto: 'print de um tênis preto' },
+    ]
+    await conversar({ clienteId: 'c-ana', texto: 'Tem esse tênis aí?', imagem: foto }, { db: env.DB, modelo: null, modoDemo: true, respostasSalvas })
+    expect(await umValor("SELECT conteudo FROM mensagem WHERE papel = 'CLIENTE'")).toEqual({
+      conteudo: '[foto: print de um tênis preto] Tem esse tênis aí?',
+    })
+  })
+
+  it('GET /api/chat devolve os cartões de cada resposta; DELETE ("Nova conversa") apaga a conversa', async () => {
+    const { modelo } = modeloSimulado(gravada(buscaTenis))
+    await conversar({ clienteId: 'c-ana', texto: 'Tem tênis de corrida preto?' }, { db: env.DB, modelo })
+    // Um produto que saiu de linha some dos cartões do histórico.
+    await env.DB.prepare("UPDATE produto SET ativo = 0 WHERE id = 'p-run'").run()
+    const historico = await chamar(lerConversa, { url: '/api/chat', usuario: ANA })
+    expect(historico.corpo.itens[1].produtos.map((p: { id: string }) => p.id)).toEqual(['p-pulse'])
+    expect(historico.corpo.itens[1].produtos[0]).toMatchObject({ nome: 'Tênis de corrida Pulse', loja: { nome: 'Loja A' } })
+
+    const apagada = await chamar(apagarConversa, { metodo: 'DELETE', url: '/api/chat', usuario: ANA })
+    expect(apagada).toEqual({ status: 200, corpo: { apagadas: 2 } })
+    expect((await chamar(lerConversa, { url: '/api/chat', usuario: ANA })).corpo).toEqual({ itens: [], total: 0 })
   })
 
   it('TI09: em 3 turnos, a Capi sabe do que se está falando (produtos e resultados das ferramentas)', async () => {

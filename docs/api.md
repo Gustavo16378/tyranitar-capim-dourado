@@ -41,7 +41,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/produtos/{id}` | Público | RF07 |
 | `GET /api/ofertas` | Público | RF06 |
 | `POST /api/chat` | CLIENTE | RF02, RF03, RF04 |
-| `GET /api/chat` | CLIENTE | RF02 |
+| `GET /api/chat`, `DELETE` | CLIENTE | RF02 |
 | `POST /api/reservas` | CLIENTE | RF08, RF09 |
 | `GET /api/reservas/{id}` | CLIENTE | RF08, RF09 |
 | `POST /api/reservas/{id}/pagamento` | CLIENTE | RF09 |
@@ -208,7 +208,23 @@ Erros: `400` (`DADOS_INVALIDOS`: mensagem vazia, texto longo, foto acima de 4 MB
 
 ### `GET /api/chat`
 
-As últimas 50 mensagens do cliente, para reabrir a conversa: `{ "itens": [ { "id", "papel": "CLIENTE" | "CAPI", "conteudo", "criadoEm" } ], "total" }`, da mais antiga para a mais nova. Fotos não são guardadas: a mensagem aparece como `[foto]`.
+As últimas 50 mensagens do cliente, para reabrir a conversa (o app carrega ao abrir a Capi), da mais antiga para a mais nova:
+
+```json
+{
+  "itens": [
+    { "id": "m1", "papel": "CLIENTE", "conteudo": "Tem esse tênis aí no shopping? Uso 42.", "foto": true, "criadoEm": "2026-11-13T15:00:00Z" },
+    { "id": "m2", "papel": "CAPI", "conteudo": "Achei parecidos aqui no térreo...", "produtos": [ { "id": "p1", "nome": "Tênis de corrida preto", "...": "..." } ], "criadoEm": "2026-11-13T15:00:04Z" }
+  ],
+  "total": 2
+}
+```
+
+A foto não é guardada: `foto: true` diz que a mensagem tinha uma. No banco, a mensagem fica como `[foto: descrição] texto`, com a descrição que a Capi fez da foto (o que ela mandou procurar em `buscar_similares`), e é assim que a foto volta para o Claude nas mensagens seguintes. `produtos` são os cartões que a resposta mostrou, dos produtos que ainda estão ativos.
+
+### `DELETE /api/chat`
+
+"Nova conversa": apaga a conversa do cliente com a Capi. Resposta `200`: `{ "apagadas": 4 }`.
 
 ## Reservas
 

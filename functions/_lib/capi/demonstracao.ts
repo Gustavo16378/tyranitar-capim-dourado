@@ -12,6 +12,8 @@ export interface RespostaSalva {
   imagensSha256: string[]
   resposta: string
   busca: { texto?: string; categoria?: string }
+  /** O que a foto do roteiro mostra: vai para o histórico no lugar da imagem. */
+  foto?: string
 }
 
 export const RESPOSTAS_SALVAS: RespostaSalva[] = salvas.respostas

@@ -62,6 +62,35 @@ export interface DependenciasDaCapi {
 const CARTOES_NO_MAXIMO = 3
 const MARCA_DE_PRODUTO = /\[produto:([^\]\s]+)\]/g
 
+/** Os ids das marcas [produto:ID] do texto, na ordem, sem repetir. */
+export function idsCitados(texto: string) {
+  return [...new Set([...texto.matchAll(MARCA_DE_PRODUTO)].map((m) => m[1]))]
+}
+
+/**
+ * A mensagem do cliente com foto fica no histórico como "[foto: descrição] texto": a imagem não é
+ * guardada, mas a descrição que a Capi fez dela é, para as próximas mensagens saberem do que se
+ * trata. "[foto]" sem descrição é das mensagens gravadas antes disso.
+ */
+const MARCA_DE_FOTO = /^\[foto(?::\s*([^\]]*))?\]\s*/
+
+/** A mensagem do cliente gravada: o texto, se tinha foto e a descrição dela. */
+export function lerMensagemDoCliente(conteudo: string) {
+  const marca = conteudo.match(MARCA_DE_FOTO)
+  if (!marca) return { texto: conteudo, foto: false, descricaoDaFoto: null }
+  return { texto: conteudo.slice(marca[0].length), foto: true, descricaoDaFoto: marca[1]?.trim() || null }
+}
+
+/** Como a mensagem do cliente volta para o Claude: a foto, que não é reenviada, pela descrição dela. */
+export function mensagemDoClienteParaOModelo(conteudo: string) {
+  const { texto, foto, descricaoDaFoto } = lerMensagemDoCliente(conteudo)
+  if (!foto) return conteudo
+  const aviso = descricaoDaFoto
+    ? `[Foto que o cliente mandou nesta mensagem. Você viu a foto e a descreveu assim: ${descricaoDaFoto}. A imagem não é reenviada.]`
+    : '[Foto que o cliente mandou nesta mensagem. Você viu a foto na hora; a imagem não é reenviada.]'
+  return texto ? `${aviso}\n${texto}` : aviso
+}
+
 /** O texto sem as marcas [produto:ID] (o app mostra cartões no lugar delas). */
 export function semMarcasDeProduto(texto: string) {
   return texto.replace(MARCA_DE_PRODUTO, '').replace(/[ \t]+([.,;:!?])/g, '$1').replace(/[ \t]{2,}/g, ' ').trim()
@@ -117,7 +146,7 @@ function montarConversa(anteriores: MensagemLinha[], conteudoNovo: Anthropic.Bet
   const desde = anteriores.findIndex((m) => m.papel === 'CLIENTE')
   const mensagens: Mensagem[] = []
   for (const m of desde < 0 ? [] : anteriores.slice(desde)) {
-    if (m.papel === 'CLIENTE') mensagens.push({ role: 'user', content: m.conteudo })
+    if (m.papel === 'CLIENTE') mensagens.push({ role: 'user', content: mensagemDoClienteParaOModelo(m.conteudo) })
     else mensagens.push(...lerTroca(m.troca), { role: 'assistant', content: m.conteudo })
   }
   mensagens.push({ role: 'user', content: conteudoNovo })
@@ -140,7 +169,7 @@ export function montarResposta(
   relevantes: ProdutoLinha[],
   acoes: Acao[],
 ): RespostaDaCapi {
-  const citados = [...new Set([...texto.matchAll(MARCA_DE_PRODUTO)].map((m) => m[1]))]
+  const citados = idsCitados(texto)
   const limpo = semMarcasDeProduto(texto)
   // Citação de produto que não veio de ferramenta é descartada. Sem citação nenhuma, entram os
   // mais relevantes da última busca por texto.
@@ -278,9 +307,48 @@ function respostaParaOHistorico(resposta: RespostaDaCapi) {
   return [resposta.resposta, ...resposta.produtos.map((p) => `[produto:${p.id}]`)].join(' ')
 }
 
-/** Como a mensagem do cliente fica no histórico (a foto não é guardada). */
-function textoParaOHistorico(pedido: PedidoDaCapi) {
-  if (pedido.imagem) return `[foto] ${pedido.texto}`.trim()
+const TAMANHO_DA_DESCRICAO = 300
+
+/**
+ * O que a Capi viu na foto, para o histórico: o que ela mandou procurar em buscar_similares (a
+ * descrição, a cor, a marca e o estilo do item), a descrição da resposta salva do roteiro, a busca
+ * que ela fez ou, sem nenhuma consulta, a primeira frase da resposta.
+ */
+function descreverAFoto(turno: Turno, salva: RespostaSalva | undefined) {
+  const consultas = turno.troca.flatMap((m) =>
+    m.role === 'assistant' && Array.isArray(m.content)
+      ? m.content.filter((b): b is Anthropic.Beta.BetaToolUseBlockParam => b.type === 'tool_use')
+      : [],
+  )
+  const entrada = (nome: string) => consultas.find((c) => c.name === nome)?.input as Record<string, unknown> | undefined
+  const similares = entrada('buscar_similares')
+  const busca = entrada('buscar_produtos')
+  const texto = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+  const partes = similares
+    ? [
+        texto(similares.descricao),
+        texto(similares.cor) && `cor ${texto(similares.cor)}`,
+        texto(similares.marca) && `marca ${texto(similares.marca)}`,
+        texto(similares.estilo) && `estilo ${texto(similares.estilo)}`,
+        texto(similares.categoria) && `categoria ${texto(similares.categoria)}`,
+      ]
+    : salva?.foto
+      ? [salva.foto]
+      : busca
+        ? [texto(busca.texto), texto(busca.categoria) && `categoria ${texto(busca.categoria)}`]
+        : [semMarcasDeProduto(turno.resposta.resposta).split(/(?<=[.?!])\s/)[0]]
+  const descricao = partes
+    .filter(Boolean)
+    .join(', ')
+    .replace(/[[\]]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return descricao.slice(0, TAMANHO_DA_DESCRICAO) || 'uma foto'
+}
+
+/** Como a mensagem do cliente fica no histórico: a foto não é guardada, a descrição dela sim. */
+function textoParaOHistorico(pedido: PedidoDaCapi, descricaoDaFoto: string | null) {
+  if (pedido.imagem) return `[foto: ${descricaoDaFoto ?? 'uma foto'}] ${pedido.texto}`.trim()
   if (pedido.link) return `${pedido.texto} ${pedido.link}`.trim()
   return pedido.texto
 }
@@ -341,7 +409,8 @@ export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi):
   }
   // A pergunta só entra no histórico junto com a resposta: se a Capi falhou (503), a mensagem
   // seguinte não carrega uma pergunta sem resposta, que o Claude responderia de novo.
-  await salvarMensagem(db, pedido.clienteId, 'CLIENTE', textoParaOHistorico(pedido))
+  const descricaoDaFoto = pedido.imagem ? descreverAFoto(turno, salva ?? undefined) : null
+  await salvarMensagem(db, pedido.clienteId, 'CLIENTE', textoParaOHistorico(pedido, descricaoDaFoto))
   await salvarMensagem(
     db,
     pedido.clienteId,

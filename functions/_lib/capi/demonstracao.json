@@ -6,7 +6,8 @@
       "textos": ["tem esse tenis", "tenis preto", "tenis de corrida", "uso 42"],
       "imagensSha256": [],
       "resposta": "Achei parecidos aqui no térreo, com o seu número. Quer que eu separe um para você?",
-      "busca": { "texto": "tênis", "categoria": "calcados" }
+      "busca": { "texto": "tênis", "categoria": "calcados" },
+      "foto": "print de um tênis de corrida preto, com sola branca e detalhe verde-limão"
     },
     {
       "id": "perfume",

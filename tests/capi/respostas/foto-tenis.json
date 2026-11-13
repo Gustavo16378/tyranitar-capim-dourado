@@ -1,0 +1,25 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_foto",
+        "name": "buscar_similares",
+        "input": { "categoria": "calcados", "descricao": "tênis de corrida preto com sola branca", "cor": "preto", "estilo": "esportivo" }
+      }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Achei dois parecidos na Loja A: o Pulse [produto:p-pulse] e o Run 2 [produto:p-run]. Quer que eu separe um?" }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Entendi, esse tênis preto não te agradou. O que você quer mudar: a cor, o modelo ou o preço?" }
+    ]
+  }
+]
