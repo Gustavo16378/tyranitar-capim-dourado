@@ -2,20 +2,19 @@
 
 O painel da loja (`/loja`: Atendimento, Reservas, Produtos, Cupons, Desempenho e Extrato) e o painel do shopping (`/shopping`: Lojas, Fidelidade e campanhas, Demanda, Lojas vagas e demanda, e Reembolsos) foram feitos pelo mesmo caminho e sobre a mesma base, em `src/painel/`. Este guia mostra esse caminho e onde está o exemplo de cada peça, para a próxima tela sair igual.
 
-O caminho é sempre o mesmo, em seis passos: **tipos → função da rota → mock → tela → estados → animação**.
+O caminho é sempre o mesmo, em seis passos: **tipos → função da rota → a rota na API → tela → estados → animação**.
 
 ## Antes de começar
 
 ```bash
-npm run dev            # http://localhost:5173/loja e http://localhost:5173/shopping
+npm run db:migrar && npm run seed:local   # a primeira vez: o D1 local com as lojas da planta (senhas no .dev.vars)
+npm run dev:api                           # o app e a API juntos, em http://localhost:8788
+npm run dev                               # o front com recarga, em http://localhost:5173 (o /api vai para o 8788)
 ```
 
-Enquanto a API não existe, quem responde são os mocks. Os dois painéis pedem login:
+O login é um só, em `/entrar`, para o app e os dois painéis: depois de entrar, cada perfil vai para o seu lugar (cliente para o Início, lojista para `/loja`, administração para `/shopping`). `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela. Com o modo demonstração ligado (`DEMO=1`, já no `wrangler.toml`), a tela mostra um botão por conta de teste: **Cliente (Ana)**, **Lojista** (a loja da unidade PC01A) e **Shopping (admin)**. Cada perfil guarda a sessão dele, então dá para ter o app numa aba e os painéis em outras. No Atendimento, **Simular leitura** abre a carteira da Ana.
 
-- **Loja:** qualquer e-mail no formato `lojista.loja-19@demo.test` e uma senha de 8 caracteres ou mais. No Atendimento, **Simular leitura** abre a carteira da Ana.
-- **Shopping:** `admin@demo.test` e uma senha de 8 caracteres ou mais.
-
-A barra lateral mostra o selo **Dados de exemplo** enquanto o painel usa mocks. Cada painel tem a sua sessão, então dá para abrir os dois em abas diferentes. Os dados de exemplo ficam na memória: recarregar a página volta tudo ao início.
+Quase tudo responde pela API real (`functions/`). Só Produtos, Cupons e Desempenho da loja ainda usam mocks, porque a API não tem essas rotas: eles mostram o selo **Dados de exemplo** no título e "exemplo" na barra lateral, e os dados ficam na memória (recarregar volta ao início).
 
 ## Onde fica cada coisa
 
@@ -27,17 +26,18 @@ src/
 │   ├── loja.ts               1. tipos das rotas /api/loja (repete os gerais)
 │   └── shopping.ts           1. tipos das rotas /api/shopping (repete os gerais)
 ├── painel/                   a base dos dois painéis
-│   ├── painel.ts             ConfigDoPainel: nome, endereço, perfil, telas, sessão e login
-│   ├── RotasDoPainel.tsx     login, guarda de perfil, barra lateral e rotas de qualquer painel
-│   ├── TelaEntrar.tsx        o login
-│   ├── layout/               barra lateral (LayoutPainel) e guarda de perfil (ExigirPerfil)
+│   ├── painel.ts             ConfigDoPainel: nome, endereço, perfil, telas e sessão
+│   ├── RotasDoPainel.tsx     guarda de perfil, barra lateral e rotas de qualquer painel
+│   ├── layout/               barra lateral (LayoutPainel) e guarda de perfil (ExigirPerfil → /entrar)
 │   ├── api/
 │   │   ├── http.ts           criarRequisitar(): token, JSON ou CSV, erros e desvio para os mocks
 │   │   ├── sessao.ts         criarSessao(): o token de um painel
+│   │   ├── sessoes.ts        as sessões dos dois painéis, que o login único (/entrar) grava
 │   │   ├── useConsulta.ts    ler dados: carregando, erro, pronto (e atualizando)
 │   │   └── useAcao.ts        enviar dados: enviando, erro e resultado
-│   ├── comum/                CabecalhoTela, Estados, Campo, CampoLongo, Selecao, Opcao, Segmentos,
-│   │                         Paginacao, useAdiado, useAgora, formatos, periodos, categorias
+│   ├── comum/                CabecalhoTela, Estados (com IlustracaoVazio), CapaDaCategoria, Campo,
+│   │                         CampoLongo, Selecao, Opcao, Segmentos, Paginacao, useAdiado, useAgora,
+│   │                         formatos, periodos, categorias
 │   ├── cupons/               FormularioCupom e CartaoCupom: cupom da loja e voucher do shopping
 │   └── graficos/             CartaoGrafico (com a tabela), GraficoRanking e as cores validadas
 ├── loja/  e  shopping/       cada painel, com a mesma forma:
@@ -45,18 +45,26 @@ src/
 │   ├── navegacao.ts          a lista das telas: vira rota e item da barra lateral
 │   ├── enderecos.ts          urlDaTela('vagas'): para uma tela levar a outra
 │   ├── api/
-│   │   ├── cliente.ts        o requisitar() e a sessão deste painel, com os mocks dele
+│   │   ├── cliente.ts        o requisitar() e a sessão deste painel (e os mocks, se ainda houver)
 │   │   ├── rotas.ts          2. uma função por rota da API
 │   │   └── index.ts          o que as telas importam: rotas, useConsulta, useAcao, ErroApi
 │   └── telas/<tela>/         4. uma pasta por tela
-└── mocks/                    3. respostas de mentira, no formato da API
+└── mocks/                    as rotas que a API ainda não tem, no formato dela
     ├── comum/                servidor de mentira, respostas, token falso, validação de cupom
-    │                         e os armazéns que os dois painéis dividem: vouchers e reembolsos
-    ├── loja/                 index.ts (ROTAS_MOCKADAS), dados.ts e um arquivo por recurso
-    └── shopping/             idem, mais sugerirVagas.ts, a regra das vagas
+    └── loja/                 produtos, cupons e relatórios (index.ts: ROTAS_MOCKADAS)
+
+functions/                    3. a API (Cloudflare Pages Functions, com o D1)
+├── api/<painel>/...          uma rota por arquivo, no caminho da URL: api/shopping/vagas.ts
+└── _lib/
+    ├── <painel>/             o que a rota monta: lê o corpo, valida e junta a resposta
+    ├── repo/                 o SQL, por tabela (sempre prepare().bind())
+    └── regras/               regras de negócio puras, testadas sem banco (vagas.ts, cupons.ts)
+tests/
+├── api/                      as rotas no runtime do Workers, com o D1 de teste (tests/seed.sql)
+└── unidade/                  regras e código do front, no Node
 ```
 
-Os componentes do design system (`Button`, `StatTile`, `CupomTicket`...) vêm de `src/componentes` e o movimento vem de `src/movimento`. Não crie componente novo se um destes resolve.
+Os componentes do design system (`Button`, `StatTile`, `CupomTicket`, `MiniaturaProduto`...) vêm de `src/componentes` e o movimento vem de `src/movimento`. Não crie componente novo se um destes resolve.
 
 ## Qual tela copiar
 
@@ -76,7 +84,9 @@ Cada tela tem, no topo do arquivo principal (`Tela<Nome>.tsx`), um mapa das part
 | Duas partes na mesma tela, uma de cada vez | Shopping › Fidelidade e campanhas |
 | Ação em lote que não volta atrás | Shopping › Reembolsos: `CartaoDaLoja.tsx` |
 | Gráficos | Loja › Desempenho; Shopping › Demanda e Lojas vagas e demanda |
-| Uma regra de negócio que a API vai portar | `mocks/shopping/sugerirVagas.ts` (pura e testada) |
+| Uma regra de negócio na API | `functions/_lib/regras/vagas.ts` (pura, testada em `tests/unidade/regras/vagas.test.ts`) |
+| Foto de produto numa lista, com a espiral sem foto | `MiniaturaProduto` (Produtos e Atendimento) |
+| Foto por categoria de loja | `painel/comum/CapaDaCategoria.tsx` (Lojas e Lojas vagas e demanda) |
 
 ## Passo a passo
 
@@ -108,32 +118,23 @@ export function buscarJornada(periodo: Periodo, sinal?: AbortSignal) {
 
 No painel da loja, nunca mande o `lojaId` no corpo nem na URL: a API usa o do token, e um id de outra loja dá `403`.
 
-### 3. Mock
+### 3. A rota na API
 
-Crie `src/mocks/shopping/jornada.ts` respondendo exatamente como a API: o mesmo corpo de sucesso e os erros no formato `{ status, erro, mensagem }`. Use os ajudantes de `mocks/comum/resposta.ts` e confira o perfil (`exigirAdmin` no shopping, `exigirLojista` na loja). Os dados ficam em `dados.ts`, dentro de `estadoInicial()`, para o `reiniciarMocks()` dos testes voltá-los ao começo.
-
-```ts
-export function buscarJornada(pedido: PedidoMock): RespostaMock {
-  const negado = exigirAdmin(pedido)
-  if (negado) return negado
-  const periodo = lerPeriodo(pedido)
-  if (!periodo) return dadosInvalidos('Use periodo 7d, 30d ou 90d.')
-  const jornada: Jornada = { periodo, reservas: { feitas: 412, retiradas: 287 }, atendimentos: { comFicha: 190, comFichaQueViraramVenda: 141 }, gastoMedioPorClienteCentavos: 31240 }
-  return ok(jornada)
-}
-```
-
-E acrescente uma linha em `ROTAS_MOCKADAS`, no `src/mocks/shopping/index.ts`:
+Uma rota é um arquivo em `functions/api/`, no caminho da URL (`functions/api/shopping/jornada.ts` responde `/api/shopping/jornada`). Ela fica curta: lê a URL ou o corpo e chama quem monta a resposta, em `functions/_lib/shopping/` (ou `_lib/loja/`), que usa o SQL de `_lib/repo/`. O `_middleware.ts` já confere o token e o perfil de cada área (`/api/loja` só lojista, `/api/shopping` só administração) e transforma qualquer `ErroApi` na resposta `{ status, erro, mensagem }`.
 
 ```ts
-'GET /api/shopping/jornada': buscarJornada,
+// functions/api/shopping/jornada.ts
+/** GET /api/shopping/jornada (ADMIN_SHOPPING): reservas que viraram retirada e atendimentos que viraram venda (RF30). */
+export const onRequestGet: Rota = async ({ request, env }) => json(await montarJornada(env.DB, lerPeriodo(new URL(request.url))))
 ```
 
-Pronto: `buscarJornada()` já responde, com 350 ms de atraso para você ver o estado de carregando. Escreva também um teste em `tests/unidade/` (veja `shopping-demanda.test.ts`) conferindo o formato e as regras. É ele que garante que a troca pela API real não vai quebrar a tela. Os testes rodam sem JSX: no código que eles importam, use `componentes/formatar` e `componentes/nivel`, não o índice `componentes`.
+- **Erros:** `throw new ErroApi('DADOS_INVALIDOS', 'Use periodo 7d, 30d ou 90d.')`. A mensagem vai para a tela: diga o que aconteceu e o que fazer.
+- **No painel da loja**, a loja vem do token: `lojaDoLojista(data)`. Nunca leia o `lojaId` do corpo nem da URL.
+- **Regra de negócio** (como a sugestão de loja para cada vaga): função pura em `functions/_lib/regras/`, com teste em `tests/unidade/regras/`, e descrita em `docs/api.md`.
+- **Teste:** em `tests/api/`, chamando a rota como o Pages chama, com um token de verdade e o banco de `tests/seed.sql` limpo a cada teste (`tests/api/shopping.test.ts`). Rode com `npm run test:api`.
+- **Banco:** coluna ou tabela nova é uma migration nova em `migrations/`; dado de demonstração vai no seed (`scripts/gerar-seed.mjs`), nunca na migration. Veja `docs/banco.md`.
 
-**Dados que os dois painéis dividem.** O voucher criado no shopping vale no Atendimento da loja, e o voucher usado no caixa vira reembolso no shopping e no Extrato da loja. Esses dados ficam em `mocks/comum/vouchers.ts` e `mocks/comum/reembolsos.ts`; o resto, em cada painel. Os testes `shopping-fidelidade` e `shopping-reembolsos` mostram os dois painéis conversando.
-
-**Regra de negócio no mock.** Se a tela precisa de uma regra que a API vai ter (como a sugestão de loja para cada vaga), escreva-a como função pura no mock, com teste, e descreva-a em `docs/api.md` para a API portar igual (`mocks/shopping/sugerirVagas.ts`).
+**Quando a rota ainda não existe e outra pessoa vai fazê-la**, a tela pode nascer com um mock: um manipulador em `src/mocks/<painel>/` que responde exatamente como a API vai responder (ajudantes em `mocks/comum/resposta.ts`, perfil com `exigirLojista`), uma linha em `ROTAS_MOCKADAS` e `dadosDeExemplo: MOCKS_LIGADOS` na tela, em `navegacao.ts`, para o selo aparecer. Os mocks de Produtos, Cupons e Desempenho são o exemplo, com os testes em `tests/unidade/loja-produtos.test.ts`. Os testes de `tests/unidade` rodam sem JSX: no código que eles importam, use `componentes/formatar` e `componentes/nivel`, não o índice `componentes`.
 
 ### 4. A tela
 
@@ -183,14 +184,16 @@ function ConteudoDaJornada({ periodo }: { periodo: Periodo }) {
     const { erro, recarregar } = consulta
     return <Erro erro={erro} aoTentarDeNovo={erro.passageiro ? recarregar : undefined} />
   }
-  if (!consulta.dados.reservas.feitas) return <Vazio>Nenhuma reserva neste período. Tente um período maior.</Vazio>
+  if (!consulta.dados.reservas.feitas) {
+    return <Vazio ilustracao="sacola">Nenhuma reserva neste período. Tente um período maior.</Vazio>
+  }
   return <Jornada jornada={consulta.dados} atualizando={consulta.atualizando} />
 }
 ```
 
 - **Carregando:** `Esqueleto` no formato do conteúdo, parado. Nada pisca nem pulsa. Só aparece na primeira carga.
 - **Atualizando:** quando o filtro, a página ou o período mudam, os dados anteriores continuam na tela com `atualizando: true`. Deixe-os mais claros (`opacity-60` e `aria-busy`), sem esqueleto e sem a página pular.
-- **Vazio:** uma frase curta dizendo o que fazer.
+- **Vazio:** um desenho pelo assunto (`ilustracao`: `sacola`, `cupom`, `grafico`, `busca`, `loja`, `pessoas` ou `recibo`) e uma frase curta dizendo o que fazer. Dentro de um cartão, ou ao lado de outro conteúdo, use `compacto`.
 - **Erro:** a `mensagem` da API já vem pronta para o usuário. Só ofereça "Tentar de novo" quando adianta (`erro.passageiro`: sem conexão ou erro do servidor).
 - **Busca enquanto digita:** passe o texto pelo `useAdiado` antes de pôr no `useCallback`, para não chamar a API a cada tecla (`ListaDeProdutos.tsx`, `ListaDeLojas.tsx`).
 - Uma função de busca que não depende de nada pode ficar fora do componente, sem `useCallback`: `useConsulta(listarCupons)`.
@@ -243,36 +246,41 @@ Desempenho (loja), Demanda e Lojas vagas e demanda (shopping) são os exemplos. 
 - Textos em português, curtos, sem ponto de exclamação e sem "Ops". O erro diz o que aconteceu e o que fazer.
 - O vendedor nunca vê a conversa do cliente com a Capi, só a ficha; o shopping nunca vê quem buscou (RN12).
 
+## Imagens
+
+- **Produto:** `MiniaturaProduto` (`src/componentes`) mostra a primeira foto do produto e, sem foto ou se ela não carregar, a espiral da marca. As fotos ficam em `public/produtos/`, e o produto aponta para elas na coluna `fotos`.
+- **Categoria de loja:** `CapaDaCategoria` mostra a capa da categoria (`public/capas/<categoria>.webp`, 800 × 533 px em WebP). Foto nova só livre (Unsplash ou Pexels, nunca Unsplash+), com o crédito em `docs/creditos.md`.
+- Imagem é decorativa (`alt=""`) quando o texto ao lado já diz o que ela mostra, e carrega sob demanda (`loading="lazy"`).
+
 ## Um painel novo
 
-Um painel é uma `ConfigDoPainel` (`src/painel/painel.ts`) entregue ao `RotasDoPainel`: nome, endereço, perfil que entra, lista de telas, sessão, login e a dica de login dos mocks. Veja `src/shopping/RotasShopping.tsx`: com `api/cliente.ts` (o `criarRequisitar` e o `criarSessao` com uma chave nova), `navegacao.ts`, `enderecos.ts` e uma linha no `App.tsx`, o painel já tem login, guarda, barra lateral e título das abas.
+Um painel é uma `ConfigDoPainel` (`src/painel/painel.ts`) entregue ao `RotasDoPainel`: nome, endereço, perfil que entra, lista de telas e sessão. Veja `src/shopping/RotasShopping.tsx`: com `api/cliente.ts` (o `criarRequisitar` com a sessão do painel, criada em `src/painel/api/sessoes.ts`), `navegacao.ts`, `enderecos.ts` e uma linha no `App.tsx`, o painel já tem guarda, barra lateral e título das abas. Para o login único levar o perfil novo ao painel, acrescente o destino em `src/app/destinoDoLogin.ts` e a sessão em `guardar()`, em `src/api/auth.ts`.
 
 ## Trocar o mock pela API real
 
-Quando a rota existir em `functions/`:
+Quando a rota de uma tela que ainda usa mock existir em `functions/`:
 
-1. Apague a linha dela em `ROTAS_MOCKADAS` (`src/mocks/<painel>/index.ts`) e o manipulador, se ninguém mais usa.
+1. Apague a linha dela em `ROTAS_MOCKADAS` (`src/mocks/loja/index.ts`), o manipulador e o `dadosDeExemplo` da tela em `navegacao.ts`.
 2. Rode `npm run dev:api` e, em outro terminal, `npm run dev`, e confira a tela.
 3. Se a resposta real vier diferente do tipo, corrija o tipo em `src/tipos/` e o registro em `docs/api.md`. A tela não muda.
 
-Troque o **login primeiro**. As rotas mockadas aceitam o token real, mas a API real recusa o token do mock.
-
-Para testar um painel inteiro contra a API real, desligue os mocks dele:
+Para ver as telas da loja só com a API real (as que ainda não têm rota dão erro):
 
 ```bash
-VITE_LOJA_MOCKS=0 npm run dev                     # bash (painel do shopping: VITE_SHOPPING_MOCKS=0)
+VITE_LOJA_MOCKS=0 npm run dev                     # bash
 $env:VITE_LOJA_MOCKS='0'; npm run dev             # PowerShell
 ```
 
-Quando a tabela de um painel ficar vazia, apague a pasta dele em `src/mocks/` e ponha `mocksLigados: false` no `api/cliente.ts` do painel. `src/mocks/comum/` sai quando os dois painéis estiverem na API real.
+Quando a tabela ficar vazia, apague `src/mocks/` inteira e ponha `mocksLigados: false` em `src/loja/api/cliente.ts`, como já está no shopping.
 
 ## Antes do commit
 
 - [ ] A tela tem os quatro estados: carregando, vazio, erro e com dados, e não volta ao esqueleto ao trocar filtro.
-- [ ] Toda chamada passa por uma função de `src/<painel>/api/rotas.ts`, com mock enquanto a API não existe.
-- [ ] O mock responde no formato de `docs/api.md`, o formato novo está registrado lá, e há teste em `tests/unidade/`.
+- [ ] Toda chamada passa por uma função de `src/<painel>/api/rotas.ts`.
+- [ ] A rota está em `functions/` com teste em `tests/api/` (ou, se outra pessoa vai fazê-la, um mock no mesmo formato, com o selo na tela), e o formato está registrado em `docs/api.md`.
+- [ ] Vazio com ilustração; imagem nova com crédito em `docs/creditos.md`.
 - [ ] Só componentes de `src/componentes` e classes de token; um único botão primário.
 - [ ] Funciona no celular (a barra lateral vira faixa no topo) e no tema escuro.
 - [ ] Biblioteca pesada só na tela que usa, com `lazy` em `navegacao.ts`.
 - [ ] `npm run lint`, `npm test` e `npm run build` passam.
-- [ ] Um commit por assunto: `feat(shopping): tela de jornada`, `test(shopping): mock da jornada`.
+- [ ] Um commit por assunto: `feat(api): jornada do shopping`, `feat(shopping): tela de jornada`.
