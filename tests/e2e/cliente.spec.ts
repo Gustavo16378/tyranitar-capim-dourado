@@ -110,6 +110,8 @@ test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => 
   await page.getByRole('button', { name: 'Sim, separar' }).click()
 
   await expect(page.getByRole('heading', { name: 'Perfume Cerrado 100 ml' })).toBeVisible()
+  // O site dos testes tem o modo demonstração ligado: o produto avisa que os dados são fictícios.
+  await expect(page.getByText('Produtos, preços e buscas fictícios, para demonstração.')).toBeVisible()
   await page.getByRole('button', { name: 'Reservar' }).click()
   await page
     .getByRole('dialog', { name: 'Como você quer reservar?' })
@@ -122,6 +124,7 @@ test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => 
 test('TE07: sem sessão, ou com ela vencida, volta para o login e depois para a tela pedida', async ({ page }) => {
   await page.goto('/carteira')
   await expect(page).toHaveURL(/\/entrar$/)
+  await expect(page.getByText('Produtos, preços e buscas fictícios, para demonstração.')).toBeVisible()
   await page.getByRole('button', { name: 'Cliente (Ana)' }).click()
   await expect(page).toHaveURL(/\/carteira$/)
   await expect(page.getByRole('heading', { name: 'Sua carteira' })).toBeVisible()

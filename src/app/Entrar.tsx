@@ -6,6 +6,7 @@ import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
 import { sessaoDaLoja, sessaoDoShopping } from '../painel/api/sessoes'
 import type { ContaDeDemonstracao, Perfil, Usuario } from '../tipos'
+import { AvisoDemonstracao } from './AvisoDemonstracao'
 import { Campo } from './Campo'
 import { destinoDoLogin, lerPedidoDeLogin } from './destinoDoLogin'
 
@@ -65,59 +66,65 @@ export default function Entrar() {
   const demonstracao = contas.tipo === 'ok' ? contas.dados : []
 
   return (
-    <main ref={tela} className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 py-8">
+    <main ref={tela} className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 py-8">
       <title>{`Entrar · ${APP_NOME}`}</title>
-      <header data-anim className="flex flex-col items-start gap-4">
-        <span className="grid size-14 place-items-center rounded-full bg-terra">
-          <CapiMark className="size-9" />
-        </span>
-        <div>
-          <p className="text-caption font-semibold uppercase tracking-widest text-marrom-ink">{APP_NOME}</p>
-          <h1 className="mt-1 text-title-lg">Entre na sua conta</h1>
-          <p className="mt-1 text-body-sm text-ink-muted">{CHAMADA[perfilPedido]}</p>
-        </div>
-      </header>
+      {/* O conteúdo fica no meio da tela; o aviso da demonstração, no rodapé. */}
+      <div className="flex flex-1 flex-col justify-center gap-6">
+        <header data-anim className="flex flex-col items-start gap-4">
+          <span className="grid size-14 place-items-center rounded-full bg-terra">
+            <CapiMark className="size-9" />
+          </span>
+          <div>
+            <p className="text-caption font-semibold uppercase tracking-widest text-marrom-ink">{APP_NOME}</p>
+            <h1 className="mt-1 text-title-lg">Entre na sua conta</h1>
+            <p className="mt-1 text-body-sm text-ink-muted">{CHAMADA[perfilPedido]}</p>
+          </div>
+        </header>
 
-      <form data-anim onSubmit={enviar} className="flex flex-col gap-4">
-        <Campo rotulo="E-mail" name="email" type="email" autoComplete="email" inputMode="email" required />
-        <Campo rotulo="Senha" name="senha" type="password" autoComplete="current-password" required />
-        {erro && (
-          <p role="alert" className="flex items-start gap-2 text-body-sm text-perigo-ink">
-            <Icon name="alerta" className="mt-px" />
-            {erro.mensagem}
+        <form data-anim onSubmit={enviar} className="flex flex-col gap-4">
+          <Campo rotulo="E-mail" name="email" type="email" autoComplete="email" inputMode="email" required />
+          <Campo rotulo="Senha" name="senha" type="password" autoComplete="current-password" required />
+          {erro && (
+            <p role="alert" className="flex items-start gap-2 text-body-sm text-perigo-ink">
+              <Icon name="alerta" className="mt-px" />
+              {erro.mensagem}
+            </p>
+          )}
+          <Button type="submit" variant="primary" block disabled={enviando !== null}>
+            {enviando === 'senha' ? 'Entrando…' : 'Entrar'}
+          </Button>
+          <p className="text-center text-body-sm text-ink-muted">
+            Ainda não tem conta?{' '}
+            <Link to="/cadastro" className="font-semibold text-marrom-ink underline">
+              Criar conta
+            </Link>
           </p>
+        </form>
+
+        {demonstracao.length > 0 && (
+          <section aria-labelledby="titulo-demonstracao" className="flex flex-col gap-3">
+            <p id="titulo-demonstracao" className="flex items-center gap-3 text-caption text-ink-muted">
+              <span aria-hidden="true" className="h-px flex-1 bg-line" />
+              ou entre com uma conta de demonstração
+              <span aria-hidden="true" className="h-px flex-1 bg-line" />
+            </p>
+            {demonstracao.map((conta) => (
+              <Button
+                key={conta.perfil}
+                block
+                disabled={enviando !== null}
+                onClick={() => tentar(conta.perfil, () => entrarComDemo(conta.perfil))}
+              >
+                {enviando === conta.perfil ? 'Entrando…' : rotuloDaConta(conta)}
+              </Button>
+            ))}
+            <p className="text-center text-body-sm text-ink-muted">Contas de teste, sem senha.</p>
+          </section>
         )}
-        <Button type="submit" variant="primary" block disabled={enviando !== null}>
-          {enviando === 'senha' ? 'Entrando…' : 'Entrar'}
-        </Button>
-        <p className="text-center text-body-sm text-ink-muted">
-          Ainda não tem conta?{' '}
-          <Link to="/cadastro" className="font-semibold text-marrom-ink underline">
-            Criar conta
-          </Link>
-        </p>
-      </form>
-
-      {demonstracao.length > 0 && (
-        <section aria-labelledby="titulo-demonstracao" className="flex flex-col gap-3">
-          <p id="titulo-demonstracao" className="flex items-center gap-3 text-caption text-ink-muted">
-            <span aria-hidden="true" className="h-px flex-1 bg-line" />
-            ou entre com uma conta de demonstração
-            <span aria-hidden="true" className="h-px flex-1 bg-line" />
-          </p>
-          {demonstracao.map((conta) => (
-            <Button
-              key={conta.perfil}
-              block
-              disabled={enviando !== null}
-              onClick={() => tentar(conta.perfil, () => entrarComDemo(conta.perfil))}
-            >
-              {enviando === conta.perfil ? 'Entrando…' : rotuloDaConta(conta)}
-            </Button>
-          ))}
-          <p className="text-center text-body-sm text-ink-muted">Contas de teste, sem senha.</p>
-        </section>
-      )}
+      </div>
+      <footer>
+        <AvisoDemonstracao />
+      </footer>
     </main>
   )
 }

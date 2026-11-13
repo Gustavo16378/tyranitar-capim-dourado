@@ -5,6 +5,7 @@ import { Badge, Button, formatarPreco, Icon } from '../componentes'
 import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
 import type { ProdutoDetalhe } from '../tipos'
+import { AvisoDemonstracao } from './AvisoDemonstracao'
 import { Carregando, ErroTela, Esqueleto } from './Estados'
 import { FolhaReserva } from './FolhaReserva'
 import { nomeDoPiso } from './formatos'
@@ -146,6 +147,8 @@ export default function Produto() {
               Reservar
             </Button>
           </div>
+
+          <AvisoDemonstracao />
 
           <FolhaReserva produto={produto.dados} aberta={folhaAberta} onFechar={() => setFolhaAberta(false)} />
         </>
