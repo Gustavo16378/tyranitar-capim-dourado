@@ -81,11 +81,11 @@ Telas reais do app do cliente, num Chrome emulando celular (390 × 844), com os 
 
 ![Abertura](img/tela-abertura.png)
 ![Início](img/tela-inicio.png)
-![Capi](img/tela-capi.png)
+![Capi, vazia, com as sugestões](img/tela-capi.png)
 ![Produto](img/tela-produto.png)
 ![Escolher como reservar](img/tela-reservar.png)
 ![Reserva confirmada](img/tela-reserva.png)
-![Mapa](img/tela-mapa.png)
+![Mapa, perguntando por qual entrada a cliente chegou](img/tela-mapa.png)
 ![Carteira](img/tela-carteira.png)
 ![Carteira, minhas reservas](img/tela-carteira-reservas.png)
 
