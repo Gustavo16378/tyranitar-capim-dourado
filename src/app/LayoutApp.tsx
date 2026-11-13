@@ -3,21 +3,37 @@ import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import { gsap } from 'gsap'
 import { useSessao } from '../api'
 import { BottomNav, type AbaId } from '../componentes'
+import { cx } from '../componentes/cx'
 import { comMovimento, DURACAO, EASE, useGSAP } from '../movimento'
+import { BarraLateral } from './BarraLateral'
 
 /** As abas do app do cliente, na ordem da barra (a busca fica com a Capi). */
 const ABAS: AbaId[] = ['inicio', 'capi', 'mapa', 'carteira']
 
-/** A aba marcada é a primeira parte do caminho. Produto e Reserva não são abas: nenhuma fica marcada. */
+/** A aba marcada é a primeira parte do caminho. Produto, Reserva e Conta não são abas: nenhuma fica marcada. */
 function abaDaRota(caminho: string): AbaId {
   const primeiro = caminho.split('/')[1]
   return ABAS.find((aba) => aba === primeiro) ?? 'busca'
 }
 
 /**
- * Casca do app do cliente: uma coluna de celular (centralizada no computador), a tela rolando
- * no meio e a BottomNav fixa embaixo. A cada troca de tela, ela entra deslizando 16 px.
- * Sem sessão de cliente, manda para o login e volta para a mesma tela depois.
+ * Largura de cada tela a partir de 768 px (no celular, todas ocupam a coluna): o mapa usa a área
+ * toda; a Capi, uma coluna larga; o Início, a grade de produtos; as outras, uma coluna de leitura.
+ */
+function larguraDaTela(caminho: string) {
+  const tela = caminho.split('/')[1]
+  if (tela === 'mapa') return 'h-full'
+  if (tela === 'capi') return 'h-full md:max-w-3xl'
+  if (tela === 'inicio') return 'md:max-w-5xl'
+  if (tela === 'carteira') return 'md:max-w-3xl'
+  return 'md:max-w-2xl'
+}
+
+/**
+ * Casca do app do cliente. No celular: uma coluna, a tela rolando no meio e a BottomNav fixa
+ * embaixo. A partir de 768 px: a barra lateral no lugar da BottomNav e a tela na largura dela.
+ * A cada troca de tela, ela entra deslizando 16 px. Sem sessão de cliente, manda para o login e
+ * volta para a mesma tela depois.
  */
 export default function LayoutApp() {
   const { pathname, search } = useLocation()
@@ -49,13 +65,19 @@ export default function LayoutApp() {
     return <Navigate to="/entrar" replace state={{ de: pathname + search }} />
   }
 
+  const aba = abaDaRota(pathname)
   return (
-    <div className="mx-auto flex h-dvh max-w-md flex-col bg-surface md:border-x">
-      <main ref={palco} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-        <Outlet />
-      </main>
-      <div className="flex-none bg-surface-raised pb-[env(safe-area-inset-bottom)] [&>nav]:rounded-none">
-        <BottomNav abas={ABAS} ativo={abaDaRota(pathname)} onSelect={(aba) => navigate(`/${aba}`)} />
+    <div className="flex h-dvh bg-surface">
+      <BarraLateral ativo={aba} naConta={pathname.startsWith('/conta')} />
+      <div className="mx-auto flex min-w-0 max-w-md flex-1 flex-col md:max-w-none">
+        <main ref={palco} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <div className={cx('mx-auto w-full', larguraDaTela(pathname))}>
+            <Outlet />
+          </div>
+        </main>
+        <div className="flex-none bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden [&>nav]:rounded-none">
+          <BottomNav abas={ABAS} ativo={aba} onSelect={(destino) => navigate(`/${destino}`)} />
+        </div>
       </div>
     </div>
   )
