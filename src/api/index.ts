@@ -3,3 +3,6 @@
 export { ErroApi, comoErroApi } from './cliente'
 export { useDados, type EstadoDados } from './useDados'
 export { entrar, sair, usuarioAtual } from './auth'
+export { listarProdutos, obterProduto } from './produtos'
+export { listarOfertas } from './ofertas'
+export { listarFavoritos } from './favoritos'
