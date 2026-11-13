@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { acoesNaConversa } from '../../src/app/acoesDoChat'
+import { desdeAUltimaVista } from '../../src/app/carteiraVista'
 import { partesDoLink } from '../../src/app/formatos'
 import type { ReservaCriada } from '../../src/tipos'
 
@@ -60,5 +61,25 @@ describe('link na conversa', () => {
       caminho: '/tenis-de-corrida-pulse/p',
     })
     expect(partesDoLink('https://loja.com/')).toEqual({ site: 'loja.com', caminho: 'Página da loja' })
+  })
+})
+
+describe('carteira: o que mudou desde a última visita', () => {
+  it('primeira visita: os pontos contam do zero, sem "subiu de nível"', () => {
+    expect(desdeAUltimaVista(null, { pontos: 2140, nivel: 'CAPIM' })).toEqual({ de: 0, somou: true, subiu: false })
+  })
+
+  it('pontos novos contam desde a última visita', () => {
+    expect(desdeAUltimaVista({ pontos: 2140, nivel: 'CAPIM' }, { pontos: 2533, nivel: 'CAPIM' })).toEqual({
+      de: 2140,
+      somou: true,
+      subiu: false,
+    })
+    expect(desdeAUltimaVista({ pontos: 2140, nivel: 'CAPIM' }, { pontos: 2140, nivel: 'CAPIM' }).somou).toBe(false)
+  })
+
+  it('subiu de nível só quando o nível novo é mais alto', () => {
+    expect(desdeAUltimaVista({ pontos: 4900, nivel: 'CAPIM' }, { pontos: 5100, nivel: 'DOURADO' }).subiu).toBe(true)
+    expect(desdeAUltimaVista({ pontos: 5100, nivel: 'DOURADO' }, { pontos: 4900, nivel: 'CAPIM' }).subiu).toBe(false)
   })
 })
