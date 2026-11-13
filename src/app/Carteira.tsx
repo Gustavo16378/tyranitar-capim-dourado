@@ -1,6 +1,6 @@
 import { gsap } from 'gsap'
-import { obterCarteira, useDados, usuarioAtual } from '../api'
-import { CarteiraQR, CupomTicket, NivelBadge, ProgressoNivel } from '../componentes'
+import { obterCarteira, sair, useDados, useSessao } from '../api'
+import { Button, CarteiraQR, CupomTicket, NivelBadge, ProgressoNivel } from '../componentes'
 import { APP_NOME } from '../config'
 import { comMovimento, DURACAO, EASE, encherBarra, useEntrada, useGSAP } from '../movimento'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
@@ -8,7 +8,7 @@ import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel } from './format
 
 /** Carteira: o QR do cliente para o balcão, pontos, progresso de nível e cupons. */
 export default function Carteira() {
-  const usuario = usuarioAtual()
+  const usuario = useSessao()?.usuario
   const carteira = useDados(obterCarteira, 'carteira')
   // O título entra na hora; o resto, quando a carteira chega.
   const topo = useEntrada<HTMLHeadingElement>()
@@ -114,6 +114,10 @@ export default function Carteira() {
           </>
         )}
       </div>
+      {/* Sair apaga a sessão; o app volta sozinho para a tela de login. */}
+      <Button variant="ghost" className="self-center" onClick={sair}>
+        Sair da conta
+      </Button>
     </div>
   )
 }

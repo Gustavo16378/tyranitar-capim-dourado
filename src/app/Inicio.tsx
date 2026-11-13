@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router'
-import { listarFavoritos, listarOfertas, obterCarteira, useDados, usuarioAtual } from '../api'
+import { listarFavoritos, listarOfertas, obterCarteira, useDados, useSessao } from '../api'
 import { Button, CapiMark, CupomTicket, Icon, NivelBadge, ProdutoCard } from '../componentes'
 import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
@@ -9,7 +9,7 @@ import { dataCurta, descontoDoCupom, nomeDoPiso, paraNivel, primeiroNome, saudac
 /** Início: ofertas para o cliente, produtos salvos e o atalho para a Capi. */
 export default function Inicio() {
   const navigate = useNavigate()
-  const usuario = usuarioAtual()
+  const usuario = useSessao()?.usuario
   const ofertas = useDados(listarOfertas, 'ofertas')
   const favoritos = useDados(listarFavoritos, 'favoritos')
   const carteira = useDados(obterCarteira, 'carteira')

@@ -1,6 +1,7 @@
 import { useRef } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import { gsap } from 'gsap'
+import { useSessao } from '../api'
 import { BottomNav, type AbaId } from '../componentes'
 import { comMovimento, DURACAO, EASE, useGSAP } from '../movimento'
 
@@ -16,10 +17,12 @@ function abaDaRota(caminho: string): AbaId {
 /**
  * Casca do app do cliente: uma coluna de celular (centralizada no computador), a tela rolando
  * no meio e a BottomNav fixa embaixo. A cada troca de tela, ela entra deslizando 16 px.
+ * Sem sessão de cliente, manda para o login e volta para a mesma tela depois.
  */
 export default function LayoutApp() {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const navigate = useNavigate()
+  const sessao = useSessao()
   const palco = useRef<HTMLElement>(null)
 
   useGSAP(
@@ -41,6 +44,10 @@ export default function LayoutApp() {
     },
     { dependencies: [pathname], revertOnUpdate: true },
   )
+
+  if (sessao?.usuario.perfil !== 'CLIENTE') {
+    return <Navigate to="/entrar" replace state={{ de: pathname + search }} />
+  }
 
   return (
     <div className="mx-auto flex h-dvh max-w-md flex-col bg-surface md:border-x">
