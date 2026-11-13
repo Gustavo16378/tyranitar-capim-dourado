@@ -1,6 +1,6 @@
 // As correções da Capi achadas no teste como usuário real (docs/evidencias-testes.md): a tela
-// vazia com sugestões que só preenchem o campo (TE11), a conversa salva ao voltar (TE12) e a
-// espera com aviso e tempo limite (TE13).
+// vazia com sugestões que só preenchem o campo (TE17), a conversa salva ao voltar (TE18) e a
+// espera com aviso e tempo limite (TE19).
 import { expect, test } from '@playwright/test'
 import { aba, comSessaoDaAna, novaConversa, PERGUNTA_DO_ROTEIRO, perguntarPeloTenisDaFoto } from './apoio'
 
@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
   await novaConversa(page.request, token)
 })
 
-test('TE11: a Capi abre vazia, com sugestões que só preenchem o campo, sem enviar nada', async ({ page }) => {
+test('TE17: a Capi abre vazia, com sugestões que só preenchem o campo, sem enviar nada', async ({ page }) => {
   const enviadas: string[] = []
   page.on('request', (r) => {
     if (r.method() === 'POST' && new URL(r.url()).pathname === '/api/chat') enviadas.push(r.url())
@@ -51,7 +51,7 @@ test('TE11: a Capi abre vazia, com sugestões que só preenchem o campo, sem env
   await expect(conversa.locator(':scope > *')).toHaveCount(0)
 })
 
-test('TE12: ao voltar para a Capi, a conversa salva continua; só "Nova conversa" limpa', async ({ page }) => {
+test('TE18: ao voltar para a Capi, a conversa salva continua; só "Nova conversa" limpa', async ({ page }) => {
   await page.goto('/capi')
   const conversa = await perguntarPeloTenisDaFoto(page)
 
@@ -76,7 +76,7 @@ test('TE12: ao voltar para a Capi, a conversa salva continua; só "Nova conversa
   await expect(conversa.getByText(PERGUNTA_DO_ROTEIRO)).toHaveCount(0)
 })
 
-test('TE13: a espera avisa "procurando" depois de 2 s e desiste em 25 s com "Tentar de novo"', async ({ page }) => {
+test('TE19: a espera avisa "procurando" depois de 2 s e desiste em 25 s com "Tentar de novo"', async ({ page }) => {
   await page.clock.install()
   // A primeira resposta nunca chega: o app tem de desistir sozinho.
   let segurar = true

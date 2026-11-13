@@ -1,4 +1,4 @@
-// O mapa sem "Você está aqui" inventado (docs/evidencias-testes.md, TE14): na primeira rota ele
+// O mapa sem "Você está aqui" inventado (docs/evidencias-testes.md, TE20): na primeira rota ele
 // pergunta por qual entrada o cliente chegou, lembra a resposta e aceita ?origem=<entrada> (o QR
 // de cada entrada). Sem resposta, a rota sai da entrada mais próxima.
 import { expect, test } from '@playwright/test'
@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
   await comSessaoDaAna(page)
 })
 
-test('TE14: o mapa pergunta a entrada, lembra a escolha e aceita ?origem= do QR', async ({ page, browser }) => {
+test('TE20: o mapa pergunta a entrada, lembra a escolha e aceita ?origem= do QR', async ({ page, browser }) => {
   await page.goto(`/mapa?loja=${LOJA_A}`)
   const pergunta = page.getByRole('region', { name: 'Por qual entrada você chegou?' })
   await expect(pergunta).toBeVisible()

@@ -28,7 +28,7 @@ src/
 ├── painel/                   a base dos dois painéis
 │   ├── painel.ts             ConfigDoPainel: nome, endereço, perfil, telas e sessão
 │   ├── RotasDoPainel.tsx     guarda de perfil, barra lateral e rotas de qualquer painel
-│   ├── layout/               barra lateral (LayoutPainel) e guarda de perfil (ExigirPerfil → /entrar)
+│   ├── layout/               barra lateral ou Menu no topo (LayoutPainel) e guarda de perfil (ExigirPerfil → /entrar)
 │   ├── api/
 │   │   ├── http.ts           criarRequisitar(): token, JSON ou CSV, erros e desvio para os mocks
 │   │   ├── sessao.ts         criarSessao(): o token de um painel
@@ -228,7 +228,7 @@ Desempenho (loja), Demanda e Lojas vagas e demanda (shopping) são os exemplos. 
 - **Cores só de tokens**, em `painel/graficos/cores.ts`, com o resultado do validador de paleta anotado. Série única é um tom só (`ouro`), sem legenda: o título diz o que é. Quando uma parte é o assunto e o resto é fundo, use o modo de destaque do `GraficoRanking` (`destaque` em cada linha e `legenda`): ouro contra `line`, com legenda. Cor que significa estado (`cerrado`, `perigo`) só quando a parte é mesmo um estado.
 - **Marcas finas:** barra de até 24 px, ponta arredondada de 4 px, reta na linha de base, e 2 px da superfície entre blocos. O número vai na ponta da barra; o texto nunca usa a cor da série.
 - **Tooltip em toda barra**, com o valor na frente e o nome depois. O recharts já dá a navegação por teclado (`accessibilityLayer`).
-- **Tabela de todo gráfico:** o `CartaoGrafico` recebe a `tabela` e mostra "Ver em tabela", o equivalente sem cor e sem hover.
+- **Tabela de todo gráfico:** o `CartaoGrafico` recebe a `tabela` e mostra "Ver em tabela", o equivalente sem cor e sem hover. Abaixo de 640 px ela aparece como cartões, um por linha.
 - **Sem a animação do recharts** (`isAnimationActive={false}`): a entrada é a cascata do GSAP, que respeita o movimento reduzido.
 - **Filtro numa linha acima de tudo o que ele muda** (`Segmentos` com `PERIODOS`), e trocar o filtro mantém o gráfico anterior mais claro até o novo chegar.
 - **A planta.** `shopping/telas/vagas/plantas.ts` lê `src/mapa/piso-*.svg` com `import.meta.glob` e devolve lista vazia se as plantas não estiverem no projeto: a tela funciona sem elas. Para marcar lojas na planta, use os polígonos (o `id` é o `mapa_id`) e ponha os marcadores em HTML por cima, com `espalhar()` para os vizinhos não se sobreporem.
@@ -271,7 +271,7 @@ Quando a tabela ficar vazia, apague `src/mocks/<painel>/` e ponha `mocksLigados:
 - [ ] A rota está em `functions/` com teste em `tests/api/` (ou, se outra pessoa vai fazê-la, um mock no mesmo formato, com o selo na tela), e o formato está registrado em `docs/api.md`.
 - [ ] Vazio com ilustração; imagem nova com crédito em `docs/creditos.md`.
 - [ ] Só componentes de `src/componentes` e classes de token; um único botão primário.
-- [ ] Funciona no celular (a barra lateral vira faixa no topo) e no tema escuro.
+- [ ] Funciona em 390, 768 e 1440 px sem rolar para o lado (abaixo de 1024 px a barra lateral vira o botão Menu no topo; tabela vira cartões, um por linha; formulário em uma coluna no celular) e no tema escuro. O TE15 (`tests/e2e/paineis.spec.ts`) confere as telas da lista.
 - [ ] Biblioteca pesada só na tela que usa, com `lazy` em `navegacao.ts`.
 - [ ] `npm run lint`, `npm test` e `npm run build` passam.
 - [ ] Um commit por assunto: `feat(api): jornada do shopping`, `feat(shopping): tela de jornada`.

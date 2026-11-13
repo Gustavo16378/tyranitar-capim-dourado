@@ -5,6 +5,8 @@ export interface DadosDosTestes {
   porta: number
   ana: { email: string; qrToken: string }
   lojista: { email: string; senha: string }
+  carla: { email: string; senha: string; qrToken: string }
+  admin: { email: string; senha: string }
   mapaDaLojaA: string
   jwtSecret: string
 }

@@ -149,6 +149,9 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA34 | Marcar reembolso como pago e tentar voltar | RF31 | Data preenchida; volta para pendente recusada |
 | TA35 | Tempo das rotas sem IA com o seed | RNF02 | Menos de 500 ms |
 | TA36 | Respostas e build do front | RNF04, RNF07 | Nenhuma resposta contém `senha_hash`; o bundle não contém a chave da IA |
+| TA37 | Trocar o nome e a senha na Minha conta | RF01 | Nome novo na conta; a senha só troca com a atual certa (errada: 400, sem encerrar a sessão) e a nova entra no login |
+| TA38 | Ver e apagar um interesse da ficha | RF13, RN04 | O interesse apagado some da ficha e do atendimento da loja; os outros mantêm o id |
+| TA39 | Baixar meus dados | RF13 (LGPD) | JSON com conta, ficha, reservas, compras, favoritos, conversa e buscas, só do cliente, sem senha nem QR |
 
 ### Capi (TI)
 
@@ -188,10 +191,16 @@ Com o Claude simulado:
 | TE08 | PWA | RNF01 | Manifesto válido e service worker registrado |
 | TE09 | Mapa | RF10 | Clicar numa loja abre a página dela; trocar de piso mostra a praça de alimentação |
 | TE10 | Celular (390 × 844) nas telas principais | RNF01 | Sem rolagem horizontal e botões alcançáveis |
-| TE11 | Capi vazia | RF02, RF03 | Sem roteiro automático: sugestões que só preenchem o campo (a do tênis anexa a foto); somem depois da primeira mensagem e voltam com "Nova conversa" |
-| TE12 | Sair da Capi e voltar | RF02 | A conversa salva volta (com o selo da foto e os cartões), também recarregando; só "Nova conversa" apaga |
-| TE13 | Capi demorando | RNF10 | "A Capi está procurando nas lojas…" depois de 2 s; em 25 s, mensagem amigável e "Tentar de novo", que manda a mesma mensagem |
-| TE14 | Mapa até uma loja | RF10 | Pergunta por qual entrada o cliente chegou (sem "Você está aqui" inventado), lembra a escolha, aceita `?origem=` do QR da entrada e escreve o nome da loja de destino uma vez só |
+| TE11 | Cupons do Início no computador | RF06 | As setas, arrastar com o mouse e a roda andam a faixa; a página não rola junto |
+| TE12 | Cupons do Início no celular | RF06, RNF01 | O dedo desliza a faixa; as setas não aparecem |
+| TE13 | Minha conta: nome, senha e dados | RF01, RF13 | O nome novo aparece no Início; a senha atual errada é recusada sem sair da conta e a nova entra; o arquivo JSON baixa com a conta |
+| TE14 | Minha conta: apagar um interesse da ficha | RF13, RN04 | O interesse some da lista e do atendimento da loja |
+| TE15 | As 11 telas dos painéis em 390, 768 e 1440 px | RNF01 | Nada rola para o lado, nem com os formulários abertos; abaixo de 1024 px a navegação fica no Menu; o extrato vira cartões; no celular, formulário em uma coluna |
+| TE16 | Menu do painel no celular | RNF01, RNF08 | O Menu abre a navegação (`aria-expanded`); Esc fecha e devolve o foco; escolher uma tela navega e fecha |
+| TE17 | Capi vazia | RF02, RF03 | Sem roteiro automático: sugestões que só preenchem o campo (a do tênis anexa a foto); somem depois da primeira mensagem e voltam com "Nova conversa" |
+| TE18 | Sair da Capi e voltar | RF02 | A conversa salva volta (com o selo da foto e os cartões), também recarregando; só "Nova conversa" apaga |
+| TE19 | Capi demorando | RNF10 | "A Capi está procurando nas lojas…" depois de 2 s; em 25 s, mensagem amigável e "Tentar de novo", que manda a mesma mensagem |
+| TE20 | Mapa até uma loja | RF10 | Pergunta por qual entrada o cliente chegou (sem "Você está aqui" inventado), lembra a escolha, aceita `?origem=` do QR da entrada e escreve o nome da loja de destino uma vez só |
 
 ### Acessibilidade (TX)
 
@@ -206,6 +215,8 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX05 | Carteira com o QR |
 | TX06 | Atendimento do painel da loja, incluindo navegação só pelo teclado |
 | TX07 | Relatórios do painel da loja (gráficos com texto alternativo) |
+| TX08 | Painel no celular com o Menu aberto |
+| TX09 | Minha conta, com a ficha e a folha de trocar a senha |
 
 ### Manual (TM)
 
@@ -222,19 +233,19 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 
 | Requisito | Testes |
 | --- | --- |
-| RF01 Cadastro e login | TA01, TA02, TA03, TB03, TE01 |
+| RF01 Cadastro e login | TA01, TA02, TA03, TA37, TB03, TE01, TE13 |
 | RF02 Conversar com a Capi | TI01, TI08, TE01 |
 | RF03 Foto ou print | TI06, TI09, TE01 |
 | RF04 Link | TI07 |
 | RF05 Buscar | TA07, TE02, TE04 |
-| RF06 Vitrine | TA10, TU13, TE03 |
+| RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
 | RF07 Produto | TA09, TE02 |
 | RF08 Reservar na loja | TA11, TA15, TI03, TE02 |
 | RF09 Reservar com Pix | TA12, TB06, TE01 |
 | RF10 Mapa e rota | TE01, TE09, TM01 |
 | RF11 Carteira | TU05, TA17, TE01 |
 | RF12 Nota fiscal | TU22, TA18 |
-| RF13 Consentimento | TA21, TE06 |
+| RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
 | RF14 Notificações | TE01 (notificação de pontos) |
 | RF15 Avaliar | TA22, TB11 |
 | RF16 Favoritos e histórico | TE02 |

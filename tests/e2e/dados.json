@@ -1,5 +1,5 @@
 {
-  "comoUsar": "Dados fixos dos testes no navegador (E2E e acessibilidade), lidos pelo servidor.mjs e pelos testes. O banco é o tests/seed.sql com os ajustes do servidor.mjs; a senha do lojista vale só nesse banco de teste.",
+  "comoUsar": "Dados fixos dos testes no navegador (E2E e acessibilidade), lidos pelo servidor.mjs e pelos testes. O banco é o tests/seed.sql com os ajustes do servidor.mjs; as senhas valem só nesse banco de teste. A Carla é a cliente da Minha conta: tem seis interesses na ficha e cada execução do TE14 apaga um.",
   "porta": 8789,
   "ana": {
     "email": "ana.souza@demo.test",
@@ -8,6 +8,15 @@
   "lojista": {
     "email": "lojista.a@teste.test",
     "senha": "senha-so-dos-testes-e2e"
+  },
+  "carla": {
+    "email": "carla@teste.test",
+    "senha": "senha-da-carla-so-dos-testes-e2e",
+    "qrToken": "q-carla-e2e"
+  },
+  "admin": {
+    "email": "admin@teste.test",
+    "senha": "senha-do-admin-so-dos-testes-e2e"
   },
   "mapaDaLojaA": "loja-07",
   "jwtSecret": "segredo-so-dos-testes-e2e-com-mais-de-32-caracteres"

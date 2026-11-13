@@ -10,14 +10,15 @@ interface SegmentosProps<T extends string> {
 
 /**
  * Filtro de uma escolha só (status, período), como os pisos do mapa no protótipo: a opção
- * ativa em marrom. Fica numa linha acima do que ele filtra.
+ * ativa em marrom. Fica numa linha acima do que ele filtra. Em tela estreita, as opções que não
+ * cabem descem para a linha de baixo, em vez de a faixa rolar para o lado.
  */
 export function Segmentos<T extends string>({ rotulo, opcoes, valor, aoMudar }: SegmentosProps<T>) {
   return (
     <div
       role="group"
       aria-label={rotulo}
-      className="inline-flex max-w-full gap-1 overflow-x-auto rounded-pill bg-surface-sunken p-1"
+      className="inline-flex max-w-full flex-wrap gap-1 rounded-md bg-surface-sunken p-1 lg:rounded-pill"
     >
       {opcoes.map((opcao) => {
         const ativo = opcao.valor === valor

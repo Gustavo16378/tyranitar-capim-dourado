@@ -32,7 +32,7 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | --- | --- | --- | --- |
 | Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Entrar e Criar conta | Login com e-mail e senha ou com a conta de demonstração; o cadastro pede nome, e-mail, senha e o consentimento da ficha (desmarcado por padrão) e já entra no Início, com 0 pontos, no nível Semente | Button | RF01, RF13 |
-| Início | Ofertas para o cliente, produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
+| Início | Ofertas para o cliente (no celular, a faixa de cupons desliza com o dedo; no computador, anda pelas setas, arrastando com o mouse ou pela roda), produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
 | Capi | Conversa com texto, foto ou link; respostas com produtos das lojas. Abre a conversa salva; vazia, mostra sugestões que só preenchem o campo (a do print do tênis anexa a foto). "Nova conversa" apaga. Esperando, avisa "A Capi está procurando nas lojas…" depois de 2 s e desiste em 25 s com "Tentar de novo" | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
@@ -40,6 +40,11 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | Reserva confirmada | Status da reserva e próximos passos | ReservaStatus, Button | RF08, RF09 |
 | Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota até ela. Na primeira rota, pergunta "Por qual entrada você chegou?" e lembra a resposta por 6 h; `?origem=<entrada>` (o QR de cada entrada, ids em `src/mapa/entradas.ts`) já responde. Sem resposta, a rota sai da entrada mais próxima e nenhuma vira "Você está aqui" | Badge, Button | RF10 |
 | Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo e "Como chegar") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
+| Minha conta | Nome (editável), e-mail, nível e pontos; trocar a senha pedindo a atual; a ficha que a Capi anotou, com o consentimento e um botão de apagar em cada interesse; baixar os dados em JSON (LGPD); sair e excluir a conta | NivelBadge, Button | RF01, RF13 |
+
+## Painéis no celular e no tablet
+
+Os dois painéis funcionam de 390 px em diante sem rolar para o lado. Abaixo de 1024 px, a barra lateral vira uma barra no topo com o botão Menu, que abre a lista de telas (Esc ou a escolha de uma tela fecham); as tabelas viram cartões, um por linha, e os formulários ficam em uma coluna no celular.
 
 ## Painel da loja
 

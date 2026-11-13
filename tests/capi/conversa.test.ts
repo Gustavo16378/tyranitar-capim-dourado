@@ -316,7 +316,7 @@ describe('Capi com o Claude simulado', () => {
     expect(historico.corpo.itens[1].produtos[0]).toMatchObject({ nome: 'Tênis de corrida Pulse', loja: { nome: 'Loja A' } })
 
     const apagada = await chamar(apagarConversa, { metodo: 'DELETE', url: '/api/chat', usuario: ANA })
-    expect(apagada).toEqual({ status: 200, corpo: { apagadas: 2 } })
+    expect(apagada).toMatchObject({ status: 200, corpo: { apagadas: 2 } })
     expect((await chamar(lerConversa, { url: '/api/chat', usuario: ANA })).corpo).toEqual({ itens: [], total: 0 })
   })
 

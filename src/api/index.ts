@@ -10,7 +10,16 @@ export { listarFavoritos } from './favoritos'
 export { listarLojas } from './lojas'
 export { criarReserva, obterReserva, pagarReserva } from './reservas'
 export { obterCarteira } from './carteira'
-export { excluirConta, mudarConsentimento, obterConta } from './conta'
+export {
+  apagarInteresse,
+  excluirConta,
+  mudarConsentimento,
+  mudarNome,
+  obterConta,
+  obterFicha,
+  obterMeusDados,
+  trocarSenha,
+} from './conta'
 export { apagarConversa, enviarMensagem, obterConversa, PERGUNTA_DEMO } from './chat'
 export { IMAGEM_MAXIMA_BYTES, tamanhoDoBase64, TEXTO_MAXIMO, TIPOS_DE_IMAGEM } from './limites'
 export { linkValido, separarLink, termosDoLink } from './link'
