@@ -4,7 +4,7 @@
 //
 //   npm run seed:local               aplica no D1 local (.wrangler/)
 //   npm run seed:remoto              aplica no D1 de produção
-//   ... -- --csv outra/pasta         lê lojas.csv e produtos.csv de outra pasta (padrão kit/seed)
+//   ... -- --csv outra/pasta         lê lojas.csv e produtos.csv de outra pasta (padrão seed/)
 //
 // Idempotente: rodar de novo atualiza em vez de duplicar. Lojas por mapa_id, usuários por
 // e-mail, produtos e cupons por id fixo (derivado dos dados). Produtos que saíram do CSV desde
@@ -26,7 +26,7 @@ const raiz = new URL('../', import.meta.url)
 const args = process.argv.slice(2)
 const destino = args.includes('--remoto') ? 'remoto' : args.includes('--local') ? 'local' : null
 const iCsv = args.indexOf('--csv')
-const pastaCsv = pathToFileURL(`${resolve(fileURLToPath(raiz), iCsv >= 0 ? (args[iCsv + 1] ?? '') : 'kit/seed')}/`)
+const pastaCsv = pathToFileURL(`${resolve(fileURLToPath(raiz), iCsv >= 0 ? (args[iCsv + 1] ?? '') : 'seed')}/`)
 
 function falhar(mensagem) {
   console.error(`seed: ${mensagem}`)

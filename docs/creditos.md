@@ -2,9 +2,9 @@
 
 ## Fotos dos produtos da demonstração
 
-As fotos dos produtos de exemplo do seed (`kit/seed/produtos.csv`) ficam em `public/produtos/`. Os produtos são de exemplo, com preços inventados, nas lojas reais do shopping. São fotos livres do Unsplash, usadas sob a [Licença do Unsplash](https://unsplash.com/license): uso gratuito, inclusive comercial, sem precisar pedir permissão. A licença não exige crédito; ele fica aqui por cortesia.
+As fotos dos produtos de exemplo do seed (`seed/produtos.csv`) ficam em `public/produtos/`. Os produtos são de exemplo, com preços inventados, nas lojas reais do shopping. São fotos livres do Unsplash, usadas sob a [Licença do Unsplash](https://unsplash.com/license): uso gratuito, inclusive comercial, sem precisar pedir permissão. A licença não exige crédito; ele fica aqui por cortesia.
 
-Cada foto foi recortada em quadrado e reduzida para 800 × 800 px, em WebP, pelo CDN do Unsplash (a das meias foi completada com fundo branco, para as três caberem). Quando a equipe mandar as fotos reais, é só trocar os arquivos (mesmo nome) ou apontar a coluna `fotos` do `produtos.csv` do kit para os novos.
+Cada foto foi recortada em quadrado e reduzida para 800 × 800 px, em WebP, pelo CDN do Unsplash (a das meias foi completada com fundo branco, para as três caberem). Quando a equipe mandar as fotos reais, é só trocar os arquivos (mesmo nome) ou apontar a coluna `fotos` do `seed/produtos.csv` para os novos.
 
 | Arquivo | Produto | Foto | Autor | Fonte |
 | --- | --- | --- | --- | --- |

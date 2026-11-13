@@ -633,7 +633,7 @@ As unidades da planta e a loja de cada uma. Unidade vaga é uma loja com `ativa:
 }
 ```
 
-**De onde vêm `unidade` e `areaM2`:** das colunas `numero` e `area_m2` da tabela `loja` (migration `0003`), que o seed preenche a partir da planilha das lojas (`kit/seed/lojas.csv`). `unidade` é `LOJA ` mais o número; numa unidade gravada sem número, ele sai do `mapa_id` (`loja-47` é a `LOJA 47`). Sem área, a vaga fica fora do cruzamento com a demanda (`GET /api/shopping/vagas`).
+**De onde vêm `unidade` e `areaM2`:** das colunas `numero` e `area_m2` da tabela `loja` (migration `0003`), que o seed preenche a partir da planilha das lojas (`seed/lojas.csv`). `unidade` é `LOJA ` mais o número; numa unidade gravada sem número, ele sai do `mapa_id` (`loja-47` é a `LOJA 47`). Sem área, a vaga fica fora do cruzamento com a demanda (`GET /api/shopping/vagas`).
 
 ### `PUT /api/shopping/lojas/{id}` e `POST /api/shopping/lojas`
 

@@ -1,0 +1,13 @@
+loja,nome,descricao,categoria,preco,estoque,fotos,atributos
+LOJA ANCORA 05,Tênis de corrida preto,"Leve, com amortecimento para corrida de rua e treino na esteira.",calcados,399.90,20,/produtos/tenis-de-corrida.webp,"{""numeracao"":[38,39,40,41,42,43],""cor"":""preto"",""uso"":""corrida""}"
+LOJA 128,Perfume masculino amadeirado 100 ml,Fragrância amadeirada com notas de cedro e baunilha.,perfumaria,249.00,20,/produtos/perfume-100-ml.webp,"{""ml"":100,""familia"":""amadeirado""}"
+LOJA ANCORA 01,Jaqueta corta-vento verde,"Leve, com capuz e bolsos com zíper. Protege do vento e da garoa.",roupas,189.90,20,/produtos/jaqueta-corta-vento.webp,"{""tamanhos"":[""P"",""M"",""G"",""GG""],""cor"":""verde""}"
+LOJA 135,Tênis de corrida preto em malha,"Cabedal em malha respirável e solado macio, para corridas longas.",calcados,459.90,20,/produtos/tenis-de-corrida-leve.webp,"{""numeracao"":[37,38,39,40,41,42,43,44],""cor"":""preto"",""uso"":""corrida""}"
+LOJA 53,Camiseta básica branca de algodão,"Malha 100% algodão, gola careca.",roupas,59.90,20,/produtos/camiseta-basica.webp,"{""tamanhos"":[""P"",""M"",""G"",""GG""],""cor"":""branco""}"
+LOJA 29,Colar de prata com pingente de coração,"Prata 925, corrente de 45 cm.",joias,690.00,20,/produtos/colar-de-prata.webp,"{""material"":""prata 925"",""comprimento_cm"":45}"
+LOJA 38,Óculos de sol redondo com lente amarela,Armação preta e lente com proteção UV400.,otica,229.90,20,/produtos/oculos-de-sol.webp,"{""cor"":""preto"",""lente"":""amarela"",""protecao"":""UV400""}"
+LOJA 75,Urso de pelúcia 40 cm,"Pelúcia macia, para crianças a partir de 3 anos.",infantil,129.90,20,/produtos/urso-de-pelucia.webp,"{""tamanho_cm"":40,""idade"":""a partir de 3 anos""}"
+LOJA 73,Caixa de bombons sortidos 250 g,"Bombons de chocolate ao leite e meio amargo, com recheios variados.",alimentacao,54.90,20,/produtos/caixa-de-bombons.webp,"{""peso_g"":250,""unidades"":12}"
+LOJA 64,Hidratante corporal 400 ml,"Hidratação por 24 horas, para todos os tipos de pele.",perfumaria,79.90,20,/produtos/hidratante-corporal.webp,"{""ml"":400,""pele"":""todos os tipos""}"
+LOJA 68,Kit com 3 pares de meias,"Meias de tricô em três cores, tamanho 34 a 39.",roupas,49.90,20,/produtos/kit-de-meias.webp,"{""tamanhos"":[""34-39""],""cor"":""cinza, roxo e amarelo""}"
+LOJA 36,Caixa de trufas de chocolate 250 g,Trufas de chocolate ao leite com recheio cremoso.,alimentacao,119.90,20,/produtos/trufas-de-chocolate.webp,"{""peso_g"":250,""unidades"":12}"

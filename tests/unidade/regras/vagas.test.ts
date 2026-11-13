@@ -42,7 +42,7 @@ describe('sugerirVagas', () => {
   })
 
   it('as 13 vagas da planta com a demanda de 30 dias do seed: o que buscar para cada uma', () => {
-    // kit/seed/lojas.csv (situacao VAGA) e as buscas sem resultado de scripts/gerar-seed.mjs.
+    // seed/lojas.csv (situacao VAGA) e as buscas sem resultado de scripts/gerar-seed.mjs.
     const vagas = [
       vaga('31', 41.2), vaga('30', 40.67), vaga('48A', 35), vaga('48', 35), vaga('47', 229.9), vaga('141', 311.55),
       vaga('142', 35.96), vaga('143', 116.1), vaga('131', 54.99), vaga('133', 62.13), vaga('132', 60.4),

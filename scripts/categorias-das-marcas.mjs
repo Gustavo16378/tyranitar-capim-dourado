@@ -1,4 +1,4 @@
-// A categoria de cada loja pelo nome da marca (coluna nome_da_marca do kit/seed/lojas.csv). O
+// A categoria de cada loja pelo nome da marca (coluna nome_da_marca do seed/lojas.csv). O
 // seed põe esta categoria em primeiro lugar na loja: é a que dá a capa no painel do shopping e o
 // filtro da ficha no balcão (RN04); as dos produtos entram depois. Ids de
 // functions/_lib/regras/categorias.ts. Marca nova: acrescente uma linha. Uma coluna "categoria"

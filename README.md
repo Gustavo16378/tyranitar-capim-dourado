@@ -79,14 +79,14 @@ Requisito: Node 22.12 ou mais novo.
 npm install
 cp .dev.vars.exemplo .dev.vars   # preencha as chaves e as senhas; o .dev.vars fica fora do Git
 npm run db:migrar                # cria as tabelas no banco D1 local
-npm run seed:local               # lojas da planta, produtos, cupons e usuários de teste
+npm run seed:local               # lojas e produtos de seed/, cupons e usuários de teste
 npm run dev                      # front em http://localhost:5173
 npm run dev:api                  # build + Functions e D1 local em http://localhost:8788
 ```
 
 Com os dois rodando, o front do `npm run dev` chama a API pelo proxy de `/api`. Para conferir as Functions: `http://localhost:8788/api/saude` responde `{ "ok": true }`. Os usuários de teste (cliente, lojista e administração) estão descritos no `.dev.vars.exemplo`; as senhas ficam só no `.dev.vars` de cada um.
 
-O seed não é migration: as migrations só criam o esquema. `npm run seed:local` e `npm run seed:remoto` podem rodar quantas vezes for preciso (atualizam em vez de duplicar), então quando os CSVs das lojas e dos produtos mudarem basta rodar de novo. A categoria de cada loja sai do nome da marca (`scripts/categorias-das-marcas.mjs`, ou a coluna `categoria` do `lojas.csv`, se existir) e vem antes das categorias dos produtos dela: é a que dá a capa no painel do shopping. Uma marca nova sem categoria aparece num aviso no fim do seed.
+O seed não é migration: as migrations só criam o esquema. `npm run seed:local` e `npm run seed:remoto` podem rodar quantas vezes for preciso (atualizam em vez de duplicar), então quando os CSVs mudarem basta rodar de novo. Os dados vêm de `seed/lojas.csv` (as unidades da planta, com número, área e a marca de cada loja) e `seed/produtos.csv` (os produtos de exemplo, com a loja, o preço, o estoque e a foto em `public/produtos/`); para ler de outra pasta, `npm run seed:local -- --csv outra/pasta`. A categoria de cada loja sai do nome da marca (`scripts/categorias-das-marcas.mjs`, ou a coluna `categoria` do `lojas.csv`, se existir) e vem antes das categorias dos produtos dela: é a que dá a capa no painel do shopping. Uma marca nova sem categoria aparece num aviso no fim do seed.
 
 Outros comandos: `npm run build`, `npm run lint`, `npm run typecheck` e `npm test` (unidade e API). Os testes no navegador (`npm run test:e2e` e `npm run test:a11y`) sobem sozinhos o site com o modo demonstração e um banco de teste; na primeira vez, instale o Chromium com `npx playwright install chromium`. O CI roda tudo isso a cada push.
 
@@ -116,7 +116,7 @@ Entre um ensaio e outro, e antes do pitch:
 npm run demo:reset   # no D1 de produção; não precisa de deploy
 ```
 
-Ele cancela as reservas em aberto da Ana, apaga a conversa dela com a Capi (para a Capi não lembrar dos ensaios), devolve a ficha dela à do seed (com o consentimento ligado) e devolve o estoque do seed, rodando o seed de novo. Por isso precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `produtos.csv` do kit, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
+Ele cancela as reservas em aberto da Ana, apaga a conversa dela com a Capi (para a Capi não lembrar dos ensaios), devolve a ficha dela à do seed (com o consentimento ligado) e devolve o estoque do seed, rodando o seed de novo. Por isso precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `seed/produtos.csv`, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
 
 ## Documentação
 
