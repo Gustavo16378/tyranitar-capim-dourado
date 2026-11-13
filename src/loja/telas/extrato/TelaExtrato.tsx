@@ -14,12 +14,7 @@ import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estado
 import { formatarData, formatarDataHora } from '../../../painel/comum/formatos'
 import { Paginacao } from '../../../painel/comum/Paginacao'
 import { Segmentos } from '../../../painel/comum/Segmentos'
-
-const PERIODOS: readonly { valor: Periodo; rotulo: string }[] = [
-  { valor: '7d', rotulo: '7 dias' },
-  { valor: '30d', rotulo: '30 dias' },
-  { valor: '90d', rotulo: '90 dias' },
-]
+import { PERIODOS } from '../../../painel/comum/periodos'
 
 export function TelaExtrato() {
   const ref = useEntrada<HTMLDivElement>()

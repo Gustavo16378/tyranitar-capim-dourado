@@ -15,16 +15,11 @@ import { buscarRelatorio, useConsulta } from '../../api'
 import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
 import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
 import { Segmentos } from '../../../painel/comum/Segmentos'
+import { PERIODOS } from '../../../painel/comum/periodos'
 import { BarraDasReservas } from './BarraDasReservas'
 import { CartaoGrafico } from '../../../painel/graficos/CartaoGrafico'
 import { partesDasReservas, porcentagem } from './contas'
 import { GraficoRanking } from '../../../painel/graficos/GraficoRanking'
-
-const PERIODOS: readonly { valor: Periodo; rotulo: string }[] = [
-  { valor: '7d', rotulo: '7 dias' },
-  { valor: '30d', rotulo: '30 dias' },
-  { valor: '90d', rotulo: '90 dias' },
-]
 
 export function TelaDesempenho() {
   const ref = useEntrada<HTMLDivElement>()

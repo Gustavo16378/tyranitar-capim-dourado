@@ -90,7 +90,7 @@ function Dica({ active, payload, formatarValor }: TooltipContentProps & { format
   const linha = payload?.[0]?.payload as LinhaDoRanking | undefined
   if (!active || !linha) return null
   return (
-    <div className="flex flex-col gap-0.5 rounded-sm border border-line bg-surface-raised px-3 py-2 shadow-card">
+    <div className="flex max-w-[260px] flex-col gap-0.5 whitespace-normal rounded-sm border border-line bg-surface-raised px-3 py-2 shadow-card">
       <span className="text-label tabular-nums text-ink">{formatarValor(linha.valor)}</span>
       <span className="text-body-sm text-ink-muted">{linha.rotulo}</span>
       {linha.detalhe && <span className="text-body-sm text-ink-muted">{linha.detalhe}</span>}
