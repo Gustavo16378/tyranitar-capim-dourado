@@ -1,4 +1,26 @@
 # Copie este arquivo para .dev.vars (que fica fora do Git) e preencha os valores.
-# Em produção, cadastre os mesmos nomes como secrets do Cloudflare.
+# Em produção, ANTHROPIC_API_KEY e JWT_SECRET são secrets do projeto no Cloudflare Pages.
 ANTHROPIC_API_KEY=
+# Pelo menos 32 caracteres aleatórios. Ex.: node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 JWT_SECRET=
+# Modelo da Capi (opcional; padrão claude-sonnet-5-5)
+CAPI_MODELO=
+
+# Modo demonstração das Functions (o pitch e a banca; veja "Modo demonstração" no README).
+# As duas já vêm ligadas (1) pelo [vars] do wrangler.toml. Descomente aqui só para mudar na sua
+# máquina: o que estiver neste arquivo vale por cima do wrangler.toml.
+#   DEMO: 1 liga POST /api/auth/demo (entrar como a Ana, sem senha); 0 desliga e a rota dá 404.
+#   CAPI_MODO_DEMO: 1 faz a Capi usar as respostas salvas (functions/_lib/capi/demonstracao.json)
+#   sempre que a mensagem bater com uma; com 0, elas só entram se o Claude falhar.
+# DEMO=0
+# CAPI_MODO_DEMO=0
+# O par do front é VITE_MODO_DEMO=1, no .env.local: o Vite não lê este arquivo.
+
+# Senhas dos usuários de teste, usadas só pelo npm run seed:local e npm run seed:remoto
+# (12 caracteres ou mais). O banco guarda só os hashes. Os usuários:
+#   cliente  ana.souza@demo.test (Ana Souza, nível Capim, 2.140 pontos, com consentimento)
+#   lojista  lojista.<id_mapa da loja>@demo.test, um por loja com produto
+#   admin    admin@demo.test
+SEED_SENHA_CLIENTE=
+SEED_SENHA_LOJISTA=
+SEED_SENHA_ADMIN=

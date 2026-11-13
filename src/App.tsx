@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Link, Route, Routes } from 'react-router'
-import { APP_NOME } from './config'
+import { rotasDoApp } from './app/rotas'
 
 // Página pública do design system, carregada só quando alguém abre /design-system.
 const PaginaDesignSystem = lazy(() => import('./design-system/PaginaDesignSystem'))
@@ -11,7 +11,7 @@ const RotasShopping = lazy(() => import('./shopping/RotasShopping')) // painel d
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<EmMontagem titulo={APP_NOME} />} />
+      {rotasDoApp}
       <Route path="/loja/*" element={<Suspense fallback={null}><RotasLoja /></Suspense>} />
       <Route path="/shopping/*" element={<Suspense fallback={null}><RotasShopping /></Suspense>} />
       <Route
@@ -24,15 +24,6 @@ export default function App() {
       />
       <Route path="*" element={<NaoEncontrada />} />
     </Routes>
-  )
-}
-
-function EmMontagem({ titulo }: { titulo: string }) {
-  return (
-    <main className="grid min-h-dvh place-content-center gap-2 p-6 text-center">
-      <h1 className="text-title-lg">{titulo}</h1>
-      <p className="text-ink-muted">Em montagem.</p>
-    </main>
   )
 }
 

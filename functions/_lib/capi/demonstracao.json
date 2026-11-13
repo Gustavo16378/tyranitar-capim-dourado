@@ -1,0 +1,26 @@
+{
+  "comoUsar": "Cada resposta dispara quando a mensagem do cliente contém um dos textos (sem acento, minúsculas) ou quando a foto tem um dos SHA-256 listados. Os produtos vêm sempre do banco, pela busca. Para achar o SHA-256 de uma foto do pitch: node scripts/hash-imagem.mjs foto.jpg (ou veja o log da Capi com CAPI_MODO_DEMO=1, que mostra o SHA-256 de cada foto recebida, já reduzida pelo app).",
+  "respostas": [
+    {
+      "id": "roteiro-tenis",
+      "textos": ["tem esse tenis", "tenis preto", "tenis de corrida", "uso 42"],
+      "imagensSha256": [],
+      "resposta": "Achei parecidos aqui no térreo, com o seu número. Quer que eu separe um para você?",
+      "busca": { "texto": "tênis", "categoria": "calcados" }
+    },
+    {
+      "id": "perfume",
+      "textos": ["perfume", "fragrancia"],
+      "imagensSha256": [],
+      "resposta": "Separei os perfumes que o shopping tem agora. Quer que eu reserve algum?",
+      "busca": { "texto": "perfume", "categoria": "perfumaria" }
+    },
+    {
+      "id": "jaqueta",
+      "textos": ["jaqueta", "corta-vento", "corta vento"],
+      "imagensSha256": [],
+      "resposta": "Tem jaqueta aqui no térreo. Quer que eu separe uma para você?",
+      "busca": { "texto": "jaqueta", "categoria": "roupas" }
+    }
+  ]
+}

@@ -13,26 +13,36 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:unidade": "vitest run tests/unidade",
+    "test:unidade": "vitest run --project unidade",
+    "test:api": "vitest run --project workers",
     "db:migrar": "wrangler d1 migrations apply tyranitar --local",
-    "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote"
+    "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote",
+    "seed:local": "node scripts/gerar-seed.mjs --local",
+    "seed:remoto": "node scripts/gerar-seed.mjs --remoto"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@gsap/react": "^2.1.2",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "gsap": "^3.15.1",
     "html5-qrcode": "^2.3.8",
+    "jose": "^6.2.17",
     "qrcode.react": "^4.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^7.18.5",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "three": "^0.187.0"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.8.1",
     "@cloudflare/workers-types": "^5.20261113.1",
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^6.3.0",
     "autoprefixer": "^10.6.2",
     "eslint": "^10.14.0",
@@ -44,6 +54,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.72.2",
     "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
     "vitest": "^4.1.12",
     "wrangler": "^4.161.0"
   }

@@ -1,0 +1,14 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "tool_use", "id": "toolu_busca", "name": "buscar_produtos", "input": { "texto": "tênis" } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Tem o Pulse [produto:p-pulse] e o Air Max 90 [produto:p-air-max-inventado] na Loja A." }
+    ]
+  }
+]

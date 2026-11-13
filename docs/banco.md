@@ -1,6 +1,6 @@
 # Banco de dados
 
-O banco é o Cloudflare D1, que usa SQLite. São 15 tabelas, criadas pela migration [`0001_inicial.sql`](../migrations/0001_inicial.sql). As regras que o banco consegue garantir sozinho (formatos, valores permitidos, unicidade, chaves estrangeiras) estão nele como `CHECK`, `UNIQUE` e `REFERENCES`; o resto fica nas regras de negócio da API.
+O banco é o Cloudflare D1, que usa SQLite. São 15 tabelas, criadas pela migration [`0001_inicial.sql`](../migrations/0001_inicial.sql) e ajustadas pelas seguintes, na pasta [`migrations/`](../migrations/). As regras que o banco consegue garantir sozinho (formatos, valores permitidos, unicidade, chaves estrangeiras) estão nele como `CHECK`, `UNIQUE` e `REFERENCES`; o resto fica nas regras de negócio da API.
 
 ## Convenções
 
@@ -177,7 +177,7 @@ Clientes, lojistas e administração do shopping numa tabela só.
 | `perfil` | texto | `CLIENTE`, `LOJISTA` ou `ADMIN_SHOPPING` |
 | `loja_id` | texto | Obrigatório para lojista e proibido para os outros perfis |
 | `qr_token` | texto | Só cliente; é o conteúdo do QR da carteira |
-| `pontos` | inteiro | Saldo de fidelidade, nunca negativo; o nível é calculado (RN08) |
+| `pontos` | inteiro | Saldo de fidelidade, nunca negativo. O nível não sai daqui: é calculado pelos pontos ganhos nas compras dos últimos 12 meses (RN08) |
 | `consentimento_ficha` | inteiro | 1 quando o cliente autoriza compartilhar a ficha (RN04) |
 
 ### produto
@@ -218,7 +218,7 @@ Clientes, lojistas e administração do shopping numa tabela só.
 | Coluna | Tipo | Regra |
 | --- | --- | --- |
 | `reserva_id` | texto | Reserva retirada nesta compra; única, para uma reserva não virar duas compras |
-| `valor_centavos` | inteiro | Valor pago, depois dos descontos |
+| `valor_centavos` | inteiro | Valor pago, depois dos descontos; pode ser zero quando os cupons cobrem tudo (e aí gera zero pontos) |
 | `origem` | texto | `CAIXA` (QR lido pelo vendedor) ou `NOTA` (NFC-e lida pelo cliente) |
 | `chave_nfce` | texto | 44 dígitos, única, obrigatória quando a origem é `NOTA` (RN09) |
 | `pontos_gerados` | inteiro | Pontos somados ao cliente (RN07) |
@@ -286,4 +286,4 @@ WHERE id = ?1 AND ativo = 1 AND estoque >= ?2;
 - Cada mudança no banco é um arquivo novo em `migrations/`, numerado em ordem (`0002_...sql`). Um arquivo já aplicado nunca é editado.
 - Local: `npx wrangler d1 migrations apply tyranitar --local`.
 - Produção: `npx wrangler d1 migrations apply tyranitar --remote`, **antes** de mergear o código que depende da mudança.
-- Os dados da demo (lojas, produtos, cupons e usuários de teste) ficam numa migration de seed separada, para todo mundo ter o mesmo banco.
+- As migrations só têm o esquema. Os dados da demo (lojas da planta, produtos, cupons, usuários de teste e o histórico de compras da Ana) entram pelo seed: `npm run seed:local` e `npm run seed:remoto`. Ele pode rodar de novo sempre que os CSVs mudarem: atualiza lojas por `mapa_id`, usuários por e-mail e produtos e cupons por id fixo, sem duplicar. As senhas dos usuários de teste ficam só no `.dev.vars` de cada um; o banco guarda só os hashes.

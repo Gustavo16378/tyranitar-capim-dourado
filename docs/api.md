@@ -34,6 +34,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | --- | --- | --- |
 | `POST /api/auth/cadastro` | Público | RF01 |
 | `POST /api/auth/login` | Público | RF01, RF17 |
+| `POST /api/auth/demo` | Público | RF01 |
 | `GET /api/lojas` | Público | RF07, RF10 |
 | `GET /api/produtos` | Público | RF05 |
 | `GET /api/produtos/{id}` | Público | RF07 |
@@ -41,6 +42,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `POST /api/chat` | CLIENTE | RF02, RF03, RF04 |
 | `GET /api/chat` | CLIENTE | RF02 |
 | `POST /api/reservas` | CLIENTE | RF08, RF09 |
+| `GET /api/reservas/{id}` | CLIENTE | RF08, RF09 |
 | `POST /api/reservas/{id}/pagamento` | CLIENTE | RF09 |
 | `POST /api/reservas/{id}/cancelar` | CLIENTE | RF08 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
@@ -49,7 +51,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `PUT /api/me/consentimento` | CLIENTE | RF13 |
 | `GET /api/me/notificacoes` | CLIENTE | RF14 |
 | `POST /api/avaliacoes` | CLIENTE | RF15 |
-| `PUT /api/me/favoritos/{produtoId}`, `DELETE ...` | CLIENTE | RF16 |
+| `GET /api/me/favoritos`, `PUT /api/me/favoritos/{produtoId}`, `DELETE ...` | CLIENTE | RF16 |
 | `GET /api/loja/atendimento/{qr}` | LOJISTA | RF18 |
 | `POST /api/loja/compras/previa` | LOJISTA | RF19 |
 | `POST /api/loja/compras` | LOJISTA | RF19 |
@@ -101,6 +103,14 @@ Resposta `200`:
 
 Erro `401` com a mesma mensagem para e-mail inexistente e senha errada, para não revelar quais e-mails existem.
 
+### `POST /api/auth/demo`
+
+Entra com a conta de demonstração, a cliente Ana do seed, sem senha. É o botão "Entrar com a conta de demonstração" da tela de login, para a banca testar o app sem cadastro. Não tem corpo.
+
+Só existe com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README). Sempre devolve um token de `CLIENTE`: não abre os painéis.
+
+Resposta `200`: o mesmo formato do login, com o token da Ana (perfil `CLIENTE`, vale 12 horas como qualquer outro). Erro `404` (`NAO_ENCONTRADO`) com `DEMO` desligado ou se a conta de demonstração não estiver no banco.
+
 ## Catálogo
 
 ### `GET /api/produtos`
@@ -136,7 +146,7 @@ Cupons ativos e válidos das lojas e do shopping. Com token de cliente, já vem 
 
 ### `POST /api/chat`
 
-Envia uma mensagem. Os campos `imagem` e `link` são opcionais e excludentes.
+Envia uma mensagem. `texto` (até 1.000 caracteres) é obrigatório quando não há foto nem link. `imagem` e `link` são opcionais e excludentes.
 
 ```json
 {
@@ -145,21 +155,30 @@ Envia uma mensagem. Os campos `imagem` e `link` são opcionais e excludentes.
 }
 ```
 
+- `imagem`: JPEG, PNG, WebP ou GIF, até 4 MB (o app reduz antes de enviar). `base64` aceita também a data URL do navegador (`data:image/jpeg;base64,...`).
+- `link`: endereço http ou https de um produto de outra loja. O servidor abre a página (até 5 s) e lê título, imagem e preço pelo Open Graph ou pelo JSON-LD.
+
 Resposta `200`:
 
 ```json
 {
-  "resposta": "Achei dois parecidos aqui no térreo. O Pulse preto está R$ 399,90 e tem o seu número.",
-  "produtos": [ { "id": "p1", "nome": "Tênis de corrida Pulse", "precoCentavos": 39990, "loja": { "nome": "Loja de esportes", "mapaId": "loja-esportes" } } ],
-  "acoes": [ { "tipo": "RESERVAR", "produtoId": "p1" }, { "tipo": "ROTA", "mapaId": "loja-esportes", "piso": 1 } ]
+  "resposta": "Achei dois parecidos aqui no térreo, na Loja de esportes. Quer que eu separe um para você?",
+  "produtos": [
+    { "id": "p1", "nome": "Tênis de corrida Pulse", "categoria": "calcados", "precoCentavos": 39990, "estoque": 2, "foto": null,
+      "loja": { "id": "l1", "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" } }
+  ],
+  "acoes": [ { "tipo": "RESERVAR", "produtoId": "p1" }, { "tipo": "ROTA", "lojaId": "l1", "mapaId": "loja-esportes", "piso": 1 } ]
 }
 ```
 
-Limites: imagem de até 4 MB (o app reduz antes de enviar), texto de até 1.000 caracteres. Erro `503` (`IA_INDISPONIVEL`) quando o Claude falha ou demora mais de 15 s.
+- `produtos`: no máximo 3 cartões, no mesmo formato da busca, e só produtos que vieram das ferramentas da Capi (RN14).
+- `acoes`: `RESERVAR` (o primeiro cartão com estoque, para o botão de reservar), `ROTA` (quando a Capi mostrou o caminho; o app desenha no mapa) e `RESERVA_CRIADA` (`{ "tipo": "RESERVA_CRIADA", "reserva": { "id", "produtoId", "lojaId", "quantidade", "precoCentavos", "status", "formaPagamento", "pago", "expiraEm" } }`, quando o cliente confirmou na conversa e a Capi reservou; com `PIX`, o app abre o pagamento).
+
+Erros: `400` (`DADOS_INVALIDOS`: mensagem vazia, texto longo, foto acima de 4 MB ou fora dos formatos, foto e link juntos, link que não é http/https) e `503` (`IA_INDISPONIVEL`, quando o Claude falha ou passa de 15 s; o app usa a busca comum). Com `CAPI_MODO_DEMO=1`, ou quando o Claude falha, mensagens do roteiro da demonstração recebem uma resposta salva, com produtos buscados no banco.
 
 ### `GET /api/chat`
 
-As últimas 50 mensagens do cliente, para reabrir a conversa.
+As últimas 50 mensagens do cliente, para reabrir a conversa: `{ "itens": [ { "id", "papel": "CLIENTE" | "CAPI", "conteudo", "criadoEm" } ], "total" }`, da mais antiga para a mais nova. Fotos não são guardadas: a mensagem aparece como `[foto]`.
 
 ## Reservas
 
@@ -185,9 +204,36 @@ Resposta `201`:
 
 Erros: `404` (produto não existe ou inativo), `409` (`SEM_ESTOQUE`).
 
+### `GET /api/reservas/{id}`
+
+Uma reserva do cliente logado, com o produto no formato da busca. É o que a tela da reserva lê, então ela abre pelo link (`/reserva/{id}`). O prazo é conferido na leitura: se venceu, a reserva já vem `EXPIRADA` e o estoque volta (RN01 a RN03).
+
+```json
+{
+  "id": "r1",
+  "status": "PENDENTE",
+  "formaPagamento": "PIX",
+  "pago": false,
+  "precoCentavos": 39990,
+  "expiraEm": "2026-11-13T18:00:00Z",
+  "pix": { "copiaECola": "00020126...", "simulado": true },
+  "produto": {
+    "id": "p1",
+    "nome": "Tênis de corrida Pulse",
+    "categoria": "calcados",
+    "precoCentavos": 39990,
+    "estoque": 2,
+    "foto": null,
+    "loja": { "id": "l1", "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" }
+  }
+}
+```
+
+`pix` só vem quando a forma de pagamento é `PIX`. Erro `404` quando a reserva não existe ou é de outro cliente (a mesma resposta nos dois casos, para não revelar reservas dos outros).
+
 ### `POST /api/reservas/{id}/pagamento`
 
-Confirma o Pix simulado. A reserva fica `pago: true` e passa a expirar em 48 horas (RN02). Erro `409` se já estiver paga, retirada, cancelada ou expirada.
+Confirma o Pix simulado. A reserva fica `pago: true` e passa a expirar em 48 horas (RN02). O status não muda: ela continua `PENDENTE`, agora paga, porque quem separa o produto é a loja (`PATCH /api/loja/reservas/{id}`). Resposta `200` no formato de `POST /api/reservas`. Erro `409` se já estiver paga, retirada, cancelada ou expirada.
 
 ### `POST /api/reservas/{id}/cancelar`
 
@@ -203,8 +249,34 @@ Cancela e devolve o estoque (RN03). Só funciona em reservas `PENDENTE`, `CONFIR
   "pontos": 2140,
   "nivel": "CAPIM",
   "proximoNivel": { "nivel": "DOURADO", "faltam": 2860 },
-  "cupons": [ { "id": "cp1", "titulo": "10% em calçados", "loja": "Loja de esportes", "validade": "2026-12-31" } ],
+  "cupons": [
+    { "id": "cp1", "titulo": "10% em calçados", "loja": "Loja de esportes", "validade": "2026-12-31", "tipo": "PERCENTUAL", "valor": 10, "nivelMinimo": "SEMENTE" },
+    { "id": "cp2", "titulo": "R$ 20 em qualquer loja", "loja": null, "validade": "2026-12-15", "tipo": "VALOR", "valor": 2000, "nivelMinimo": "SEMENTE" }
+  ],
   "reservasAtivas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "status": "SEPARADA" } ]
+}
+```
+
+Cada cupom traz `tipo` (`PERCENTUAL`, `VALOR` ou `BRINDE`), `valor` (a porcentagem, ou centavos no `VALOR`) e `nivelMinimo`, para o app montar o canhoto ("10%", "R$ 20") e o selo de nível. `loja` vem `null` no voucher do shopping.
+
+### `GET /api/me/favoritos`
+
+Os produtos que o cliente salvou, do mais recente para o mais antigo, no formato da busca e com paginação. O Início mostra em "Você salvou".
+
+```json
+{
+  "itens": [
+    {
+      "id": "p1",
+      "nome": "Tênis de corrida Pulse",
+      "categoria": "calcados",
+      "precoCentavos": 39990,
+      "estoque": 2,
+      "foto": null,
+      "loja": { "id": "l1", "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" }
+    }
+  ],
+  "total": 1
 }
 ```
 
