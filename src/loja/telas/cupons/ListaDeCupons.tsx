@@ -41,7 +41,7 @@ export function ListaDeCupons({ aviso }: { aviso: string }) {
         {aviso}
       </p>
       {consulta.dados.itens.length === 0 ? (
-        <Vazio>A loja ainda não tem cupons. Crie o primeiro: ele aparece para o cliente no atendimento.</Vazio>
+        <Vazio ilustracao="cupom">A loja ainda não tem cupons. Crie o primeiro: ele aparece para o cliente no atendimento.</Vazio>
       ) : (
         <Cupons cupons={consulta.dados.itens} />
       )}

@@ -89,7 +89,7 @@ function AtendimentoDoCliente({ atendimento, leitura, aoRegistrar, aoTerminar }:
         <section data-anim aria-label="Reservas nesta loja" className="flex flex-col gap-3">
           <h2 className="text-title-sm">Reservas nesta loja</h2>
           {reservas.length === 0 ? (
-            <Vazio>{cliente.nome} não tem reservas nesta loja.</Vazio>
+            <Vazio ilustracao="sacola" compacto>{cliente.nome} não tem reservas nesta loja.</Vazio>
           ) : (
             reservas.map((r) => (
               <ReservaStatus key={r.id} produto={r.produto} foto={r.foto} loja={situacao(r)} status={r.status} pago={r.pago} />

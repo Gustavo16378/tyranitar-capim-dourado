@@ -58,7 +58,7 @@ export function ListaDeReservas({ filtro, pagina, aoMudarPagina }: ListaDeReserv
         {aviso}
       </p>
       {dados.itens.length === 0 ? (
-        <Vazio>{filtro.vazio}</Vazio>
+        <Vazio ilustracao="sacola">{filtro.vazio}</Vazio>
       ) : (
         <Reservas reservas={dados.itens} atualizando={atualizando} aoMudar={aoMudar} />
       )}

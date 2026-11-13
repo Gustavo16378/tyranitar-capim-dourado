@@ -60,7 +60,7 @@ export function ListaDeProdutos({ aviso, aoEditar }: ListaDeProdutosProps) {
 
       {consulta.estado === 'pronto' &&
         (consulta.dados.itens.length === 0 ? (
-          <Vazio>
+          <Vazio ilustracao={q ? 'busca' : 'sacola'}>
             {q
               ? `Nenhum produto com "${q}" no nome.`
               : 'Nenhum produto ainda. Cadastre o primeiro ou importe uma planilha.'}

@@ -76,7 +76,7 @@ export function ListaDeLojas({ aoEditar }: ListaDeLojasProps) {
       )}
       {consulta.estado === 'pronto' &&
         (consulta.dados.itens.length === 0 ? (
-          <Vazio>{q ? `Nenhuma unidade com "${q}".` : 'Nenhuma unidade nesta situação.'}</Vazio>
+          <Vazio ilustracao={q ? 'busca' : 'loja'}>{q ? `Nenhuma unidade com "${q}".` : 'Nenhuma unidade nesta situação.'}</Vazio>
         ) : (
           <>
             <Unidades lojas={consulta.dados.itens} atualizando={consulta.atualizando} aoEditar={aoEditar} />

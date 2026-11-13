@@ -103,7 +103,7 @@ function PorLoja({ reembolsos, filtro, atualizando, aoPagar }: PorLojaProps) {
         <StatTile rotulo="Pago nos últimos 30 dias" valor={formatarPreco(totais.pagoUltimos30DiasCentavos)} nota="já transferido" />
       </div>
       {lojas.length === 0 ? (
-        <Vazio>
+        <Vazio ilustracao="recibo">
           {filtro === 'PENDENTE'
             ? 'Nenhum reembolso a pagar. Quando um cliente usar um voucher numa loja, ele aparece aqui.'
             : 'Nenhum reembolso neste filtro.'}

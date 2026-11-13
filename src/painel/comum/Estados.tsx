@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { Button, Icon } from '../../componentes'
 import { cx } from '../../componentes/cx'
 import type { ErroApi } from '../api/http'
+import { IlustracaoVazio, type TemaDaIlustracao } from './IlustracaoVazio'
 
 /**
  * Carregando: blocos no formato do conteúdo, parados (nada se mexe sozinho).
@@ -24,9 +25,30 @@ export function Carregando({ rotulo, className, children }: { rotulo: string; cl
   )
 }
 
-/** Vazio: uma frase curta dizendo o que fazer. */
-export function Vazio({ children }: { children: ReactNode }) {
-  return <p className="rounded-md bg-surface-sunken p-4 text-body-sm text-ink-muted">{children}</p>
+interface VazioProps {
+  /** O desenho, pelo assunto da lista: sacola, cupom, grafico, busca, loja, pessoas ou recibo. */
+  ilustracao: TemaDaIlustracao
+  /** Dentro de um cartão ou ao lado de outro conteúdo: desenho pequeno, ao lado do texto. */
+  compacto?: boolean
+  children: ReactNode
+}
+
+/** Vazio: um desenho e uma frase curta dizendo o que fazer. */
+export function Vazio({ ilustracao, compacto, children }: VazioProps) {
+  if (compacto) {
+    return (
+      <div className="flex items-center gap-3 rounded-md bg-surface-sunken p-3">
+        <IlustracaoVazio tema={ilustracao} className="h-12 w-[60px] flex-none" />
+        <p className="text-body-sm text-ink-muted">{children}</p>
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-md bg-surface-sunken px-4 py-8 text-center">
+      <IlustracaoVazio tema={ilustracao} className="h-24 w-[120px]" />
+      <p className="max-w-[46ch] text-body text-ink-muted">{children}</p>
+    </div>
+  )
 }
 
 interface ErroProps {

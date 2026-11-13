@@ -71,7 +71,7 @@ function Cruzamento({ dados, atualizando }: { dados: VagasEDemanda; atualizando:
   const noPeriodo = `em ${PERIODOS.find((p) => p.valor === dados.periodo)?.rotulo ?? dados.periodo}`
 
   if (resumo.vagas === 0) {
-    return <Vazio>O shopping não tem lojas vagas agora. Quando uma unidade ficar vaga, ela aparece aqui com a sugestão.</Vazio>
+    return <Vazio ilustracao="loja">O shopping não tem lojas vagas agora. Quando uma unidade ficar vaga, ela aparece aqui com a sugestão.</Vazio>
   }
 
   const cobertura = resumo.buscasSemResultado ? Math.round((resumo.buscasComVaga / resumo.buscasSemResultado) * 100) : 0

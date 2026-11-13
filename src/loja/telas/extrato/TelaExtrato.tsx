@@ -115,7 +115,7 @@ function ExtratoDoPeriodo({
       </div>
 
       {resumo.compras === 0 ? (
-        <Vazio>Nenhuma compra pela plataforma neste período. Tente um período maior.</Vazio>
+        <Vazio ilustracao="recibo">Nenhuma compra pela plataforma neste período. Tente um período maior.</Vazio>
       ) : (
         <section data-anim aria-labelledby="titulo-compras" className="flex flex-col gap-4 rounded-md border border-line bg-surface-raised p-5">
           <div className="flex flex-col gap-1">

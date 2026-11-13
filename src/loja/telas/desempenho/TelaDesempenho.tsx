@@ -74,7 +74,7 @@ function Relatorio({ relatorio, atualizando }: { relatorio: DadosDoRelatorio; at
   const { maisVendidos, naoEncontrados, reservas, ticketMedio } = relatorio
 
   if (!maisVendidos.length && !naoEncontrados.length && !reservas.feitas) {
-    return <Vazio>Ainda não há vendas, buscas nem reservas neste período. Tente um período maior.</Vazio>
+    return <Vazio ilustracao="grafico">Ainda não há vendas, buscas nem reservas neste período. Tente um período maior.</Vazio>
   }
 
   const conversao = porcentagem(reservas.retiradas, reservas.feitas)
@@ -128,7 +128,7 @@ function Relatorio({ relatorio, atualizando }: { relatorio: DadosDoRelatorio; at
                 formatarValor={(n) => `${formatarNumero(n)} ${n === 1 ? 'unidade' : 'unidades'}`}
               />
             ) : (
-              <Vazio>Nenhuma venda neste período.</Vazio>
+              <Vazio ilustracao="sacola" compacto>Nenhuma venda neste período.</Vazio>
             )}
           </CartaoGrafico>
         </div>
@@ -148,7 +148,7 @@ function Relatorio({ relatorio, atualizando }: { relatorio: DadosDoRelatorio; at
                 formatarValor={(n) => `${formatarNumero(n)} ${n === 1 ? 'busca' : 'buscas'}`}
               />
             ) : (
-              <Vazio>Nenhuma busca ficou sem resposta neste período.</Vazio>
+              <Vazio ilustracao="busca" compacto>Nenhuma busca ficou sem resposta neste período.</Vazio>
             )}
           </CartaoGrafico>
         </div>
@@ -175,7 +175,7 @@ function Relatorio({ relatorio, atualizando }: { relatorio: DadosDoRelatorio; at
           {reservas.feitas ? (
             <BarraDasReservas reservas={reservas} />
           ) : (
-            <Vazio>Nenhuma reserva neste período.</Vazio>
+            <Vazio ilustracao="sacola" compacto>Nenhuma reserva neste período.</Vazio>
           )}
           <span className="sr-only">
             {`Retiradas ${partes.retiradas}, em aberto ${partes.emAberto}, canceladas ou expiradas ${partes.perdidas}.`}

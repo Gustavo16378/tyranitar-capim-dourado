@@ -63,7 +63,7 @@ export function TelaDemanda() {
 function Relatorio({ demanda, atualizando }: { demanda: Demanda; atualizando: boolean }) {
   const ref = useEntrada<HTMLDivElement>()
   const navegar = useNavigate()
-  if (!demanda.buscas) return <Vazio>Ninguém buscou nada no app neste período. Tente um período maior.</Vazio>
+  if (!demanda.buscas) return <Vazio ilustracao="busca">Ninguém buscou nada no app neste período. Tente um período maior.</Vazio>
 
   const porCategoria = demanda.semResultadoPorCategoria
   const maisFalta = porCategoria[0]
@@ -115,7 +115,7 @@ function Relatorio({ demanda, atualizando }: { demanda: Demanda; atualizando: bo
                 formatarValor={buscas}
               />
             ) : (
-              <Vazio>Toda busca achou alguma loja neste período.</Vazio>
+              <Vazio ilustracao="busca" compacto>Toda busca achou alguma loja neste período.</Vazio>
             )}
           </CartaoGrafico>
         </div>

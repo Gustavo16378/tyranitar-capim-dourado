@@ -59,7 +59,7 @@ export function Vouchers() {
       )}
       {consulta.estado === 'pronto' &&
         (consulta.dados.itens.length === 0 ? (
-          <Vazio>O shopping ainda não tem vouchers. Crie o primeiro: ele aparece na vitrine do app.</Vazio>
+          <Vazio ilustracao="cupom">O shopping ainda não tem vouchers. Crie o primeiro: ele aparece na vitrine do app.</Vazio>
         ) : (
           <ListaDeVouchers vouchers={consulta.dados.itens} />
         ))}

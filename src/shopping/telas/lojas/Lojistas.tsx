@@ -46,7 +46,7 @@ export function Lojistas({ loja }: { loja: LojaDoShopping }) {
         {consulta.estado === 'erro' && <Erro erro={consulta.erro} aoTentarDeNovo={consulta.recarregar} />}
         {consulta.estado === 'pronto' &&
           (consulta.dados.length === 0 ? (
-            <Vazio>Ninguém tem acesso ao painel desta loja ainda. Crie o primeiro acesso abaixo.</Vazio>
+            <Vazio ilustracao="pessoas" compacto>Ninguém tem acesso ao painel desta loja ainda. Crie o primeiro acesso abaixo.</Vazio>
           ) : (
             <ul className="flex flex-col divide-y divide-line">
               {consulta.dados.map((lojista) => (
