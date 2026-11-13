@@ -21,7 +21,7 @@ export default function Entrar() {
   const sessao = useSessao()
   const [enviando, setEnviando] = useState<'senha' | 'demo' | null>(null)
   const [erro, setErro] = useState<ErroApi | null>(null)
-  const tela = useEntrada<HTMLDivElement>()
+  const tela = useEntrada<HTMLElement>()
 
   if (sessao?.usuario.perfil === 'CLIENTE') return <Navigate to={destinoDe(location.state)} replace />
 
@@ -44,7 +44,7 @@ export default function Entrar() {
   }
 
   return (
-    <div ref={tela} className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 py-8">
+    <main ref={tela} className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-4 py-8">
       <title>{`Entrar · ${APP_NOME}`}</title>
       <header data-anim className="flex flex-col items-start gap-4">
         <span className="grid size-14 place-items-center rounded-full bg-terra">
@@ -82,6 +82,6 @@ export default function Entrar() {
         </Button>
         <p className="text-center text-body-sm text-ink-muted">Você entra como Ana, cliente de teste.</p>
       </div>
-    </div>
+    </main>
   )
 }

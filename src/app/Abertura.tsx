@@ -10,7 +10,7 @@ const PAUSA_MS = 1200
 /** Abertura: a trança da Capi se desenha, ela se apresenta e o app segue para o Início. */
 export default function Abertura() {
   const navigate = useNavigate()
-  const tela = useRef<HTMLDivElement>(null)
+  const tela = useRef<HTMLElement>(null)
   const marca = useRef<SVGSVGElement>(null)
   const fio = useRef<SVGPathElement>(null)
   const comecar = useCallback(() => navigate('/inicio', { replace: true }), [navigate])
@@ -36,7 +36,7 @@ export default function Abertura() {
   )
 
   return (
-    <div
+    <main
       ref={tela}
       className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-terra px-4 py-6 text-center text-on-terra"
     >
@@ -64,6 +64,6 @@ export default function Abertura() {
       <Button data-anim variant="ouro" size="lg" onClick={comecar}>
         Começar
       </Button>
-    </div>
+    </main>
   )
 }
