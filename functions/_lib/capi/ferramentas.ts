@@ -155,7 +155,7 @@ function inteiro(entrada: Record<string, unknown>, campo: string, min: number, m
 }
 
 /** Produto como o modelo vê: o id para citar e o que ele precisa para falar dele. */
-function paraOModelo(p: ProdutoLinha) {
+export function paraOModelo(p: ProdutoLinha) {
   return {
     id: p.id,
     nome: p.nome,

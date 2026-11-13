@@ -86,6 +86,7 @@ erDiagram
     text cliente_id FK
     text papel
     text conteudo
+    text troca
   }
   busca {
     text id PK
@@ -230,7 +231,7 @@ Clientes, lojistas e administração do shopping numa tabela só.
 
 ### mensagem, ficha e busca
 
-`mensagem` guarda a conversa com a Capi (`papel` `CLIENTE` ou `CAPI`). `ficha` guarda o resumo de interesses em JSON, como `[{"categoria":"calcados","detalhe":"tênis de corrida 42, até R$ 400"}]`; ela é apagada junto com o consentimento. `busca` registra cada busca com `encontrou` 0 ou 1, base dos relatórios de demanda (RN12).
+`mensagem` guarda a conversa com a Capi (`papel` `CLIENTE` ou `CAPI`). Nas respostas da Capi, `troca` guarda as consultas que ela fez para responder (as chamadas de ferramenta e os resultados, em JSON, sem os blocos de raciocínio; migration 0003): elas voltam ao Claude nas mensagens seguintes, junto com o texto, para ele saber de que produtos se está falando. `ficha` guarda o resumo de interesses em JSON, como `[{"categoria":"calcados","detalhe":"tênis de corrida 42, até R$ 400"}]`; ela é apagada junto com o consentimento. `busca` registra cada busca com `encontrou` 0 ou 1, base dos relatórios de demanda (RN12).
 
 ### avaliacao, favorito e notificacao
 
