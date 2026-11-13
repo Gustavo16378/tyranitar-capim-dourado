@@ -47,7 +47,9 @@ export async function esperarRoteiroDaCapi(page: Page) {
   return conversa
 }
 
-/** Toca numa aba da barra de baixo do app. */
+/** Toca numa aba da navegação do app. */
 export function aba(page: Page, nome: 'Início' | 'Capi' | 'Mapa' | 'Carteira') {
-  return page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button', { name: nome })
+  // No celular, a BottomNav (botões); a partir de 768 px, a barra lateral (links). Só uma aparece.
+  const navegacao = page.getByRole('navigation', { name: 'Navegação principal' })
+  return navegacao.getByRole('button', { name: nome }).or(navegacao.getByRole('link', { name: nome }))
 }
