@@ -1,4 +1,6 @@
-// POST /api/auth/cadastro (público): cria um cliente. Lojistas e admins nascem no painel do shopping.
+// POST /api/auth/cadastro (público): cria um cliente e já abre a sessão. Conta nova começa com 0
+// pontos (nível Semente). consentimentoFicha (opcional, false se não vier) é o aceite da ficha de
+// interesses (RF13, RN04). Lojistas e admins nascem no painel do shopping.
 import { abrirSessao } from '../../_lib/auth/sessao'
 import { gerarHashSenha } from '../../_lib/auth/senha'
 import type { Rota } from '../../_lib/contexto'
@@ -20,10 +22,19 @@ export const onRequestPost: Rota = async ({ request, env }) => {
   const email = texto(corpo, 'email', { max: 200 }).toLowerCase()
   const senha = texto(corpo, 'senha', { min: 8, max: 200, aparar: false })
   if (!EMAIL.test(email)) throw new ErroApi('DADOS_INVALIDOS', 'Confira o e-mail: ele parece incompleto.')
+  const consentimento = corpo.consentimentoFicha ?? false
+  if (typeof consentimento !== 'boolean') throw new ErroApi('DADOS_INVALIDOS', 'O consentimento da ficha é sim ou não.')
 
   if (await buscarUsuarioPorEmail(env.DB, email)) throw new ErroApi('EMAIL_EM_USO', EMAIL_EM_USO)
 
-  const cliente = { id: crypto.randomUUID(), nome, email, senhaHash: await gerarHashSenha(senha), qrToken: novoQrToken() }
+  const cliente = {
+    id: crypto.randomUUID(),
+    nome,
+    email,
+    senhaHash: await gerarHashSenha(senha),
+    qrToken: novoQrToken(),
+    consentimentoFicha: consentimento,
+  }
   try {
     await criarCliente(env.DB, cliente)
   } catch (erro) {

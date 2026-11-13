@@ -78,10 +78,12 @@ A rota dentro do shopping é calculada no front: a API devolve o `mapa_id` e o `
 Cria um cliente. Lojistas e administradores são criados pelo painel do shopping.
 
 ```json
-{ "nome": "Ana Souza", "email": "ana@email.com", "senha": "minimo8caracteres" }
+{ "nome": "Ana Souza", "email": "ana@email.com", "senha": "minimo8caracteres", "consentimentoFicha": false }
 ```
 
-Resposta `201`: o mesmo formato do login. Erros: `400` (senha com menos de 8 caracteres, e-mail inválido), `409` (`EMAIL_EM_USO`).
+`consentimentoFicha` é opcional (`false` se não vier): é a caixa de consentimento da ficha de interesses da tela de cadastro, desmarcada por padrão (RF13, RN04). A conta nova começa com 0 pontos, no nível Semente.
+
+Resposta `201`: o mesmo formato do login, já com a sessão aberta. Erros: `400` (senha com menos de 8 caracteres, e-mail inválido), `409` (`EMAIL_EM_USO`).
 
 ### `POST /api/auth/login`
 

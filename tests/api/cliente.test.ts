@@ -2,6 +2,7 @@
 import { env } from 'cloudflare:test'
 import { describe, expect, it } from 'vitest'
 import { lerToken } from '../../functions/_lib/auth/jwt'
+import { onRequestPost as cadastro } from '../../functions/api/auth/cadastro'
 import { onRequestPost as demo } from '../../functions/api/auth/demo'
 import { onRequestGet as carteira } from '../../functions/api/me/carteira'
 import { onRequestGet as favoritos } from '../../functions/api/me/favoritos/index'
@@ -28,6 +29,37 @@ describe('POST /api/auth/demo', () => {
     expect(r.status).toBe(200)
     expect(r.corpo.usuario).toEqual({ id: 'c-ana', nome: 'Ana Souza', perfil: 'CLIENTE', lojaId: null })
     expect((await lerToken(r.corpo.token, env.JWT_SECRET)).perfil).toBe('CLIENTE')
+  })
+})
+
+describe('POST /api/auth/cadastro', () => {
+  const novaConta = (corpo: Record<string, unknown>) => chamar(cadastro, { metodo: 'POST', url: '/api/auth/cadastro', corpo })
+
+  it('cria o cliente já logado, com 0 pontos e nível Semente, sem consentimento por padrão', async () => {
+    const r = await novaConta({ nome: 'Carla Dias', email: 'Carla@Exemplo.com', senha: 'senha-segura-1' })
+    expect(r.status).toBe(201)
+    expect(r.corpo.usuario).toMatchObject({ nome: 'Carla Dias', perfil: 'CLIENTE', lojaId: null })
+    const { id } = await lerToken(r.corpo.token, env.JWT_SECRET)
+    expect(await um('SELECT email, pontos, consentimento_ficha FROM usuario WHERE id = ?1', id)).toEqual({
+      email: 'carla@exemplo.com',
+      pontos: 0,
+      consentimento_ficha: 0,
+    })
+    const c = await chamar(carteira, { url: '/api/me/carteira', usuario: { id, nome: 'Carla Dias', perfil: 'CLIENTE', lojaId: null } })
+    expect(c.corpo).toMatchObject({ pontos: 0, nivel: 'SEMENTE', reservasAtivas: [] })
+  })
+
+  it('com a caixa marcada, grava o consentimento da ficha; e-mail repetido dá 409', async () => {
+    const r = await novaConta({ nome: 'Davi Reis', email: 'davi@exemplo.com', senha: 'senha-segura-2', consentimentoFicha: true })
+    const { id } = await lerToken(r.corpo.token, env.JWT_SECRET)
+    expect(await um('SELECT consentimento_ficha FROM usuario WHERE id = ?1', id)).toEqual({ consentimento_ficha: 1 })
+    const repetido = await novaConta({ nome: 'Outro Davi', email: 'DAVI@exemplo.com', senha: 'senha-segura-3' })
+    expect(repetido).toMatchObject({ status: 409, corpo: { erro: 'EMAIL_EM_USO' } })
+  })
+
+  it('consentimento que não é sim ou não dá 400', async () => {
+    const r = await novaConta({ nome: 'Eva Lima', email: 'eva@exemplo.com', senha: 'senha-segura-4', consentimentoFicha: 'sim' })
+    expect(r).toMatchObject({ status: 400, corpo: { erro: 'DADOS_INVALIDOS' } })
   })
 })
 

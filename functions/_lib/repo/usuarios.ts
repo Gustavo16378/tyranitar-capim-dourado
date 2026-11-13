@@ -38,13 +38,13 @@ export async function atualizarSenhaHash(db: D1Database, id: string, senhaHash: 
 
 export async function criarCliente(
   db: D1Database,
-  cliente: { id: string; nome: string; email: string; senhaHash: string; qrToken: string },
+  cliente: { id: string; nome: string; email: string; senhaHash: string; qrToken: string; consentimentoFicha?: boolean },
 ) {
   await db
     .prepare(
-      `INSERT INTO usuario (id, nome, email, senha_hash, perfil, qr_token)
-       VALUES (?1, ?2, ?3, ?4, 'CLIENTE', ?5)`,
+      `INSERT INTO usuario (id, nome, email, senha_hash, perfil, qr_token, consentimento_ficha)
+       VALUES (?1, ?2, ?3, ?4, 'CLIENTE', ?5, ?6)`,
     )
-    .bind(cliente.id, cliente.nome, cliente.email, cliente.senhaHash, cliente.qrToken)
+    .bind(cliente.id, cliente.nome, cliente.email, cliente.senhaHash, cliente.qrToken, cliente.consentimentoFicha ? 1 : 0)
     .run()
 }
