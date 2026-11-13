@@ -4,8 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "tokens": "node scripts/gerar-tokens.mjs",
+    "predev": "npm run tokens",
     "dev": "vite",
     "dev:api": "npm run build && wrangler pages dev",
+    "prebuild": "npm run tokens",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",

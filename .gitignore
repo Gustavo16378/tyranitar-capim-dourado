@@ -6,6 +6,9 @@ dev-dist/
 coverage/
 *.tsbuildinfo
 
+# Gerado de tokens.json no predev e no prebuild
+src/design-system/tokens.css
+
 # Cloudflare (D1 local e estado do wrangler)
 .wrangler/
 
