@@ -14,7 +14,13 @@ export const onRequestPost: Rota = async ({ request, env, data }) => {
   const entrada = lerEntradaDoChat(await lerCorpo(request))
   const resposta = await conversar(
     { clienteId: cliente.id, ...entrada },
-    { db: env.DB, modelo: modeloClaude(env), nomeDoModelo: env.CAPI_MODELO || undefined, lerPagina: lerPaginaDeProduto },
+    {
+      db: env.DB,
+      modelo: modeloClaude(env),
+      nomeDoModelo: env.CAPI_MODELO || undefined,
+      lerPagina: lerPaginaDeProduto,
+      modoDemo: env.CAPI_MODO_DEMO === '1',
+    },
   )
   return json(resposta)
 }

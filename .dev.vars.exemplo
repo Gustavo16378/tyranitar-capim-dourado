@@ -5,6 +5,9 @@ ANTHROPIC_API_KEY=
 JWT_SECRET=
 # Modelo da Capi (opcional; padrão claude-sonnet-5-5)
 CAPI_MODELO=
+# 1 para a Capi usar as respostas salvas da demonstração (functions/_lib/capi/demonstracao.json)
+# sempre que a mensagem bater com uma. Sem isso, elas só entram se o Claude falhar.
+CAPI_MODO_DEMO=
 
 # Senhas dos usuários de teste, usadas só pelo npm run seed:local e npm run seed:remoto
 # (12 caracteres ou mais). O banco guarda só os hashes. Os usuários:

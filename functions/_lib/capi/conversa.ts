@@ -5,6 +5,13 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { ErroApi } from '../erros'
 import { salvarMensagem, ultimasMensagens, type MensagemLinha } from '../repo/mensagens'
 import { produtoParaApi, type ProdutoLinha } from '../repo/produtos'
+import {
+  acharRespostaSalva,
+  produtosDaRespostaSalva,
+  RESPOSTA_SALVA_SEM_PRODUTO,
+  sha256DaImagem,
+  type RespostaSalva,
+} from './demonstracao'
 import type { TipoDeImagem } from './entrada'
 import { executarFerramenta, FERRAMENTAS, type Acao, type ContextoDasFerramentas } from './ferramentas'
 import type { ModeloCapi, ParametrosDoModelo } from './modelo'
@@ -46,6 +53,10 @@ export interface DependenciasDaCapi {
   prazoMs?: number
   /** Como abrir a página de um link; os testes passam uma página de exemplo. */
   lerPagina?: LerPagina
+  /** CAPI_MODO_DEMO=1: usa a resposta salva sempre que a mensagem bater com uma. */
+  modoDemo?: boolean
+  /** Respostas salvas (padrão: demonstracao.json). */
+  respostasSalvas?: RespostaSalva[]
 }
 
 const CARTOES_NO_MAXIMO = 3
@@ -215,26 +226,47 @@ function textoParaOHistorico(pedido: PedidoDaCapi) {
   return pedido.texto
 }
 
+/** A resposta salva como resposta da Capi: texto fixo, produtos buscados agora no banco. */
+async function responderComSalva(db: D1Database, salva: RespostaSalva, clienteId: string) {
+  const encontrados = await produtosDaRespostaSalva(db, salva, clienteId)
+  return montarResposta(encontrados.length ? salva.resposta : RESPOSTA_SALVA_SEM_PRODUTO, new Map(), encontrados, [])
+}
+
 /** Uma mensagem do cliente para a Capi: grava a conversa e devolve resposta, cartões e ações. */
 export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi): Promise<RespostaDaCapi> {
   const { db } = deps
   const anteriores = await ultimasMensagens(db, pedido.clienteId, MENSAGENS_NO_CONTEXTO)
   await salvarMensagem(db, pedido.clienteId, 'CLIENTE', textoParaOHistorico(pedido))
-  if (!deps.modelo) throw iaIndisponivel()
 
-  const ctx: ContextoDasFerramentas = {
-    db,
-    clienteId: pedido.clienteId,
-    mensagemDoCliente: pedido.texto,
-    agora: deps.agora ?? new Date(),
-    reservasFeitas: 0,
+  const imagemSha256 = pedido.imagem ? await sha256DaImagem(pedido.imagem.base64) : undefined
+  if (imagemSha256 && deps.modoDemo) console.log(`Capi (modo demonstração): foto recebida, SHA-256 ${imagemSha256}`)
+  const salva = acharRespostaSalva({ texto: pedido.texto, imagemSha256 }, deps.respostasSalvas)
+
+  let resposta: RespostaDaCapi
+  if (salva && (deps.modoDemo || !deps.modelo)) {
+    resposta = await responderComSalva(db, salva, pedido.clienteId)
+  } else {
+    if (!deps.modelo) throw iaIndisponivel()
+    const modelo = deps.modelo
+    const ctx: ContextoDasFerramentas = {
+      db,
+      clienteId: pedido.clienteId,
+      mensagemDoCliente: pedido.texto,
+      agora: deps.agora ?? new Date(),
+      reservasFeitas: 0,
+    }
+    try {
+      // A leitura do link conta dentro dos mesmos 15 s.
+      resposta = await comPrazo(deps.prazoMs ?? PRAZO_MS, async (signal) => {
+        const conteudo = await conteudoDoPedido(pedido, deps.lerPagina ?? lerPaginaDeProduto, signal)
+        return rodarLoop(modelo, deps.nomeDoModelo ?? MODELO_PADRAO, montarConversa(anteriores, conteudo), ctx, signal)
+      })
+    } catch (erro) {
+      // Claude fora do ar: se a mensagem é do roteiro da demonstração, responde com a salva.
+      if (!(erro instanceof ErroApi && erro.codigo === 'IA_INDISPONIVEL' && salva)) throw erro
+      resposta = await responderComSalva(db, salva, pedido.clienteId)
+    }
   }
-  const modelo = deps.modelo
-  // A leitura do link conta dentro dos mesmos 15 s.
-  const resposta = await comPrazo(deps.prazoMs ?? PRAZO_MS, async (signal) => {
-    const conteudo = await conteudoDoPedido(pedido, deps.lerPagina ?? lerPaginaDeProduto, signal)
-    return rodarLoop(modelo, deps.nomeDoModelo ?? MODELO_PADRAO, montarConversa(anteriores, conteudo), ctx, signal)
-  })
   await salvarMensagem(db, pedido.clienteId, 'CAPI', resposta.resposta)
   return resposta
 }

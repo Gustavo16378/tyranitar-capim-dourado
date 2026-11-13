@@ -6,4 +6,6 @@ interface Env {
   ANTHROPIC_API_KEY?: string
   /** Modelo da Capi; padrão claude-sonnet-5-5. */
   CAPI_MODELO?: string
+  /** "1": a Capi usa as respostas salvas da demonstração sempre que a mensagem bater com uma. */
+  CAPI_MODO_DEMO?: string
 }
