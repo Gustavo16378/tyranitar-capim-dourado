@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react'
+import { Fragment, useId, type ReactNode } from 'react'
 
 interface CartaoGraficoProps {
   titulo: string
@@ -8,7 +8,10 @@ interface CartaoGraficoProps {
   tabela: { colunas: string[]; linhas: (string | number)[][] }
 }
 
-/** Moldura de um gráfico: título, uma frase sobre o que ele mostra, o gráfico e a tabela. */
+/**
+ * Moldura de um gráfico: título, uma frase sobre o que ele mostra, o gráfico e a tabela. Abaixo
+ * de 640 px, a tabela vira cartões (um por linha, cada coluna com o nome dela), sem rolar de lado.
+ */
 export function CartaoGrafico({ titulo, descricao, children, tabela }: CartaoGraficoProps) {
   const idTitulo = useId()
   return (
@@ -25,7 +28,22 @@ export function CartaoGrafico({ titulo, descricao, children, tabela }: CartaoGra
       {children}
       <details className="text-body-sm">
         <summary className="cursor-pointer text-label text-marrom-ink">Ver em tabela</summary>
-        <table className="mt-3 w-full border-collapse text-left">
+        <ul aria-label={titulo} className="mt-3 flex flex-col gap-2 sm:hidden">
+          {tabela.linhas.map((linha) => (
+            <li key={String(linha[0])} className="flex flex-col gap-1 rounded-sm border border-line p-3">
+              <span className="text-label">{linha[0]}</span>
+              <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4">
+                {tabela.colunas.slice(1).map((coluna, i) => (
+                  <Fragment key={coluna}>
+                    <dt className="text-ink-muted">{coluna}</dt>
+                    <dd className="text-right tabular-nums">{linha[i + 1]}</dd>
+                  </Fragment>
+                ))}
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <table className="mt-3 hidden w-full border-collapse text-left sm:table">
           <caption className="sr-only">{titulo}</caption>
           <thead>
             <tr>
