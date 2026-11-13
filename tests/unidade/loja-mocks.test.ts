@@ -68,10 +68,11 @@ describe('mocks: GET /api/loja/atendimento/{qr}', () => {
     expect(corpo.ficha).toContain('Prefere preto')
     expect(corpo.ficha.join(' ')).not.toMatch(/perfume/i)
     expect(corpo.reservas).toEqual([{ id: 'r1', produto: 'Tênis de corrida Pulse', status: 'SEPARADA', pago: true }])
+    // Os da loja primeiro, depois os vouchers; vencido, de nível acima e brinde do shopping ficam de fora.
     expect(corpo.cupons).toEqual([
       { id: 'cp1', titulo: '10% em calçados', origem: 'LOJA' },
-      { id: 'cp2', titulo: 'R$ 20 do shopping', origem: 'SHOPPING' },
       { id: 'cp3', titulo: 'R$ 15 em camisetas', origem: 'LOJA' },
+      { id: 'cp2', titulo: 'R$ 20 do shopping', origem: 'SHOPPING' },
     ])
   })
 
@@ -154,7 +155,7 @@ describe('mocks: POST /api/loja/compras', () => {
     const segunda = await chamar('POST', '/api/loja/compras', { qrToken: QR_DA_ANA, valorCentavos: 10000, cupons: ['cp1'] })
     expect(segunda.status).toBe(422)
     const { corpo } = await chamar<Atendimento>('GET', `/api/loja/atendimento/${QR_DA_ANA}`)
-    expect(corpo.cupons.map((c) => c.id)).toEqual(['cp2', 'cp3'])
+    expect(corpo.cupons.map((c) => c.id)).toEqual(['cp3', 'cp2'])
   })
 
   it('retira a reserva paga com Pix pelo valor dela, sem cobrar de novo, e só uma vez', async () => {

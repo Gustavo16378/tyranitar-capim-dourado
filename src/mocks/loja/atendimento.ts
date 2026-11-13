@@ -7,6 +7,7 @@ import { podeRetirar, STATUS_ATIVOS } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
 import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { registrarReembolso } from '../comum/reembolsos'
+import { todosOsVouchers } from '../comum/vouchers'
 import { banco, LOJA, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
 import {
   dadosInvalidos,
@@ -56,7 +57,9 @@ export function buscarAtendimento(pedido: PedidoMock): RespostaMock {
     reservas: banco.reservas
       .filter((r) => r.clienteId === cliente.id && STATUS_ATIVOS.includes(r.status))
       .map(({ id, produto, status, pago }) => ({ id, produto, status, pago })),
-    cupons: banco.cupons
+    // Os da loja primeiro, depois os vouchers do shopping. Brinde do shopping (estacionamento)
+    // se resgata no balcão do shopping, não no caixa da loja.
+    cupons: [...banco.cupons, ...todosOsVouchers().filter((v) => v.tipo !== 'BRINDE')]
       .filter((c) => !motivoCupomInvalido(c, cliente))
       .map(({ id, titulo, origem }) => ({ id, titulo, origem })),
   }
@@ -125,7 +128,7 @@ function calcular(pedido: PedidoMock): Calculo | RespostaMock {
   }
   const usados: CupomMock[] = []
   for (const id of lido.cupons) {
-    const cupom = banco.cupons.find((c) => c.id === id)
+    const cupom = [...banco.cupons, ...todosOsVouchers()].find((c) => c.id === id)
     if (!cupom) return erro(422, 'CUPOM_INVALIDO', 'Um dos cupons não existe mais. Leia o QR de novo.')
     const motivo = motivoCupomInvalido(cupom, cliente)
     if (motivo) return erro(422, 'CUPOM_INVALIDO', motivo)

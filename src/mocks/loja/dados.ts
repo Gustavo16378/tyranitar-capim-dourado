@@ -1,10 +1,12 @@
 // Banco de mentira do painel da loja: o lojista da "Loja de esportes", a Ana do seed, as
 // reservas, o catálogo e os cupons da loja. Fica na memória: recarregar a página volta tudo
 // ao início, o que deixa a demonstração repetível. Os testes chamam reiniciarMocks().
-import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { diasAtras, reiniciarReembolsos, VOUCHERS_DA_LOJA_DE_ESPORTES } from '../comum/reembolsos'
+import { cupomMock, emDias, reiniciarVouchers, type CupomMock } from '../comum/vouchers'
+
+export type { CupomMock }
 import { QR_DA_ANA } from '../../loja/telas/atendimento/demo'
-import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom, UsuarioLogado } from '../../tipos/loja'
+import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, UsuarioLogado } from '../../tipos/loja'
 
 export const LOJA = {
   id: 'loja-esportes',
@@ -32,22 +34,6 @@ export interface ClienteMock {
   pontos: number
   consentimentoFicha: boolean
   interesses: { categoria: string; detalhe: string }[]
-}
-
-export interface CupomMock {
-  id: string
-  titulo: string
-  /** LOJA: desta loja. SHOPPING: voucher do shopping, vale em qualquer loja. */
-  origem: 'LOJA' | 'SHOPPING'
-  tipo: TipoCupom
-  /** PERCENTUAL: 1 a 100. VALOR: centavos. BRINDE: 0. */
-  valor: number
-  categoriaAlvo: string | null
-  nivelMinimo: NivelApi
-  limitePorCliente: number
-  /** Último dia de uso: "2026-12-31". */
-  validade: string
-  ativo: boolean
 }
 
 export interface ReservaMock extends ReservaDaLoja {
@@ -82,11 +68,6 @@ export function nivelAtende(nivel: NivelApi, minimo: NivelApi) {
 
 const HORA = 60 * 60 * 1000
 
-/** A data daqui a tantos dias (negativo: no passado), para as validades não vencerem com o tempo. */
-function emDias(dias: number) {
-  return hojeEmPalmas(Date.now() + dias * 24 * HORA)
-}
-
 function emHoras(horas: number) {
   return new Date(Date.now() + horas * HORA).toISOString()
 }
@@ -118,22 +99,13 @@ function estadoInicial() {
     interesses: [{ categoria: 'roupas', detalhe: 'Bermuda de corrida' }],
   }
 
-  const cupom = (c: Partial<CupomMock> & Pick<CupomMock, 'id' | 'titulo' | 'origem' | 'tipo' | 'valor'>): CupomMock => ({
-    categoriaAlvo: null,
-    nivelMinimo: 'SEMENTE',
-    limitePorCliente: 1,
-    validade: emDias(48),
-    ativo: true,
-    ...c,
-  })
   const cupons: CupomMock[] = [
-    cupom({ id: 'cp1', titulo: '10% em calçados', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 10, categoriaAlvo: 'calcados' }),
-    cupom({ id: 'cp2', titulo: 'R$ 20 do shopping', origem: 'SHOPPING', tipo: 'VALOR', valor: 2000, validade: emDias(32) }),
+    cupomMock({ id: 'cp1', titulo: '10% em calçados', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 10, categoriaAlvo: 'calcados' }),
     // Segundo cupom da loja: não combina com o cp1 na mesma compra (RN05).
-    cupom({ id: 'cp3', titulo: 'R$ 15 em camisetas', origem: 'LOJA', tipo: 'VALOR', valor: 1500, categoriaAlvo: 'roupas' }),
+    cupomMock({ id: 'cp3', titulo: 'R$ 15 em camisetas', origem: 'LOJA', tipo: 'VALOR', valor: 1500, categoriaAlvo: 'roupas' }),
     // Cupons da loja que a Ana não vê no atendimento: vencido e só para o nível Dourado.
-    cupom({ id: 'cp4', titulo: 'Squeeze de brinde', origem: 'LOJA', tipo: 'BRINDE', valor: 0, validade: emDias(-13) }),
-    cupom({ id: 'cp5', titulo: '15% para clientes Dourado', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 15, nivelMinimo: 'DOURADO', limitePorCliente: 2 }),
+    cupomMock({ id: 'cp4', titulo: 'Squeeze de brinde', origem: 'LOJA', tipo: 'BRINDE', valor: 0, validade: emDias(-13) }),
+    cupomMock({ id: 'cp5', titulo: '15% para clientes Dourado', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 15, nivelMinimo: 'DOURADO', limitePorCliente: 2 }),
   ]
 
   const { compras, usos } = historicoDeCompras()
@@ -257,10 +229,11 @@ function historicoDeCompras() {
 
 export let banco = estadoInicial()
 
-/** Volta os dados ao início (testes e "recomeçar a demonstração"), com os reembolsos. */
+/** Volta os dados ao início (testes e "recomeçar a demonstração"), com reembolsos e vouchers. */
 export function reiniciarMocks() {
   banco = estadoInicial()
   reiniciarReembolsos()
+  reiniciarVouchers()
 }
 
 /** Id novo para o que o mock cria: novoId('p') → 'p100'. */
