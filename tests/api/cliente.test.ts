@@ -157,7 +157,16 @@ describe('GET /api/me/carteira', () => {
         { id: 'cp-a-15', titulo: 'R$ 15 em camisetas', loja: 'Loja A', validade: '2099-12-31', tipo: 'VALOR', valor: 1500, nivelMinimo: 'SEMENTE' },
         { id: 'cp-shopping-20', titulo: 'R$ 20 em qualquer loja', loja: null, validade: '2099-12-31', tipo: 'VALOR', valor: 2000, nivelMinimo: 'SEMENTE' },
       ],
-      reservasAtivas: [{ id: r1.corpo.id, produto: 'Tênis de corrida Pulse', status: 'PENDENTE' }],
+      reservasAtivas: [
+        {
+          id: r1.corpo.id,
+          produto: 'Tênis de corrida Pulse',
+          status: 'PENDENTE',
+          pago: false,
+          expiraEm: r1.corpo.expiraEm,
+          loja: { nome: 'Loja A', piso: 1, mapaId: 'mapa-loja-a' },
+        },
+      ],
     })
   })
 

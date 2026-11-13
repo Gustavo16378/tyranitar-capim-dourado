@@ -1,6 +1,7 @@
 // GET /api/me/carteira (CLIENTE): QR do balcão, saldo de pontos, nível (pelos pontos dos últimos
 // 12 meses, RN08), quanto falta para o próximo, os cupons que o cliente pode usar e as reservas
-// em aberto. Cada cupom traz tipo, valor e nível mínimo para o app montar o canhoto.
+// em aberto, com a loja (para o "Como chegar"). Cada cupom traz tipo, valor e nível mínimo para o
+// app montar o canhoto.
 import { exigirPerfil, type Rota } from '../../_lib/contexto'
 import { ErroApi } from '../../_lib/erros'
 import { json } from '../../_lib/http'
@@ -10,7 +11,7 @@ import { categoriasDaFicha } from '../../_lib/repo/fichas'
 import { expirarVencidas, reservasAtivasDoCliente } from '../../_lib/repo/reservas'
 import { buscarUsuarioPorId } from '../../_lib/repo/usuarios'
 import { clienteVeCupom } from '../../_lib/regras/cupons'
-import { dataEmPalmas } from '../../_lib/regras/datas'
+import { dataEmPalmas, deSqlite } from '../../_lib/regras/datas'
 
 export const onRequestGet: Rota = async ({ env, data }) => {
   const { id } = exigirPerfil(data, 'CLIENTE')
@@ -42,6 +43,13 @@ export const onRequestGet: Rota = async ({ env, data }) => {
         valor: c.valor,
         nivelMinimo: c.nivel_minimo,
       })),
-    reservasAtivas: reservas.map((r) => ({ id: r.id, produto: r.produto_nome, status: r.status })),
+    reservasAtivas: reservas.map((r) => ({
+      id: r.id,
+      produto: r.produto_nome,
+      status: r.status,
+      pago: r.pago === 1,
+      expiraEm: deSqlite(r.expira_em).toISOString(),
+      loja: { nome: r.loja_nome, piso: r.loja_piso, mapaId: r.loja_mapa_id },
+    })),
   })
 }

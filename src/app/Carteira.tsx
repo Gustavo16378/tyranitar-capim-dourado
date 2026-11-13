@@ -7,8 +7,9 @@ import { comMovimento, DURACAO, EASE, encherBarra, somarPontos, subirDeNivel, us
 import { desdeAUltimaVista, guardarVista, lerVista } from './carteiraVista'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
 import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel } from './formatos'
+import { MinhasReservas } from './MinhasReservas'
 
-/** Carteira: o QR do cliente para o balcão, pontos, progresso de nível e cupons. */
+/** Carteira: o QR do cliente para o balcão, pontos, progresso de nível, reservas e cupons. */
 export default function Carteira() {
   const usuario = useSessao()?.usuario
   const carteira = useDados(obterCarteira, 'carteira')
@@ -124,6 +125,10 @@ export default function Carteira() {
                   <NivelBadge nivel={paraNivel(carteira.dados.nivel)} />
                 </div>
               )}
+            </div>
+
+            <div data-anim>
+              <MinhasReservas reservas={carteira.dados.reservasAtivas} />
             </div>
 
             <section data-anim aria-labelledby="titulo-cupons" className="flex flex-col gap-3">

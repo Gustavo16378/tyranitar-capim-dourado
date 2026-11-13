@@ -15,10 +15,14 @@
     "test": "vitest run",
     "test:unidade": "vitest run --project unidade",
     "test:api": "vitest run --project workers",
+    "test:e2e": "playwright test --project=e2e-celular --project=e2e-computador",
+    "test:a11y": "playwright test --project=a11y",
+    "typecheck": "tsc -b",
     "db:migrar": "wrangler d1 migrations apply tyranitar --local",
     "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote",
     "seed:local": "node scripts/gerar-seed.mjs --local",
-    "seed:remoto": "node scripts/gerar-seed.mjs --remoto"
+    "seed:remoto": "node scripts/gerar-seed.mjs --remoto",
+    "demo:reset": "node scripts/demo-reset.mjs --remoto"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -36,9 +40,11 @@
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@cloudflare/vitest-plugin": "^1.8.1",
     "@cloudflare/workers-types": "^5.20261113.1",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -49,6 +55,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.14.0",
+    "playwright-core": "^1.64.1",
     "postcss": "^8.5.32",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.9.3",

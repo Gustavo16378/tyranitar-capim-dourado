@@ -129,7 +129,16 @@ describe('mock da carteira', () => {
       pontos: 2140,
       nivel: 'CAPIM',
       proximoNivel: { nivel: 'DOURADO', faltam: 2860 },
-      reservasAtivas: [{ id: expect.any(String), produto: 'Tênis de corrida Pulse', status: 'PENDENTE' }],
+      reservasAtivas: [
+        {
+          id: expect.any(String),
+          produto: 'Tênis de corrida Pulse',
+          status: 'PENDENTE',
+          pago: false,
+          expiraEm: expect.any(String),
+          loja: { nome: 'Loja de esportes', piso: 1, mapaId: 'loja-esportes' },
+        },
+      ],
     })
     expect(carteira.cupons[0]).toMatchObject({
       id: 'cp1',

@@ -12,9 +12,10 @@ database_id = "be85546f-df5d-4364-bd06-a2acf6b3a1a2"
 migrations_dir = "migrations"
 
 # Variáveis (vão para o Cloudflare no deploy e valem no wrangler pages dev; o .dev.vars vale por
-# cima delas na máquina). Modo demonstração, para o hackathon (veja o README); depois, "0" nas duas.
+# cima delas na máquina). Modo demonstração do hackathon: veja o README.
 [vars]
-# Liga POST /api/auth/demo: entrar como a cliente Ana sem senha, para a banca.
+# Liga POST /api/auth/demo: entrar como a cliente Ana sem senha, para a banca. Depois, "0".
 DEMO = "1"
-# A Capi responde o roteiro da demonstração com as respostas salvas, sem chamar o Claude.
-CAPI_MODO_DEMO = "1"
+# "0": a Capi é o Claude de verdade, também no roteiro. As respostas salvas só entram se ele
+# falhar. "1" faz o roteiro sair sempre das respostas salvas, sem chamar o Claude.
+CAPI_MODO_DEMO = "0"

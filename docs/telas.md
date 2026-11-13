@@ -19,24 +19,26 @@ flowchart TB
   pix --> reserva
   reserva --> mapa
   reserva --> carteira
+  carteira --> reserva
+  carteira --> mapa
   carteira --> balcao(["Vendedor lê o QR no balcão"])
 ```
 
-A barra de navegação fixa no rodapé leva a Início, Capi, Mapa e Carteira de qualquer tela.
+A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a página) e depois segue para a tela que a pessoa abriu, inclusive num link direto. Um toque pula; com movimento reduzido ela é curta. A barra de navegação fixa no rodapé leva a Início, Capi, Mapa e Carteira de qualquer tela.
 
 ## App do cliente
 
 | Tela | Para que serve | Componentes | Requisitos |
 | --- | --- | --- | --- |
-| Abertura | Apresentar a Capi; a trança se desenha | CapiMark, Button | RF01 |
+| Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Início | Ofertas para o cliente, produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
 | Capi | Conversa com texto, foto ou link; respostas com produtos das lojas | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
 | Pix simulado | QR do Pix e confirmação do pagamento | Button | RF09 |
 | Reserva confirmada | Status da reserva e próximos passos | ReservaStatus, Button | RF08, RF09 |
-| Mapa | Planta do térreo e da praça de alimentação, loja destacada e rota da entrada | Badge | RF10 |
-| Carteira | QR do cliente, pontos, progresso de nível e cupons | CarteiraQR, ProgressoNivel, CupomTicket | RF11, RF12 |
+| Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota da entrada mais próxima | Badge | RF10 |
+| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo e "Como chegar") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
 
 ## Painel da loja
 
@@ -68,7 +70,7 @@ Toda tela prevê quatro estados, todos com os componentes do design system:
 
 ## Prévia
 
-Telas do app do cliente no protótipo:
+Telas reais do app do cliente, num Chrome emulando celular (390 × 844), com os dados do seed e a Capi de verdade respondendo ao roteiro da demonstração:
 
 ![Abertura](img/tela-abertura.png)
 ![Início](img/tela-inicio.png)
@@ -78,8 +80,9 @@ Telas do app do cliente no protótipo:
 ![Reserva confirmada](img/tela-reserva.png)
 ![Mapa](img/tela-mapa.png)
 ![Carteira](img/tela-carteira.png)
+![Carteira, minhas reservas](img/tela-carteira-reservas.png)
 
-Atendimento no painel da loja:
+Atendimento no painel da loja, depois de ler o QR da Ana (painel da branch fase-4, com os dados de exemplo dela):
 
 ![Painel da loja, atendimento](img/painel-atendimento.png)
 

@@ -11,9 +11,12 @@ import { linkValido, termosDoLink } from '../link'
 import { listarProdutos } from '../produtos'
 import { ATRASO_CAPI_MS, falhar, responder } from './atraso'
 
-/** A mensagem que abre o roteiro da demonstração. */
+/** A mensagem que abre o roteiro da demonstração: o texto e o print do tênis (public/demo). */
 export const PERGUNTA_DEMO = {
   texto: 'Tem esse tênis aí no shopping? Uso 42.',
+  /** O print que vai junto, como foto: a Capi de verdade precisa ver o tênis. */
+  imagem: '/demo/print-tenis.jpg',
+  /** Descrição do print, se ele não carregar. */
   anexo: 'Print de um tênis preto',
 }
 

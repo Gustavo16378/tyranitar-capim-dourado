@@ -1,0 +1,14 @@
+{
+  "comoUsar": "Dados fixos dos testes no navegador (E2E e acessibilidade), lidos pelo servidor.mjs e pelos testes. O banco é o tests/seed.sql com os ajustes do servidor.mjs; a senha do lojista vale só nesse banco de teste.",
+  "porta": 8789,
+  "ana": {
+    "email": "ana.souza@demo.test",
+    "qrToken": "q-e08f6d74302d293349fda714"
+  },
+  "lojista": {
+    "email": "lojista.a@teste.test",
+    "senha": "senha-so-dos-testes-e2e"
+  },
+  "mapaDaLojaA": "loja-07",
+  "jwtSecret": "segredo-so-dos-testes-e2e-com-mais-de-32-caracteres"
+}

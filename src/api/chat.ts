@@ -9,5 +9,5 @@ export function enviarMensagem(mensagem: MensagemChat) {
   return requisitar<RespostaChat>('POST', '/api/chat', mensagem)
 }
 
-/** A primeira mensagem do roteiro da demonstração (o print do tênis), até a Fase 5. */
+/** A primeira mensagem do roteiro da demonstração (o texto e o print do tênis). */
 export const PERGUNTA_DEMO = mock.PERGUNTA_DEMO
