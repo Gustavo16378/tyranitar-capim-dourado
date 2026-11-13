@@ -164,6 +164,7 @@ Com o Claude simulado:
 | TI06 | Imagem maior que 4 MB | RF03 | 400 |
 | TI07 | Link de uma página de exemplo | RF04 | `og:title` e `og:image` extraídos |
 | TI08 | Conversa longa | RF02 | Só as últimas mensagens vão para o modelo |
+| TI12 | Foto de tênis e, depois, "não gostei" | RF03 | O histórico guarda a descrição que a Capi fez da foto; na mensagem seguinte o Claude recebe a foto como vista, com a descrição, e o prompt proíbe dizer que não viu |
 
 **Conjunto de avaliação com a IA real**, rodado à mão antes do pitch:
 
@@ -187,6 +188,9 @@ Com o Claude simulado:
 | TE08 | PWA | RNF01 | Manifesto válido e service worker registrado |
 | TE09 | Mapa | RF10 | Clicar numa loja abre a página dela; trocar de piso mostra a praça de alimentação |
 | TE10 | Celular (390 × 844) nas telas principais | RNF01 | Sem rolagem horizontal e botões alcançáveis |
+| TE11 | Capi vazia | RF02, RF03 | Sem roteiro automático: sugestões que só preenchem o campo (a do tênis anexa a foto); somem depois da primeira mensagem e voltam com "Nova conversa" |
+| TE12 | Sair da Capi e voltar | RF02 | A conversa salva volta (com o selo da foto e os cartões), também recarregando; só "Nova conversa" apaga |
+| TE13 | Capi demorando | RNF10 | "A Capi está procurando nas lojas…" depois de 2 s; em 25 s, mensagem amigável e "Tentar de novo", que manda a mesma mensagem |
 
 ### Acessibilidade (TX)
 

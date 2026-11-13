@@ -2,7 +2,7 @@
 // de impacto serious ou critical das regras WCAG 2.1 A e AA, nos temas claro e escuro.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { comSessaoDaAna, entrarNoPainelDaLoja, esperarRoteiroDaCapi } from '../e2e/apoio'
+import { comSessaoDaAna, entrarNoPainelDaLoja, novaConversa, perguntarPeloTenisDaFoto } from '../e2e/apoio'
 
 const GRAVES = new Set(['serious', 'critical'])
 
@@ -57,9 +57,13 @@ for (const tema of ['light', 'dark'] as const) {
     })
 
     test('TX02: conversa com a Capi, também só pelo teclado', async ({ page }) => {
-      await comSessaoDaAna(page)
+      const { token } = await comSessaoDaAna(page)
+      await novaConversa(page.request, token)
       await page.goto('/capi')
-      await esperarRoteiroDaCapi(page)
+      // A Capi vazia, com as sugestões; depois a conversa com a foto do tênis.
+      await expect(page.getByRole('button', { name: /Tem esse tênis aí no shopping/ })).toBeVisible()
+      await semViolacoesGraves(page)
+      await perguntarPeloTenisDaFoto(page)
       await semViolacoesGraves(page)
 
       // Só com o teclado: Tab até o campo da mensagem, escrever e mandar com Enter.

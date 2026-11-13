@@ -98,7 +98,7 @@ São três chaves, ligadas com `1`; nenhuma é segredo.
 
 | Chave | Quem lê | No hackathon | O que faz |
 | --- | --- | --- | --- |
-| `VITE_MODO_DEMO` | Front, no build | `1`, no `.env.local` | A Capi abre tocando o roteiro da demonstração (o print do tênis), e os avisos de dados fictícios aparecem. Desligada, a Capi abre vazia e os avisos somem. |
+| `VITE_MODO_DEMO` | Front, no build | `1`, no `.env.local` | Os avisos de dados fictícios aparecem (tela de entrar, produto, Demanda e Lojas vagas). Desligada, eles somem. A Capi nunca manda nada sozinha: vazia, ela mostra sugestões que só preenchem o campo, como a do print do tênis do roteiro. |
 | `DEMO` | Functions | `1`, no `[vars]` do `wrangler.toml` | Liga `/api/auth/demo` e os botões de conta de demonstração da tela de entrar, sem senha: Cliente (Ana), Lojista (a loja do roteiro) e Shopping (admin). Desligada, a rota responde 404 e os botões somem. |
 | `CAPI_MODO_DEMO` | Functions | `0`, no `[vars]` do `wrangler.toml` | Com `0`, a Capi é o Claude de verdade, também no roteiro, e as respostas salvas (`functions/_lib/capi/demonstracao.json`) só entram se ele falhar. Com `1`, o roteiro sai sempre das respostas salvas, sem chamar o Claude (para apresentar sem internet). |
 

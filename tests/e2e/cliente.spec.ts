@@ -9,7 +9,8 @@ import {
   comSessaoDaAna,
   comToken,
   dados,
-  esperarRoteiroDaCapi,
+  novaConversa,
+  perguntarPeloTenisDaFoto,
   pontosDaAna,
   tokenDoLojista,
   tokenNaTela,
@@ -28,8 +29,9 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
   const pontosAntes = await pontosDaAna(request, await tokenNaTela(page))
 
   await test.step('a Capi responde o roteiro com produtos do shopping', async () => {
+    await novaConversa(request, await tokenNaTela(page))
     await aba(page, 'Capi').click()
-    const conversa = await esperarRoteiroDaCapi(page)
+    const conversa = await perguntarPeloTenisDaFoto(page)
     await expect(conversa.getByRole('heading', { name: /Tênis/ }).first()).toBeVisible()
     await page.getByRole('button', { name: 'Sim, separar' }).click()
   })
@@ -97,9 +99,10 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
 })
 
 test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => {
-  await comSessaoDaAna(page)
+  const { token } = await comSessaoDaAna(page)
+  await novaConversa(page.request, token)
   await page.goto('/capi')
-  await esperarRoteiroDaCapi(page)
+  await perguntarPeloTenisDaFoto(page)
 
   const mensagem = page.getByRole('textbox', { name: 'Mensagem para a Capi' })
   await mensagem.fill('perfume')

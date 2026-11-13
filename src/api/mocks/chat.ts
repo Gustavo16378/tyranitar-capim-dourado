@@ -5,7 +5,7 @@
 // - Texto: busca no catálogo.
 // Os produtos vêm do catálogo da fonte atual (src/api/produtos), como as ferramentas da Capi
 // buscam no banco: com produtos já na API real, os cards abrem produtos que existem.
-import type { AcaoChat, MensagemChat, ProdutoResumo, RespostaChat } from '../../tipos'
+import type { AcaoChat, HistoricoChat, MensagemChat, ProdutoResumo, RespostaChat } from '../../tipos'
 import { IMAGEM_MAXIMA_BYTES, tamanhoDoBase64, TEXTO_MAXIMO, TIPOS_DE_IMAGEM } from '../limites'
 import { linkValido, termosDoLink } from '../link'
 import { listarProdutos } from '../produtos'
@@ -126,4 +126,13 @@ export async function enviarMensagem(mensagem: MensagemChat): Promise<RespostaCh
         ? await respostaDemo()
         : await respostaBusca(texto)
   return responder(resposta, ATRASO_CAPI_MS)
+}
+
+/** O mock não guarda a conversa: a Capi abre vazia. */
+export async function obterConversa(): Promise<HistoricoChat> {
+  return responder({ itens: [], total: 0 }, 0)
+}
+
+export async function apagarConversa() {
+  return responder({ apagadas: 0 }, 0)
 }

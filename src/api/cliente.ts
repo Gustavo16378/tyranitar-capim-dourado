@@ -46,6 +46,8 @@ export async function requisitar<T>(
   metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   caminho: string,
   corpo?: unknown,
+  /** Para cancelar a chamada (o tempo limite da Capi). */
+  sinal?: AbortSignal,
 ) {
   const cabecalhos: Record<string, string> = { Accept: 'application/json' }
   // O token do login em mock não vale na API real (que recusa token inválido até em rota pública).
@@ -59,6 +61,7 @@ export async function requisitar<T>(
       method: metodo,
       headers: cabecalhos,
       body: corpo === undefined ? undefined : JSON.stringify(corpo),
+      signal: sinal,
     })
   } catch (erro) {
     throw comoErroApi(erro)

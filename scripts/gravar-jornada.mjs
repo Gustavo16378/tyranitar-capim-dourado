@@ -39,6 +39,8 @@ if (!login?.ok) {
   process.exit(1)
 }
 const sessao = await login.json()
+// Nova conversa: a Capi abre vazia, com as sugestões.
+await fetch(`${SITE}/api/chat`, { method: 'DELETE', headers: { Authorization: `Bearer ${sessao.token}` } })
 
 const pasta = mkdtempSync(join(tmpdir(), 'jornada-'))
 const navegador = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] })
@@ -106,8 +108,13 @@ await pagina.getByRole('heading', { name: 'O que você procura hoje?' }).waitFor
 const corte = (Date.now() - comeco) / 1000
 await pausa(1800)
 
-// A Capi abre tocando o roteiro da demonstração (o print do tênis) e oferece separar um par.
+// Na Capi vazia, a sugestão com a foto do tênis anexa o print e põe a pergunta no campo; a Ana
+// envia e a Capi oferece separar um par.
 await tocar(aba('Capi'))
+await tocar(pagina.getByRole('button', { name: /Tem esse tênis aí no shopping/ }))
+await pagina.getByRole('img', { name: 'Foto anexada' }).waitFor()
+await pausa(1200)
+await tocar(pagina.getByRole('button', { name: 'Enviar', exact: true }))
 await pagina.getByRole('button', { name: 'Sim, separar' }).waitFor({ timeout: 30_000 })
 await pausa(2200)
 await tocar(pagina.getByRole('button', { name: 'Sim, separar' }))

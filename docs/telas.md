@@ -33,7 +33,7 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Entrar e Criar conta | Login com e-mail e senha ou com a conta de demonstração; o cadastro pede nome, e-mail, senha e o consentimento da ficha (desmarcado por padrão) e já entra no Início, com 0 pontos, no nível Semente | Button | RF01, RF13 |
 | Início | Ofertas para o cliente, produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
-| Capi | Conversa com texto, foto ou link; respostas com produtos das lojas | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
+| Capi | Conversa com texto, foto ou link; respostas com produtos das lojas. Abre a conversa salva; vazia, mostra sugestões que só preenchem o campo (a do print do tênis anexa a foto). "Nova conversa" apaga. Esperando, avisa "A Capi está procurando nas lojas…" depois de 2 s e desiste em 25 s com "Tentar de novo" | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
 | Pix simulado | QR do Pix e confirmação do pagamento | Button | RF09 |
@@ -71,7 +71,7 @@ Toda tela prevê quatro estados, todos com os componentes do design system:
 
 ## Prévia
 
-Telas reais do app do cliente, num Chrome emulando celular (390 × 844), com os dados do seed e a Capi de verdade respondendo ao roteiro da demonstração:
+Telas reais do app do cliente, num Chrome emulando celular (390 × 844), com os dados do seed e a Capi respondendo à pergunta do roteiro da demonstração (a sugestão com o print do tênis):
 
 ![Abertura](img/tela-abertura.png)
 ![Início](img/tela-inicio.png)

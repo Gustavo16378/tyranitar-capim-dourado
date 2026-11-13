@@ -4,7 +4,7 @@ import { dados } from './dados'
 
 export { dados }
 
-/** A pergunta do roteiro da demonstração, que a Capi manda sozinha com VITE_MODO_DEMO=1. */
+/** A pergunta da sugestão com a foto do tênis (a do roteiro da demonstração). */
 export const PERGUNTA_DO_ROTEIRO = 'Tem esse tênis aí no shopping? Uso 42.'
 
 export const comToken = (token: string) => ({ Authorization: `Bearer ${token}` })
@@ -49,9 +49,22 @@ export async function entrarNoPainelDaLoja(page: Page, caminho = '/loja/atendime
   await expect(page).toHaveURL((url) => url.pathname === caminho)
 }
 
-/** Espera a Capi terminar o roteiro da demonstração (o botão de separar aparece no fim). */
-export async function esperarRoteiroDaCapi(page: Page) {
+/** "Nova conversa" pela API (DELETE /api/chat): a Capi abre vazia, com as sugestões. */
+export async function novaConversa(request: APIRequestContext, token: string) {
+  const resposta = await request.delete('/api/chat', { headers: comToken(token) })
+  expect(resposta.status()).toBe(200)
+}
+
+/**
+ * Na Capi vazia, toca na sugestão com a foto do tênis (ela só anexa a foto e preenche o campo) e
+ * envia. A Capi responde o roteiro, e o botão de separar aparece no fim.
+ */
+export async function perguntarPeloTenisDaFoto(page: Page) {
   const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
+  await page.getByRole('button', { name: /Tem esse tênis aí no shopping/ }).click()
+  await expect(page.getByRole('img', { name: 'Foto anexada' })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Mensagem para a Capi' })).toHaveValue(PERGUNTA_DO_ROTEIRO)
+  await page.getByRole('button', { name: 'Enviar', exact: true }).click()
   await expect(conversa.getByText(PERGUNTA_DO_ROTEIRO)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sim, separar' })).toBeVisible()
   return conversa

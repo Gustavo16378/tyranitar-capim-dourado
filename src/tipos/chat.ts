@@ -40,6 +40,24 @@ export type AcaoChat =
  * Os produtos (no máximo 3) vêm no mesmo formato da busca, e só os que vieram das ferramentas
  * da Capi (RN14). A resposta pode ter parágrafos separados por linha em branco: um balão cada.
  */
+/** Uma mensagem da conversa salva (GET /api/chat). */
+export interface MensagemDoHistorico {
+  id: string
+  papel: 'CLIENTE' | 'CAPI'
+  conteudo: string
+  /** Só do cliente: a mensagem tinha foto (a imagem não é guardada). */
+  foto?: boolean
+  /** Só da Capi: os cartões que a resposta mostrou, dos produtos que ainda estão ativos. */
+  produtos?: ProdutoResumo[]
+  /** ISO 8601. */
+  criadoEm: string
+}
+
+export interface HistoricoChat {
+  itens: MensagemDoHistorico[]
+  total: number
+}
+
 export interface RespostaChat {
   resposta: string
   produtos: ProdutoResumo[]
