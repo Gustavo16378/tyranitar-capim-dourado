@@ -62,6 +62,11 @@ export interface DependenciasDaCapi {
 const CARTOES_NO_MAXIMO = 3
 const MARCA_DE_PRODUTO = /\[produto:([^\]\s]+)\]/g
 
+/** O texto sem as marcas [produto:ID] (o app mostra cartões no lugar delas). */
+export function semMarcasDeProduto(texto: string) {
+  return texto.replace(MARCA_DE_PRODUTO, '').replace(/[ \t]+([.,;:!?])/g, '$1').replace(/[ \t]{2,}/g, ' ').trim()
+}
+
 export function iaIndisponivel() {
   return new ErroApi('IA_INDISPONIVEL', 'A Capi não conseguiu responder agora. Use a busca do app enquanto isso.')
 }
@@ -100,7 +105,7 @@ export function montarResposta(
   acoes: Acao[],
 ): RespostaDaCapi {
   const citados = [...new Set([...texto.matchAll(MARCA_DE_PRODUTO)].map((m) => m[1]))]
-  const limpo = texto.replace(MARCA_DE_PRODUTO, '').replace(/[ \t]+([.,;:!?])/g, '$1').replace(/[ \t]{2,}/g, ' ').trim()
+  const limpo = semMarcasDeProduto(texto)
   // Citação de produto que não veio de ferramenta é descartada. Sem citação nenhuma, entram os
   // mais relevantes da última busca por texto.
   const cartoes = citados.length
@@ -219,6 +224,15 @@ async function conteudoDoPedido(pedido: PedidoDaCapi, lerPagina: LerPagina, sign
   return blocos
 }
 
+/**
+ * Como a resposta da Capi fica no histórico: o texto e as marcas dos produtos mostrados. Sem as
+ * marcas, na mensagem seguinte o Claude via um produto oferecido sem consulta (as respostas
+ * salvas não passam por ferramenta) e pedia desculpas por isso. GET /api/chat tira as marcas.
+ */
+function respostaParaOHistorico(resposta: RespostaDaCapi) {
+  return [resposta.resposta, ...resposta.produtos.map((p) => `[produto:${p.id}]`)].join(' ')
+}
+
 /** Como a mensagem do cliente fica no histórico (a foto não é guardada). */
 function textoParaOHistorico(pedido: PedidoDaCapi) {
   if (pedido.imagem) return `[foto] ${pedido.texto}`.trim()
@@ -236,7 +250,6 @@ async function responderComSalva(db: D1Database, salva: RespostaSalva, clienteId
 export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi): Promise<RespostaDaCapi> {
   const { db } = deps
   const anteriores = await ultimasMensagens(db, pedido.clienteId, MENSAGENS_NO_CONTEXTO)
-  await salvarMensagem(db, pedido.clienteId, 'CLIENTE', textoParaOHistorico(pedido))
 
   const imagemSha256 = pedido.imagem ? await sha256DaImagem(pedido.imagem.base64) : undefined
   if (imagemSha256 && deps.modoDemo) console.log(`Capi (modo demonstração): foto recebida, SHA-256 ${imagemSha256}`)
@@ -267,6 +280,9 @@ export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi):
       resposta = await responderComSalva(db, salva, pedido.clienteId)
     }
   }
-  await salvarMensagem(db, pedido.clienteId, 'CAPI', resposta.resposta)
+  // A pergunta só entra no histórico junto com a resposta: se a Capi falhou (503), a mensagem
+  // seguinte não carrega uma pergunta sem resposta, que o Claude responderia de novo.
+  await salvarMensagem(db, pedido.clienteId, 'CLIENTE', textoParaOHistorico(pedido))
+  await salvarMensagem(db, pedido.clienteId, 'CAPI', respostaParaOHistorico(resposta))
   return resposta
 }

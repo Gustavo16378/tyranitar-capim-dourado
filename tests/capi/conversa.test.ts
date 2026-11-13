@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { conversar } from '../../functions/_lib/capi/conversa'
 import { RESPOSTA_SALVA_SEM_PRODUTO, sha256DaImagem } from '../../functions/_lib/capi/demonstracao'
 import { RESPOSTA_RECUSA, SISTEMA } from '../../functions/_lib/capi/prompt'
+import { onRequestGet as lerConversa } from '../../functions/api/chat'
+import { ANA, chamar } from '../workers/rotas'
 import { modeloQueFalha, modeloQueNaoResponde, modeloSimulado, type RespostaGravada } from './modelo-simulado'
 import buscaTenis from './respostas/busca-tenis.json'
 import ficha from './respostas/ficha.json'
@@ -129,6 +131,29 @@ describe('Capi com o Claude simulado', () => {
       codigo: 'IA_INDISPONIVEL',
     })
     expect(Date.now() - inicio).toBeLessThan(2000)
+    // A pergunta que falhou não fica no histórico: a próxima mensagem não a responderia de novo.
+    expect(await umValor('SELECT count(*) AS n FROM mensagem')).toEqual({ n: 0 })
+  })
+
+  it('o histórico guarda a resposta com as marcas dos produtos mostrados; o GET devolve sem elas', async () => {
+    const { modelo } = modeloSimulado(gravada(buscaTenis))
+    await conversar({ clienteId: 'c-ana', texto: 'Tem tênis de corrida preto?' }, { db: env.DB, modelo })
+    expect(await umValor("SELECT conteudo FROM mensagem WHERE papel = 'CAPI'")).toEqual({
+      conteudo: 'Achei dois aqui no térreo, na Loja A: o Pulse e o Run 2. Quer que eu separe um para você? [produto:p-pulse] [produto:p-run]',
+    })
+
+    // Na mensagem seguinte, o Claude vê que os produtos de antes vieram de uma consulta.
+    const seguinte = modeloSimulado(gravada(respostaSimples))
+    await conversar({ clienteId: 'c-ana', texto: 'E em azul?' }, { db: env.DB, modelo: seguinte.modelo })
+    expect(seguinte.chamadas[0].messages.at(-2)).toMatchObject({ role: 'assistant', content: expect.stringContaining('[produto:p-pulse]') })
+
+    const historico = await chamar(lerConversa, { url: '/api/chat', usuario: ANA })
+    expect(historico.corpo.itens.map((m: { conteudo: string }) => m.conteudo)).toEqual([
+      'Tem tênis de corrida preto?',
+      'Achei dois aqui no térreo, na Loja A: o Pulse e o Run 2. Quer que eu separe um para você?',
+      'E em azul?',
+      expect.not.stringContaining('[produto:'),
+    ])
   })
 
   it('recusa do modelo vira uma resposta gentil, sem produtos', async () => {
@@ -174,6 +199,7 @@ describe('Capi com o Claude simulado', () => {
     expect(texto.text).toContain('Mensagem do cliente: Tem esse?')
   })
 
+
   describe('respostas salvas da demonstração', () => {
     const ROTEIRO = 'Tem esse tênis aí no shopping? Uso 42.'
 
@@ -184,6 +210,10 @@ describe('Capi com o Claude simulado', () => {
       expect(r.resposta).toBe('Achei parecidos aqui no térreo, com o seu número. Quer que eu separe um para você?')
       expect(r.produtos.map((p) => p.id)).toEqual(['p-pulse', 'p-run'])
       expect(r.acoes).toEqual([{ tipo: 'RESERVAR', produtoId: 'p-pulse' }])
+      // A salva também entra no histórico com os produtos, como se tivesse vindo de uma consulta.
+      expect(await umValor("SELECT conteudo FROM mensagem WHERE papel = 'CAPI'")).toEqual({
+        conteudo: 'Achei parecidos aqui no térreo, com o seu número. Quer que eu separe um para você? [produto:p-pulse] [produto:p-run]',
+      })
       expect(await umValor('SELECT termo, categoria, encontrou FROM busca')).toEqual({
         termo: 'tênis',
         categoria: 'calcados',
