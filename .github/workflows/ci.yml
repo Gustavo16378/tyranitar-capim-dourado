@@ -1,0 +1,71 @@
+# Integração contínua (docs/testes.md): roda a cada push, em qualquer branch, e a cada pull
+# request para a main. Dois jobs em paralelo:
+# - verificação: lint, tipos, testes de unidade, testes de API (runtime do Workers com D1 local)
+#   e build;
+# - navegador: jornadas E2E e acessibilidade com o Playwright, contra o site de verdade
+#   (front com o modo demonstração, Functions e D1 local com o seed de teste).
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Um push novo na mesma branch cancela a rodada que ficou velha.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificacao:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tipos
+        run: npm run typecheck
+      - name: Testes de unidade
+        run: npm run test:unidade
+      - name: Testes de API (Workers com D1 local)
+        run: npm run test:api
+      - name: Build
+        run: npm run build
+
+  navegador:
+    name: E2E e acessibilidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Jornadas E2E (celular e computador)
+        run: npm run test:e2e
+      - name: Acessibilidade (axe-core)
+        run: npm run test:a11y
+      - name: Relatório do Playwright
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-playwright
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
