@@ -6,7 +6,7 @@ import { cupomMock, emDias, reiniciarVouchers, type CupomMock } from '../comum/v
 
 export type { CupomMock }
 import { QR_DA_ANA } from '../../loja/telas/atendimento/demo'
-import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, UsuarioLogado } from '../../tipos/loja'
+import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, Usuario } from '../../tipos/loja'
 
 export const LOJA = {
   id: 'loja-esportes',
@@ -18,7 +18,7 @@ export const LOJA = {
 /** Aceita qualquer e-mail lojista.*@demo.test, como os lojistas do seed. */
 export const EMAIL_DO_LOJISTA = /^lojista\.[a-z0-9-]+@demo\.test$/
 
-export const LOJISTA: UsuarioLogado = {
+export const LOJISTA: Usuario = {
   id: 'usuario-lojista-esportes',
   nome: `Equipe da ${LOJA.nome}`,
   perfil: 'LOJISTA',

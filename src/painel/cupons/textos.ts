@@ -1,5 +1,5 @@
 import { formatarPreco } from '../../componentes/formatar'
-import type { CupomComUso, TipoCupom } from '../../tipos/painel'
+import type { CupomComUso, TipoCupom } from '../../tipos'
 import { rotuloDaCategoria } from '../comum/categorias'
 import { diasAte } from '../comum/formatos'
 

@@ -1,4 +1,5 @@
-// Cupons em GET /api/ofertas e em GET /api/me/carteira (docs/api.md).
+// Cupons em GET /api/ofertas e em GET /api/me/carteira, e nos painéis: os da loja
+// (/api/loja/cupons) e os vouchers do shopping (/api/shopping/cupons) (docs/api.md).
 import type { NivelApi } from './comum'
 
 export type TipoCupom = 'PERCENTUAL' | 'VALOR' | 'BRINDE'
@@ -34,3 +35,29 @@ export interface CupomCarteira {
   valor: number
   nivelMinimo: NivelApi
 }
+
+/** Cupom nos painéis, com o uso dele: o da loja e o voucher do shopping têm o mesmo formato. */
+export interface CupomComUso {
+  id: string
+  titulo: string
+  tipo: TipoCupom
+  /** PERCENTUAL: 1 a 100. VALOR: centavos. BRINDE: 0. */
+  valor: number
+  /** Se preenchido, o cupom só aparece para quem tem interesse nessa categoria. */
+  categoriaAlvo: string | null
+  nivelMinimo: NivelApi
+  limitePorCliente: number
+  /** Último dia de uso, em Palmas: "2026-12-31". */
+  validade: string
+  ativo: boolean
+  /** Quantas compras usaram o cupom. */
+  usos: number
+  /** Soma dos descontos dados com ele. */
+  descontoCentavos: number
+}
+
+/** Corpo de POST /api/loja/cupons e de POST /api/shopping/cupons. */
+export type PedidoCupom = Pick<
+  CupomComUso,
+  'titulo' | 'tipo' | 'valor' | 'categoriaAlvo' | 'nivelMinimo' | 'limitePorCliente' | 'validade'
+>

@@ -1,5 +1,5 @@
 // GET e PUT /api/shopping/configuracao e GET e POST /api/shopping/cupons (RF28).
-import type { ConfiguracaoDoShopping, NivelApi, Pagina, VoucherDoShopping } from '../../tipos/shopping'
+import type { ConfiguracaoDoShopping, NivelApi, Lista, VoucherDoShopping } from '../../tipos/shopping'
 import { CATEGORIAS_DO_SHOPPING } from '../../painel/comum/categorias'
 import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { validarCupom } from '../comum/cupons'
@@ -80,7 +80,7 @@ export function listarVouchers(pedido: PedidoMock): RespostaMock {
   const vouchers = [...todosOsVouchers()].sort(
     (a, b) => Number(valendo(b)) - Number(valendo(a)) || a.validade.localeCompare(b.validade),
   )
-  const resposta: Pagina<VoucherDoShopping> = { itens: vouchers.map(paraApi), total: vouchers.length }
+  const resposta: Lista<VoucherDoShopping> = { itens: vouchers.map(paraApi), total: vouchers.length }
   return ok(resposta)
 }
 

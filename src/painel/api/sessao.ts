@@ -3,11 +3,11 @@
 // e no do shopping em outra. Quando a API responde 401, o cliente HTTP apaga a sessão e a
 // guarda de perfil manda de volta para o login.
 import { useSyncExternalStore } from 'react'
-import type { RespostaLogin, UsuarioLogado } from '../../tipos/painel'
+import type { RespostaLogin, Usuario } from '../../tipos'
 
 export interface Sessao {
   token: string
-  usuario: UsuarioLogado
+  usuario: Usuario
 }
 
 export interface ArmazemDeSessao {

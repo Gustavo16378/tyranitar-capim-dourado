@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarMocks, responderMock } from '../../src/mocks/shopping'
-import type { LojaDoShopping, LojistaCriado, LojistaDaLoja, Pagina, PedidoLoja, RespostaLogin } from '../../src/tipos/shopping'
+import type { LojaDoShopping, LojistaCriado, LojistaDaLoja, Lista, PedidoLoja, RespostaLogin } from '../../src/tipos/shopping'
 
 let token: string | null = null
 
@@ -37,12 +37,12 @@ describe('mocks do shopping: login', () => {
 
 describe('mocks do shopping: lojas e lojistas', () => {
   it('lista as unidades com as 13 vagas da planta', async () => {
-    const todas = await chamar<Pagina<LojaDoShopping>>('GET', '/api/shopping/lojas?tamanho=200')
+    const todas = await chamar<Lista<LojaDoShopping>>('GET', '/api/shopping/lojas?tamanho=200')
     expect(todas.corpo.total).toBe(34)
-    const vagas = await chamar<Pagina<LojaDoShopping>>('GET', '/api/shopping/lojas?situacao=VAGA&tamanho=200')
+    const vagas = await chamar<Lista<LojaDoShopping>>('GET', '/api/shopping/lojas?situacao=VAGA&tamanho=200')
     expect(vagas.corpo.total).toBe(13)
     expect(vagas.corpo.itens.find((l) => l.mapaId === 'loja-47')).toMatchObject({ unidade: 'LOJA 47', areaM2: 229.9, cnpj: null, lojistas: 0 })
-    const busca = await chamar<Pagina<LojaDoShopping>>('GET', '/api/shopping/lojas?q=esportes')
+    const busca = await chamar<Lista<LojaDoShopping>>('GET', '/api/shopping/lojas?q=esportes')
     expect(busca.corpo.itens[0]).toMatchObject({ nome: 'Loja de esportes', unidade: 'LOJA 19', lojistas: 1 })
   })
 

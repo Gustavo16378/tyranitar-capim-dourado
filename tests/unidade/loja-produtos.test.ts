@@ -7,7 +7,7 @@ import {
   resumoDosAtributos,
   textoParaAtributos,
 } from '../../src/loja/telas/produtos/categorias'
-import type { Pagina, ProdutoDaLoja, ResultadoImportacao, RespostaLogin } from '../../src/tipos/loja'
+import type { Lista, ProdutoDaLoja, ResultadoImportacao, RespostaLogin } from '../../src/tipos/loja'
 
 let token: string | null = null
 
@@ -46,11 +46,11 @@ const NOVO = {
 
 describe('mocks: produtos da loja', () => {
   it('lista o catálogo com inativos no fim e busca sem ligar para acento', async () => {
-    const todos = await chamar<Pagina<ProdutoDaLoja>>('GET', '/api/loja/produtos')
+    const todos = await chamar<Lista<ProdutoDaLoja>>('GET', '/api/loja/produtos')
     expect(todos.corpo.total).toBe(9)
     expect(todos.corpo.itens.at(-1)).toMatchObject({ nome: 'Jaqueta corta-vento', ativo: false })
 
-    const busca = await chamar<Pagina<ProdutoDaLoja>>('GET', '/api/loja/produtos?q=tenis')
+    const busca = await chamar<Lista<ProdutoDaLoja>>('GET', '/api/loja/produtos?q=tenis')
     expect(busca.corpo.itens.map((p) => p.nome)).toEqual(['Tênis de corrida Pulse', 'Tênis Run 2 preto'])
   })
 
@@ -85,7 +85,7 @@ describe('mocks: produtos da loja', () => {
       { linha: 4, mensagem: expect.stringMatching(/preço/) },
       { linha: 5, mensagem: expect.stringMatching(/JSON/) },
     ])
-    const lista = await chamar<Pagina<ProdutoDaLoja>>('GET', '/api/loja/produtos?tamanho=100')
+    const lista = await chamar<Lista<ProdutoDaLoja>>('GET', '/api/loja/produtos?tamanho=100')
     expect(lista.corpo.total).toBe(10)
     expect(lista.corpo.itens.find((p) => p.nome === 'Tênis de corrida Pulse')?.precoCentavos).toBe(37990)
   })

@@ -1,7 +1,7 @@
 // Os vouchers do shopping (cupons sem loja, RN11), um armazém só para os mocks da loja e do
 // shopping: o voucher criado no painel do shopping já vale no Atendimento da loja, e o uso
 // dele no caixa vira reembolso (mocks/comum/reembolsos.ts). Fica na memória.
-import type { NivelApi, TipoCupom } from '../../tipos/painel'
+import type { NivelApi, TipoCupom } from '../../tipos'
 import { hojeEmPalmas } from '../../painel/comum/formatos'
 
 /** Um cupom como o banco guarda (tabela cupom). Sem loja, é voucher do shopping. */

@@ -4,7 +4,7 @@ import { reiniciarMocks, responderMock } from '../../src/mocks/shopping'
 import { hojeEmPalmas } from '../../src/painel/comum/formatos'
 import { QR_DA_ANA } from '../../src/loja/telas/atendimento/demo'
 import type { Atendimento } from '../../src/tipos/loja'
-import type { ConfiguracaoDoShopping, Pagina, PedidoCupom, RespostaLogin, VoucherDoShopping } from '../../src/tipos/shopping'
+import type { ConfiguracaoDoShopping, Lista, PedidoCupom, RespostaLogin, VoucherDoShopping } from '../../src/tipos/shopping'
 
 let token: string | null = null
 let tokenDaLoja: string | null = null
@@ -60,7 +60,7 @@ describe('mocks do shopping: configuração da fidelidade', () => {
 
 describe('mocks do shopping: vouchers', () => {
   it('lista os vouchers com o uso tirado dos reembolsos às lojas', async () => {
-    const { corpo } = await chamar<Pagina<VoucherDoShopping>>('GET', '/api/shopping/cupons')
+    const { corpo } = await chamar<Lista<VoucherDoShopping>>('GET', '/api/shopping/cupons')
     const vinte = corpo.itens.find((v) => v.id === 'cp2')
     // 22 usos em outras lojas e 8 na Loja de esportes.
     expect(vinte).toMatchObject({ titulo: 'R$ 20 do shopping', usos: 30 })

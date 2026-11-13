@@ -6,7 +6,7 @@
 // Mocks: enquanto uma rota estiver na tabela de mocks do painel (src/mocks/<painel>/index.ts),
 // quem responde é o mock, no mesmo formato da API. Quando a rota real ficar pronta, apague a
 // linha dela lá e nada muda aqui nem nas telas.
-import type { CorpoErro } from '../../tipos/painel'
+import type { RespostaErro } from '../../tipos'
 import type { ArmazemDeSessao } from './sessao'
 
 /** Erro da API (ou da rede), com a frase pronta para mostrar em `mensagem`. */
@@ -15,7 +15,7 @@ export class ErroApi extends Error {
   readonly erro: string
   readonly mensagem: string
 
-  constructor({ status, erro, mensagem }: CorpoErro) {
+  constructor({ status, erro, mensagem }: RespostaErro) {
     super(mensagem)
     this.name = 'ErroApi'
     this.status = status
@@ -29,7 +29,7 @@ export class ErroApi extends Error {
   }
 }
 
-const SEM_CONEXAO: CorpoErro = {
+const SEM_CONEXAO: RespostaErro = {
   status: 0,
   erro: 'SEM_CONEXAO',
   mensagem: 'Sem conexão com o servidor. Confira a internet e tente de novo.',
@@ -125,11 +125,11 @@ async function tratar<T>(resposta: Response, sessao: ArmazemDeSessao): Promise<T
 
   // Token vencido ou inválido: a sessão acaba e o painel volta para o login.
   if (resposta.status === 401) sessao.apagarSessao()
-  throw new ErroApi(comoCorpoErro(corpo, resposta.status))
+  throw new ErroApi(comoRespostaErro(corpo, resposta.status))
 }
 
-function comoCorpoErro(corpo: unknown, status: number): CorpoErro {
-  const c = corpo as Partial<CorpoErro> | undefined
+function comoRespostaErro(corpo: unknown, status: number): RespostaErro {
+  const c = corpo as Partial<RespostaErro> | undefined
   if (c && typeof c.erro === 'string' && typeof c.mensagem === 'string') {
     return { status, erro: c.erro, mensagem: c.mensagem }
   }

@@ -1,10 +1,14 @@
 // Tipos das rotas que o painel da loja usa, no formato de docs/api.md.
 // O front (src/loja/api) e os mocks (src/mocks/loja) leem daqui; quando as Functions
-// existirem, elas podem importar os mesmos tipos. Os comuns aos dois painéis ficam em
-// painel.ts e são repetidos aqui, para as telas da loja importarem tudo de um lugar.
-import type { CupomComUso, NivelApi, Pagina, Periodo } from './painel'
+// existirem, elas podem importar os mesmos tipos. Os gerais (erro, lista, nível, login,
+// cupom) ficam em comum.ts, usuario.ts e cupom.ts e são repetidos aqui, para as telas da
+// loja importarem tudo de um lugar.
+import type { Lista, NivelApi, Periodo } from './comum'
+import type { CupomComUso } from './cupom'
 
-export type * from './painel'
+export type * from './comum'
+export type * from './usuario'
+export type { CupomComUso, PedidoCupom, TipoCupom } from './cupom'
 
 export type StatusReserva = 'PENDENTE' | 'CONFIRMADA' | 'SEPARADA' | 'RETIRADA' | 'CANCELADA' | 'EXPIRADA'
 
@@ -140,7 +144,7 @@ export interface ResultadoImportacao {
 
 // ---------- /api/loja/cupons (RF23) ----------
 
-/** Cupom da loja com o uso dele; o corpo do POST é o PedidoCupom de painel.ts. */
+/** Cupom da loja com o uso dele; o corpo do POST é o PedidoCupom de cupom.ts. */
 export type CupomDaLoja = CupomComUso
 
 // ---------- GET /api/loja/relatorios (RF24) ----------
@@ -196,5 +200,5 @@ export interface Extrato {
   /** Reembolsos dos vouchers do shopping: o que falta receber (de qualquer data) e o que foi pago no período. */
   reembolsos: { pendenteCentavos: number; pagoNoPeriodoCentavos: number }
   /** As compras do período, da mais nova para a mais antiga, paginadas. */
-  lancamentos: Pagina<LancamentoDoExtrato>
+  lancamentos: Lista<LancamentoDoExtrato>
 }

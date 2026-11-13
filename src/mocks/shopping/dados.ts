@@ -2,13 +2,13 @@
 // funcionando, com nomes genéricos por tipo, e as 13 vagas reais da planta, com número e
 // área), os lojistas e as regras da fidelidade. Os vouchers e os reembolsos ficam em
 // mocks/comum, divididos com o mock da loja. Fica na memória; os testes chamam reiniciarMocks().
-import type { ConfiguracaoDoShopping, LojaDoShopping, LojistaDaLoja, UsuarioLogado } from '../../tipos/shopping'
+import type { ConfiguracaoDoShopping, LojaDoShopping, LojistaDaLoja, Usuario } from '../../tipos/shopping'
 import { reiniciarReembolsos } from '../comum/reembolsos'
 import { reiniciarVouchers } from '../comum/vouchers'
 
 export const EMAIL_DO_ADMIN = 'admin@demo.test'
 
-export const ADMIN: UsuarioLogado = {
+export const ADMIN: Usuario = {
   id: 'usuario-admin',
   nome: 'Administração do shopping',
   perfil: 'ADMIN_SHOPPING',

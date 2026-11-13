@@ -22,9 +22,10 @@ A barra lateral mostra o selo **Dados de exemplo** enquanto o painel usa mocks. 
 ```text
 src/
 ├── tipos/
-│   ├── painel.ts             tipos comuns aos dois painéis: erro, paginação, login, nível, período, cupom
-│   ├── loja.ts               1. tipos das rotas /api/loja (repete os de painel.ts)
-│   └── shopping.ts           1. tipos das rotas /api/shopping (repete os de painel.ts)
+│   ├── comum.ts, usuario.ts, cupom.ts   os gerais, do app e dos painéis: erro, lista, nível,
+│   │                         período, login e cupom
+│   ├── loja.ts               1. tipos das rotas /api/loja (repete os gerais)
+│   └── shopping.ts           1. tipos das rotas /api/shopping (repete os gerais)
 ├── painel/                   a base dos dois painéis
 │   ├── painel.ts             ConfigDoPainel: nome, endereço, perfil, telas, sessão e login
 │   ├── RotasDoPainel.tsx     login, guarda de perfil, barra lateral e rotas de qualquer painel

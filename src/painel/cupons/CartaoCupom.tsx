@@ -1,6 +1,6 @@
 import { Badge, CupomTicket, formatarNumero, formatarPreco } from '../../componentes'
 import { cx } from '../../componentes/cx'
-import type { CupomComUso } from '../../tipos/painel'
+import type { CupomComUso } from '../../tipos'
 import { formatarDia, paraNivel } from '../comum/formatos'
 import { cupomValendo, situacaoDoCupom, textoDoDesconto, textoDoAlvo } from './textos'
 

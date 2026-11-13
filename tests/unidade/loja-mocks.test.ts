@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarMocks, responderMock } from '../../src/mocks/loja'
 import { QR_DA_ANA } from '../../src/loja/telas/atendimento/demo'
-import type { Atendimento, Compra, Pagina, ReservaDaLoja, RespostaLogin } from '../../src/tipos/loja'
+import type { Atendimento, Compra, Lista, ReservaDaLoja, RespostaLogin } from '../../src/tipos/loja'
 
 let token: string | null = null
 
@@ -238,7 +238,7 @@ describe('mocks: POST /api/loja/compras/previa', () => {
 
 describe('mocks: reservas da loja', () => {
   it('lista as ativas paginadas, as que vencem primeiro no topo', async () => {
-    const { status, corpo } = await chamar<Pagina<ReservaDaLoja>>(
+    const { status, corpo } = await chamar<Lista<ReservaDaLoja>>(
       'GET',
       '/api/loja/reservas?status=PENDENTE,CONFIRMADA,SEPARADA&tamanho=3',
     )

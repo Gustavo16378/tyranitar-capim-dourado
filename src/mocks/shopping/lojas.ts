@@ -1,6 +1,6 @@
 // GET /api/shopping/lojas, PUT /api/shopping/lojas/{id}, GET /api/shopping/lojas/{id}/lojistas
 // e POST /api/shopping/lojistas (RF27).
-import type { LojaDoShopping, LojistaCriado, Pagina, PedidoLoja, TipoDeLoja } from '../../tipos/shopping'
+import type { LojaDoShopping, LojistaCriado, Lista, PedidoLoja, TipoDeLoja } from '../../tipos/shopping'
 import { CATEGORIAS_DO_SHOPPING } from '../../painel/comum/categorias'
 import { dadosInvalidos, erro, naoEncontrado, objeto, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
 import { exigirAdmin } from './auth'
@@ -26,7 +26,7 @@ export function listarLojas(pedido: PedidoMock): RespostaMock {
     .filter((l) => !situacao || (situacao === 'ATIVA') === l.ativa)
     .filter((l) => !q || sem(`${l.nome} ${l.unidade}`).includes(q))
     .sort((a, b) => a.piso - b.piso || a.unidade.localeCompare(b.unidade, 'pt-BR', { numeric: true }))
-  const resposta: Pagina<LojaDoShopping> = {
+  const resposta: Lista<LojaDoShopping> = {
     itens: filtradas.slice((pagina - 1) * tamanho, pagina * tamanho).map(paraApi),
     total: filtradas.length,
   }

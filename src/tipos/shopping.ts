@@ -1,8 +1,11 @@
 // Tipos das rotas do painel do shopping (/api/shopping/*), no formato de docs/api.md.
 // O front (src/shopping/api) e os mocks (src/mocks/shopping) leem daqui.
-import type { CupomComUso, NivelApi, Periodo } from './painel'
+import type { NivelApi, Periodo, Piso } from './comum'
+import type { CupomComUso } from './cupom'
 
-export type * from './painel'
+export type * from './comum'
+export type * from './usuario'
+export type { CupomComUso, PedidoCupom, TipoCupom } from './cupom'
 
 // ---------- /api/shopping/lojas e /api/shopping/lojistas (RF27) ----------
 
@@ -15,7 +18,7 @@ export interface LojaDoShopping {
   nome: string
   /** O número da unidade na planta: "LOJA 47". */
   unidade: string
-  piso: 1 | 2
+  piso: Piso
   /** Área da unidade, em m² (da planta). null quando a planta não traz. */
   areaM2: number | null
   tipo: TipoDeLoja
@@ -50,7 +53,7 @@ export interface PedidoLoja {
 /** Corpo de POST /api/shopping/lojas: uma unidade nova na planta. */
 export interface PedidoNovaLoja extends PedidoLoja {
   unidade: string
-  piso: 1 | 2
+  piso: Piso
   areaM2: number | null
   mapaId: string
 }
@@ -127,7 +130,7 @@ export interface SugestaoParaVaga {
 export interface VagaComSugestao {
   id: string
   unidade: string
-  piso: 1 | 2
+  piso: Piso
   areaM2: number | null
   mapaId: string
   /** null quando nenhuma categoria com demanda cabe na vaga. */

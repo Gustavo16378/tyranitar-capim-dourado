@@ -1,6 +1,6 @@
 // A validação de um cupom novo, igual para o da loja (POST /api/loja/cupons) e o voucher do
 // shopping (POST /api/shopping/cupons).
-import type { NivelApi, PedidoCupom, TipoCupom } from '../../tipos/painel'
+import type { NivelApi, PedidoCupom, TipoCupom } from '../../tipos'
 import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { objeto } from './resposta'
 

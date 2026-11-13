@@ -3,7 +3,7 @@ import { reiniciarMocks, responderMock } from '../../src/mocks/loja'
 import { hojeEmPalmas } from '../../src/painel/comum/formatos'
 import { QR_DA_ANA } from '../../src/loja/telas/atendimento/demo'
 import { situacaoDoCupom, textoDoDesconto } from '../../src/painel/cupons/textos'
-import type { Atendimento, CupomDaLoja, Pagina, PedidoCupom, Relatorio, RespostaLogin } from '../../src/tipos/loja'
+import type { Atendimento, CupomDaLoja, Lista, PedidoCupom, Relatorio, RespostaLogin } from '../../src/tipos/loja'
 
 let token: string | null = null
 
@@ -37,7 +37,7 @@ const NOVO: PedidoCupom = {
 
 describe('mocks: cupons da loja', () => {
   it('lista só os cupons da loja, com uso e desconto, os que valem primeiro', async () => {
-    const { corpo } = await chamar<Pagina<CupomDaLoja>>('GET', '/api/loja/cupons')
+    const { corpo } = await chamar<Lista<CupomDaLoja>>('GET', '/api/loja/cupons')
     expect(corpo.itens.map((c) => c.id)).toEqual(['cp1', 'cp3', 'cp5', 'cp4'])
     expect(corpo.itens[0]).toMatchObject({ titulo: '10% em calçados', usos: 12 })
     expect(corpo.itens[0].descontoCentavos).toBe(Array.from({ length: 12 }, (_, i) => 2990 + i * 410).reduce((a, b) => a + b))

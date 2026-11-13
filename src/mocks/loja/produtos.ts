@@ -1,5 +1,5 @@
 // GET, POST e PUT /api/loja/produtos e POST /api/loja/produtos/importar (RF21, RF22).
-import type { Pagina, PedidoProduto, ProdutoDaLoja, ResultadoImportacao } from '../../tipos/loja'
+import type { Lista, PedidoProduto, ProdutoDaLoja, ResultadoImportacao } from '../../tipos/loja'
 import { lerValorEmCentavos } from '../../painel/comum/formatos'
 import { categoria, CATEGORIAS } from '../../loja/telas/produtos/categorias'
 import { exigirLojista } from './auth'
@@ -22,7 +22,7 @@ export function listarProdutos(pedido: PedidoMock): RespostaMock {
   const filtrados = banco.produtos
     .filter((p) => !q || sem(p.nome).includes(q))
     .sort((a, b) => Number(b.ativo) - Number(a.ativo) || a.nome.localeCompare(b.nome, 'pt-BR'))
-  const resposta: Pagina<ProdutoDaLoja> = {
+  const resposta: Lista<ProdutoDaLoja> = {
     itens: filtrados.slice((pagina - 1) * tamanho, pagina * tamanho),
     total: filtrados.length,
   }

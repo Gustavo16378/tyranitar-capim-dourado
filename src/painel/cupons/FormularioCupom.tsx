@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Button, CupomTicket, NIVEIS } from '../../componentes'
 import { useEntrada } from '../../movimento'
-import type { CupomComUso, NivelApi, PedidoCupom, TipoCupom } from '../../tipos/painel'
+import type { CupomComUso, NivelApi, PedidoCupom, TipoCupom } from '../../tipos'
 import { useAcao } from '../api/useAcao'
 import { Campo } from '../comum/Campo'
 import { Erro } from '../comum/Estados'

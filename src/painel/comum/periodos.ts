@@ -1,4 +1,4 @@
-import type { Periodo } from '../../tipos/painel'
+import type { Periodo } from '../../tipos'
 
 /** As opções do filtro de período dos relatórios, para o Segmentos. */
 export const PERIODOS: readonly { valor: Periodo; rotulo: string }[] = [

@@ -1,5 +1,5 @@
 // GET /api/loja/reservas e PATCH /api/loja/reservas/{id}.
-import type { Pagina, ReservaDaLoja, StatusReserva } from '../../tipos/loja'
+import type { Lista, ReservaDaLoja, StatusReserva } from '../../tipos/loja'
 import { podeMudar, ROTULO_DO_STATUS, TRANSICOES_DA_LOJA } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
 import { banco, type ReservaMock } from './dados'
@@ -32,7 +32,7 @@ export function listarReservas(pedido: PedidoMock): RespostaMock {
   const filtradas = banco.reservas
     .filter((r) => status.includes(r.status))
     .sort((a, b) => a.expiraEm.localeCompare(b.expiraEm))
-  const resposta: Pagina<ReservaDaLoja> = {
+  const resposta: Lista<ReservaDaLoja> = {
     itens: filtradas.slice((pagina - 1) * tamanho, pagina * tamanho).map(paraLoja),
     total: filtradas.length,
   }

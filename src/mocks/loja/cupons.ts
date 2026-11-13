@@ -1,6 +1,6 @@
 // GET e POST /api/loja/cupons (RF23): os cupons da loja, com uso, e a criação de um cupom
 // com as regras da tabela cupom (docs/banco.md) e o limite e a validade de RN06.
-import type { CupomDaLoja, Pagina } from '../../tipos/loja'
+import type { CupomDaLoja, Lista } from '../../tipos/loja'
 import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { CATEGORIAS } from '../../loja/telas/produtos/categorias'
 import { validarCupom } from '../comum/cupons'
@@ -36,7 +36,7 @@ export function listarCupons(pedido: PedidoMock): RespostaMock {
   const daLoja = banco.cupons
     .filter((c) => c.origem === 'LOJA')
     .sort((a, b) => Number(valendo(b)) - Number(valendo(a)) || a.validade.localeCompare(b.validade))
-  const resposta: Pagina<CupomDaLoja> = { itens: daLoja.map(paraLoja), total: daLoja.length }
+  const resposta: Lista<CupomDaLoja> = { itens: daLoja.map(paraLoja), total: daLoja.length }
   return ok(resposta)
 }
 

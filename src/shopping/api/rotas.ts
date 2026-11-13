@@ -8,7 +8,7 @@ import type {
   LojaDoShopping,
   LojistaCriado,
   LojistaDaLoja,
-  Pagina,
+  Lista,
   PedidoLogin,
   PedidoCupom,
   PedidoLoja,
@@ -30,7 +30,7 @@ export function entrar(pedido: PedidoLogin) {
 
 /** GET /api/shopping/lojas: as unidades da planta, com a loja de cada uma ou vaga (RF27). */
 export function listarLojas(filtro: FiltroLojas = {}, sinal?: AbortSignal) {
-  return requisitar<Pagina<LojaDoShopping>>('GET', '/api/shopping/lojas', {
+  return requisitar<Lista<LojaDoShopping>>('GET', '/api/shopping/lojas', {
     busca: { q: filtro.q, situacao: filtro.situacao, pagina: filtro.pagina, tamanho: filtro.tamanho },
     sinal,
   })
@@ -63,7 +63,7 @@ export function salvarConfiguracao(configuracao: ConfiguracaoDoShopping) {
 
 /** GET /api/shopping/cupons: os vouchers do shopping, com uso e o que foi devolvido às lojas (RF28). */
 export function listarVouchers(sinal?: AbortSignal) {
-  return requisitar<Pagina<VoucherDoShopping>>('GET', '/api/shopping/cupons', { busca: { tamanho: 100 }, sinal })
+  return requisitar<Lista<VoucherDoShopping>>('GET', '/api/shopping/cupons', { busca: { tamanho: 100 }, sinal })
 }
 
 /** POST /api/shopping/cupons: um voucher que vale em qualquer loja e aparece na vitrine do app. */

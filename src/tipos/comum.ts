@@ -18,3 +18,6 @@ export type NivelApi = 'SEMENTE' | 'BROTO' | 'CAPIM' | 'DOURADO'
 
 /** 1: térreo (lojas). 2: segundo piso (praça de alimentação). */
 export type Piso = 1 | 2
+
+/** Período dos relatórios dos painéis: ?periodo=30d. */
+export type Periodo = '7d' | '30d' | '90d'

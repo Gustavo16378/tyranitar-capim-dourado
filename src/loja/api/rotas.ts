@@ -8,7 +8,7 @@ import type {
   Extrato,
   FiltroProdutos,
   FiltroReservas,
-  Pagina,
+  Lista,
   PedidoCompra,
   PedidoCupom,
   PedidoLogin,
@@ -47,7 +47,7 @@ export function registrarCompra(pedido: PedidoCompra) {
 
 /** GET /api/loja/reservas: reservas da loja do token, mais urgentes primeiro (RF20). */
 export function listarReservas(filtro: FiltroReservas = {}, sinal?: AbortSignal) {
-  return requisitar<Pagina<ReservaDaLoja>>('GET', '/api/loja/reservas', {
+  return requisitar<Lista<ReservaDaLoja>>('GET', '/api/loja/reservas', {
     busca: { status: filtro.status?.join(','), pagina: filtro.pagina, tamanho: filtro.tamanho },
     sinal,
   })
@@ -62,7 +62,7 @@ export function mudarStatusReserva(id: string, status: StatusPedidoPelaLoja) {
 
 /** GET /api/loja/produtos: o catálogo da loja, ativos e inativos (RF21). */
 export function listarProdutos(filtro: FiltroProdutos = {}, sinal?: AbortSignal) {
-  return requisitar<Pagina<ProdutoDaLoja>>('GET', '/api/loja/produtos', {
+  return requisitar<Lista<ProdutoDaLoja>>('GET', '/api/loja/produtos', {
     busca: { q: filtro.q, pagina: filtro.pagina, tamanho: filtro.tamanho },
     sinal,
   })
@@ -87,7 +87,7 @@ export function importarProdutos(csv: string) {
 
 /** GET /api/loja/cupons: os cupons da loja e o uso de cada um (RF23). */
 export function listarCupons(sinal?: AbortSignal) {
-  return requisitar<Pagina<CupomDaLoja>>('GET', '/api/loja/cupons', { busca: { tamanho: 100 }, sinal })
+  return requisitar<Lista<CupomDaLoja>>('GET', '/api/loja/cupons', { busca: { tamanho: 100 }, sinal })
 }
 
 /** POST /api/loja/cupons */

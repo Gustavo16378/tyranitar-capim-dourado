@@ -2,7 +2,7 @@
 // O token tem o formato de um JWT (cabeçalho.payload.assinatura) com exp de 12 horas, para o
 // front tratar igual ao token real. A assinatura é falsa: a API real recusa este token.
 // As rotas mockadas aceitam o token real (só leem o perfil e o exp).
-import type { Perfil } from '../../tipos/painel'
+import type { Perfil } from '../../tipos'
 import { erro, type PedidoMock, type RespostaMock } from './resposta'
 
 const DOZE_HORAS = 12 * 60 * 60
