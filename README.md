@@ -32,7 +32,7 @@ Um site só, com três interfaces:
 | `/shopping` | Administração do shopping |
 | `/design-system` | Design system: tokens, componentes e movimentos nos temas claro e escuro |
 
-O app ainda não tem nome definitivo: o nome vem da constante `APP_NOME`, em `src/config.ts`.
+A Capi é a assistente de IA do app; o nome do app será definido junto com o shopping.
 
 ### A jornada do cliente
 
