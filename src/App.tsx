@@ -4,8 +4,6 @@ import { rotasDoApp } from './app/rotas'
 
 // Página pública do design system, carregada só quando alguém abre /design-system.
 const PaginaDesignSystem = lazy(() => import('./design-system/PaginaDesignSystem'))
-// Mapa 3D (three.js): também só carrega quando abre.
-const PaginaMapa3D = lazy(() => import('./mapa/PaginaMapa3D'))
 
 // As três interfaces do site. Cada uma ganha suas telas nas próximas fases.
 export default function App() {
@@ -19,14 +17,6 @@ export default function App() {
         element={
           <Suspense fallback={null}>
             <PaginaDesignSystem />
-          </Suspense>
-        }
-      />
-      <Route
-        path="/mapa-3d"
-        element={
-          <Suspense fallback={null}>
-            <PaginaMapa3D />
           </Suspense>
         }
       />
