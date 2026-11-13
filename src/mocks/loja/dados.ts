@@ -88,6 +88,8 @@ function estadoInicial() {
   const cupons: CupomMock[] = [
     { id: 'cp1', titulo: '10% em calçados', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 10, limitePorCliente: 1 },
     { id: 'cp2', titulo: 'R$ 20 do shopping', origem: 'SHOPPING', tipo: 'VALOR', valor: 2000, limitePorCliente: 1 },
+    // Segundo cupom da loja: não combina com o cp1 na mesma compra (RN05).
+    { id: 'cp3', titulo: 'R$ 15 em camisetas', origem: 'LOJA', tipo: 'VALOR', valor: 1500, limitePorCliente: 1 },
   ]
 
   const reserva = (
