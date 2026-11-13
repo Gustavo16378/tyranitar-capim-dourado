@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { reiniciarMocks, responderMock } from '../../src/mocks/loja'
 import { hojeEmPalmas } from '../../src/painel/comum/formatos'
 import { QR_DA_ANA } from '../../src/loja/telas/atendimento/demo'
-import { situacaoDoCupom, textoDoDesconto } from '../../src/loja/telas/cupons/textos'
+import { situacaoDoCupom, textoDoDesconto } from '../../src/painel/cupons/textos'
 import type { Atendimento, CupomDaLoja, Pagina, PedidoCupom, Relatorio, RespostaLogin } from '../../src/tipos/loja'
 
 let token: string | null = null

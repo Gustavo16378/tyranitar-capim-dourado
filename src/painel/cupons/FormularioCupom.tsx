@@ -1,15 +1,15 @@
 import { useId, useState, type FormEvent } from 'react'
-import { Button, CupomTicket, NIVEIS } from '../../../componentes'
-import { useEntrada } from '../../../movimento'
-import type { CupomDaLoja, NivelApi, PedidoCupom, TipoCupom } from '../../../tipos/loja'
-import { criarCupom, useAcao } from '../../api'
-import { Campo } from '../../../painel/comum/Campo'
-import { Erro } from '../../../painel/comum/Estados'
-import { formatarDia, hojeEmPalmas, lerValorEmCentavos, paraNivel } from '../../../painel/comum/formatos'
-import { Opcao } from '../../../painel/comum/Opcao'
-import { Selecao } from '../../../painel/comum/Selecao'
-import { CATEGORIAS, rotuloDaCategoria } from '../produtos/categorias'
-import { textoDoDesconto } from './textos'
+import { Button, CupomTicket, NIVEIS } from '../../componentes'
+import { useEntrada } from '../../movimento'
+import type { CupomComUso, NivelApi, PedidoCupom, TipoCupom } from '../../tipos/comum'
+import { useAcao } from '../api/useAcao'
+import { Campo } from '../comum/Campo'
+import { Erro } from '../comum/Estados'
+import { formatarDia, hojeEmPalmas, lerValorEmCentavos, paraNivel } from '../comum/formatos'
+import { Opcao } from '../comum/Opcao'
+import { Selecao } from '../comum/Selecao'
+import type { CategoriaDoShopping } from '../comum/categorias'
+import { textoDoAlvo, textoDoDesconto } from './textos'
 
 const TIPOS: readonly { valor: TipoCupom; rotulo: string }[] = [
   { valor: 'PERCENTUAL', rotulo: 'Porcentagem' },
@@ -19,13 +19,26 @@ const TIPOS: readonly { valor: TipoCupom; rotulo: string }[] = [
 const NIVEIS_DA_API: readonly NivelApi[] = ['SEMENTE', 'BROTO', 'CAPIM', 'DOURADO']
 const TODAS = ''
 
+// O que muda entre o cupom da loja e o voucher do shopping.
+const TEXTOS = {
+  loja: { nome: 'cupom', titulo: 'Novo cupom', exemplo: '10% em calçados', todas: 'Toda a loja', voltar: 'Voltar aos cupons' },
+  shopping: { nome: 'voucher', titulo: 'Novo voucher', exemplo: 'R$ 20 em qualquer loja', todas: 'Qualquer compra', voltar: 'Voltar aos vouchers' },
+} as const
+
 interface FormularioCupomProps {
-  aoCriar: (cupom: CupomDaLoja) => void
+  /** loja: cupom da loja (RF23). shopping: voucher que vale em qualquer loja (RF28). */
+  origem: 'loja' | 'shopping'
+  /** A rota que cria: criarCupom na loja, criarVoucher no shopping. */
+  criar: (pedido: PedidoCupom) => Promise<CupomComUso>
+  /** As categorias que o cupom pode mirar. */
+  categorias: readonly CategoriaDoShopping[]
+  aoCriar: (cupom: CupomComUso) => void
   aoVoltar: () => void
 }
 
-/** Novo cupom da loja (RF23), com a prévia de como ele aparece na carteira do cliente. */
-export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
+/** Novo cupom ou voucher, com a prévia de como ele aparece na carteira do cliente. */
+export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCriar, aoVoltar }: FormularioCupomProps) {
+  const textos = TEXTOS[origem]
   const ref = useEntrada<HTMLFormElement>()
   const grupoTipo = useId()
   const hoje = hojeEmPalmas()
@@ -37,7 +50,7 @@ export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
   const [limite, setLimite] = useState('1')
   const [validade, setValidade] = useState(() => hojeEmPalmas(Date.now() + 30 * 86_400_000))
   const [erros, setErros] = useState<Record<string, string>>({})
-  const criar = useAcao(criarCupom)
+  const criar = useAcao(enviarCupom)
 
   // O valor como a API quer: porcentagem inteira, centavos ou 0 no brinde.
   const valorLido =
@@ -45,7 +58,7 @@ export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
 
   function ler(): { pedido: PedidoCupom } | { erros: Record<string, string> } {
     const novos: Record<string, string> = {}
-    if (titulo.trim().length < 3) novos.titulo = 'Escreva o que o cupom dá, como "10% em calçados".'
+    if (titulo.trim().length < 3) novos.titulo = `Escreva o que o ${textos.nome} dá, como "${textos.exemplo}".`
     if (tipo === 'PERCENTUAL' && (valorLido === null || valorLido < 1 || valorLido > 100)) {
       novos.valor = 'Use uma porcentagem de 1 a 100.'
     }
@@ -89,14 +102,14 @@ export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
     >
       <div className="flex flex-col gap-5">
         <h2 data-anim className="text-title-sm">
-          Novo cupom
+          {textos.titulo}
         </h2>
 
         <div data-anim className="flex flex-col gap-4">
           <Campo
             rotulo="Título"
             autoFocus
-            placeholder="10% em calçados"
+            placeholder={textos.exemplo}
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             erro={erros.titulo}
@@ -136,10 +149,10 @@ export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
         <div data-anim className="grid gap-4 md:grid-cols-2">
           <Selecao
             rotulo="Vale em"
-            opcoes={[{ valor: TODAS, rotulo: 'Toda a loja' }, ...CATEGORIAS.map((c) => ({ valor: c.id, rotulo: c.rotulo }))]}
+            opcoes={[{ valor: TODAS, rotulo: textos.todas }, ...categorias.map((c) => ({ valor: c.id, rotulo: c.rotulo }))]}
             value={categoriaAlvo}
             onChange={(e) => setCategoriaAlvo(e.target.value)}
-            dica="Com uma categoria, o cupom aparece para quem procura por ela."
+            dica={`Com uma categoria, o ${textos.nome} aparece para quem procura por ela.`}
           />
           <Selecao
             rotulo="Nível mínimo"
@@ -168,10 +181,10 @@ export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
           {criar.erro && <Erro erro={criar.erro} />}
           <div className="flex flex-wrap gap-2 border-t border-line pt-4">
             <Button type="submit" variant="primary" disabled={criar.enviando}>
-              {criar.enviando ? 'Criando…' : 'Criar cupom'}
+              {criar.enviando ? 'Criando…' : `Criar ${textos.nome}`}
             </Button>
             <Button variant="ghost" onClick={aoVoltar} disabled={criar.enviando}>
-              Voltar aos cupons
+              {textos.voltar}
             </Button>
           </div>
         </div>
@@ -181,9 +194,9 @@ export function FormularioCupom({ aoCriar, aoVoltar }: FormularioCupomProps) {
       <aside data-anim aria-label="Prévia do cupom" className="flex flex-col gap-2 lg:sticky lg:top-8">
         <p className="text-caption font-semibold uppercase tracking-wider text-ink-muted">Como o cliente vê</p>
         <CupomTicket
-          origem="loja"
+          origem={origem}
           titulo={titulo.trim() || 'Título do cupom'}
-          loja={categoriaAlvo ? `Em ${rotuloDaCategoria(categoriaAlvo).toLowerCase()}` : 'Na loja toda'}
+          loja={textoDoAlvo(categoriaAlvo || null)}
           desconto={valorLido === null ? '—' : textoDoDesconto({ tipo, valor: valorLido })}
           validade={validade ? formatarDia(validade) : '—'}
           nivel={nivelMinimo === 'SEMENTE' ? undefined : paraNivel(nivelMinimo)}

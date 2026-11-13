@@ -1,13 +1,13 @@
-import { Badge, CupomTicket, formatarNumero, formatarPreco, StatTile } from '../../../componentes'
+import { formatarNumero, formatarPreco, StatTile } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
 import { useEntrada } from '../../../movimento'
 import type { CupomDaLoja } from '../../../tipos/loja'
 import { listarCupons, useConsulta } from '../../api'
 import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
-import { formatarDia, hojeEmPalmas, paraNivel } from '../../../painel/comum/formatos'
+import { hojeEmPalmas } from '../../../painel/comum/formatos'
 import { useAgora } from '../../../painel/comum/useAgora'
-import { rotuloDaCategoria } from '../produtos/categorias'
-import { cupomValendo, situacaoDoCupom, textoDoDesconto } from './textos'
+import { CartaoCupom } from '../../../painel/cupons/CartaoCupom'
+import { cupomValendo } from '../../../painel/cupons/textos'
 
 /** Os cupons da loja e o uso deles, nos quatro estados. */
 export function ListaDeCupons({ aviso }: { aviso: string }) {
@@ -66,40 +66,10 @@ function Cupons({ cupons }: { cupons: CupomDaLoja[] }) {
       <ul className="grid items-start gap-x-4 gap-y-6 md:grid-cols-2">
         {cupons.map((cupom) => (
           <li key={cupom.id} data-anim>
-            <CartaoCupom cupom={cupom} hoje={hoje} />
+            <CartaoCupom cupom={cupom} origem="loja" hoje={hoje} />
           </li>
         ))}
       </ul>
-    </div>
-  )
-}
-
-function CartaoCupom({ cupom, hoje }: { cupom: CupomDaLoja; hoje: string }) {
-  const situacao = situacaoDoCupom(cupom, hoje)
-  const uso =
-    cupom.usos === 0 ? 'Ainda não usado' : `Usado ${cupom.usos === 1 ? '1 vez' : `${formatarNumero(cupom.usos)} vezes`}`
-  return (
-    <div className={cx('flex flex-col gap-3', !cupomValendo(cupom, hoje) && 'opacity-70')}>
-      <CupomTicket
-        origem="loja"
-        titulo={cupom.titulo}
-        loja={cupom.categoriaAlvo ? `Em ${rotuloDaCategoria(cupom.categoriaAlvo).toLowerCase()}` : 'Na loja toda'}
-        desconto={textoDoDesconto(cupom)}
-        validade={formatarDia(cupom.validade)}
-        nivel={cupom.nivelMinimo === 'SEMENTE' ? undefined : paraNivel(cupom.nivelMinimo)}
-      />
-      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-        <p className="text-body-sm text-ink-muted">
-          {uso}
-          {cupom.descontoCentavos > 0 && ` · ${formatarPreco(cupom.descontoCentavos)} de desconto`} · até{' '}
-          {cupom.limitePorCliente} por cliente
-        </p>
-        {situacao && (
-          <Badge tone={situacao.tom} icon={situacao.icone}>
-            {situacao.texto}
-          </Badge>
-        )}
-      </div>
     </div>
   )
 }

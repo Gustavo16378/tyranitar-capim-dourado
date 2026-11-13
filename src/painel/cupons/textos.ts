@@ -1,6 +1,7 @@
-import { formatarPreco } from '../../../componentes/formatar'
-import type { CupomDaLoja, TipoCupom } from '../../../tipos/loja'
-import { diasAte } from '../../../painel/comum/formatos'
+import { formatarPreco } from '../../componentes/formatar'
+import type { CupomComUso, TipoCupom } from '../../tipos/comum'
+import { rotuloDaCategoria } from '../comum/categorias'
+import { diasAte } from '../comum/formatos'
 
 /** O que vai no canhoto do CupomTicket: "10%", "R$ 15", "R$ 12,50" ou "Brinde". */
 export function textoDoDesconto({ tipo, valor }: { tipo: TipoCupom; valor: number }) {
@@ -17,7 +18,7 @@ const AVISO_DE_VENCIMENTO = 7
  * null quando ele vale normalmente e não há nada a avisar.
  */
 export function situacaoDoCupom(
-  { ativo, validade }: Pick<CupomDaLoja, 'ativo' | 'validade'>,
+  { ativo, validade }: Pick<CupomComUso, 'ativo' | 'validade'>,
   hoje: string,
 ): { tom: 'neutral' | 'aviso'; texto: string; icone?: 'relogio' } | null {
   if (!ativo) return { tom: 'neutral', texto: 'Inativo' }
@@ -30,7 +31,12 @@ export function situacaoDoCupom(
   return null
 }
 
+/** A linha de onde o cupom vale, no CupomTicket: "Em calçados" ou "Na loja toda". */
+export function textoDoAlvo(categoriaAlvo: string | null) {
+  return categoriaAlvo ? `Em ${rotuloDaCategoria(categoriaAlvo).toLowerCase()}` : 'Na loja toda'
+}
+
 /** Cupom que vale hoje. */
-export function cupomValendo(cupom: Pick<CupomDaLoja, 'ativo' | 'validade'>, hoje: string) {
+export function cupomValendo(cupom: Pick<CupomComUso, 'ativo' | 'validade'>, hoje: string) {
   return cupom.ativo && cupom.validade >= hoje
 }

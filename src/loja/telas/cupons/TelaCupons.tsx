@@ -7,7 +7,9 @@ import { useState } from 'react'
 import { Button } from '../../../componentes'
 import { useEntrada } from '../../../movimento'
 import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
-import { FormularioCupom } from './FormularioCupom'
+import { FormularioCupom } from '../../../painel/cupons/FormularioCupom'
+import { criarCupom } from '../../api'
+import { CATEGORIAS } from '../produtos/categorias'
 import { ListaDeCupons } from './ListaDeCupons'
 
 export function TelaCupons() {
@@ -31,6 +33,9 @@ export function TelaCupons() {
       <div data-anim>
         {criando ? (
           <FormularioCupom
+            origem="loja"
+            criar={criarCupom}
+            categorias={CATEGORIAS}
             aoCriar={(cupom) => {
               setAviso(`Cupom criado: ${cupom.titulo}. Ele já aparece para os clientes no atendimento.`)
               setCriando(false)
