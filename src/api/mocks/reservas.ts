@@ -16,7 +16,9 @@ export const PRAZO_PIX_PAGO = 48 * HORA
 const CHAVE = 'mock-reservas'
 const EM_ABERTO = new Set(['PENDENTE', 'CONFIRMADA', 'SEPARADA'])
 
-interface ReservaGuardada extends ReservaDetalhe {
+/** No mock, o produto nunca sai do catálogo. */
+interface ReservaGuardada extends Reserva {
+  produto: ProdutoResumo
   quantidade: number
 }
 

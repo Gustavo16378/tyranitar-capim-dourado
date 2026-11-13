@@ -63,6 +63,8 @@ export default function Reserva() {
   }
 
   const { produto } = reserva
+  // O produto pode ter saído do catálogo: a reserva continua valendo.
+  const nome = produto?.nome ?? 'Produto reservado'
 
   if (esperandoPix) {
     return (
@@ -71,7 +73,7 @@ export default function Reserva() {
         <div data-anim>
           <h1 className="text-title-lg">Pague com Pix</h1>
           <p className="mt-0.5 text-body-sm text-ink-muted">
-            {produto.nome} · {formatarPreco(reserva.precoCentavos)}
+            {nome} · {formatarPreco(reserva.precoCentavos)}
           </p>
         </div>
         <div data-anim className="flex flex-col items-center gap-2 rounded-md border bg-surface-raised p-6">
@@ -106,11 +108,14 @@ export default function Reserva() {
           {reserva.status === 'CANCELADA' ? 'Reserva cancelada' : 'Reserva expirada'}
         </h1>
         <p data-anim className="text-body-sm text-ink-muted">
-          {produto.nome} voltou para o estoque da loja. Você pode reservar de novo.
+          {nome} voltou para o estoque da loja. Você pode reservar de novo.
         </p>
         <div data-anim>
-          <Button variant="primary" onClick={() => navigate(`/produto/${produto.id}`)}>
-            Ver o produto
+          <Button
+            variant="primary"
+            onClick={() => navigate(produto ? `/produto/${encodeURIComponent(produto.id)}` : '/inicio')}
+          >
+            {produto ? 'Ver o produto' : 'Ir para o início'}
           </Button>
         </div>
       </div>
@@ -131,8 +136,8 @@ export default function Reserva() {
       </p>
       <div data-anim>
         <ReservaStatus
-          produto={produto.nome}
-          loja={`${produto.loja.nome} · ${nomeDoPiso(produto.loja.piso)}`}
+          produto={nome}
+          loja={produto ? `${produto.loja.nome} · ${nomeDoPiso(produto.loja.piso)}` : ''}
           status={reserva.status}
           pago={reserva.pago}
           prazo={reserva.pago ? undefined : prazoDaReserva(reserva.expiraEm)}
@@ -142,14 +147,16 @@ export default function Reserva() {
         <Button block onClick={() => navigate('/carteira')}>
           Abrir carteira
         </Button>
-        <Button
-          variant="primary"
-          block
-          icon="mapa"
-          onClick={() => navigate(`/mapa?loja=${encodeURIComponent(produto.loja.mapaId)}`)}
-        >
-          Como chegar
-        </Button>
+        {produto && (
+          <Button
+            variant="primary"
+            block
+            icon="mapa"
+            onClick={() => navigate(`/mapa?loja=${encodeURIComponent(produto.loja.mapaId)}`)}
+          >
+            Como chegar
+          </Button>
+        )}
       </div>
     </div>
   )

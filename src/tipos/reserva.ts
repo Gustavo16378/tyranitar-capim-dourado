@@ -25,7 +25,7 @@ export interface Reserva {
   pix?: { copiaECola: string; simulado: boolean }
 }
 
-/** GET /api/reservas/{id}: a reserva com o produto no formato da busca. */
+/** GET /api/reservas/{id}: a reserva com o produto no formato da busca (null se ele saiu do banco). */
 export interface ReservaDetalhe extends Reserva {
-  produto: ProdutoResumo
+  produto: ProdutoResumo | null
 }
