@@ -1,6 +1,7 @@
-// Mock de POST /api/reservas, GET /api/reservas/{id} e POST /api/reservas/{id}/pagamento, com as
-// regras da API: estoque desconta na reserva e volta quando ela expira (RN03), pagar na loja vale
-// 4 h (RN01), pago por Pix vale 48 h (RN02) e o prazo é conferido sempre que a reserva é lida.
+// Mock de POST /api/reservas, GET /api/reservas/{id}, POST /api/reservas/{id}/pagamento e
+// PATCH /api/reservas/{id}/cancelar, com as regras da API: estoque desconta na reserva e volta
+// quando ela expira ou é cancelada (RN03), pagar na loja vale 4 h (RN01), pago por Pix vale 48 h
+// (RN02), cancelar a paga pede o estorno e o prazo é conferido sempre que a reserva é lida.
 // O produto vem do catálogo da fonte atual (src/api/produtos): com produtos já na API real, a
 // reserva continua funcionando aqui até a rota de reservas existir.
 // As reservas ficam guardadas no aparelho, para o link de uma reserva abrir depois de recarregar.
@@ -56,8 +57,9 @@ function conferirPrazo(reserva: ReservaGuardada, agora: number) {
 }
 
 /** A reserva como POST /api/reservas e o pagamento devolvem. */
-function comoResposta({ id, status, formaPagamento, pago, precoCentavos, expiraEm, pix }: Reserva): Reserva {
-  return { id, status, formaPagamento, pago, precoCentavos, expiraEm, ...(pix ? { pix } : {}) }
+function comoResposta({ id, status, formaPagamento, pago, estornoSolicitado, precoCentavos, expiraEm, pix }: Reserva): Reserva {
+  // Guardada antes de o cancelamento existir, a reserva não tem o campo: nunca pediu estorno.
+  return { id, status, formaPagamento, pago, estornoSolicitado: estornoSolicitado ?? false, precoCentavos, expiraEm, ...(pix ? { pix } : {}) }
 }
 
 function resumo({ id, nome, categoria, precoCentavos, estoque, foto, loja }: ProdutoResumo): ProdutoResumo {
@@ -82,6 +84,7 @@ export async function criarReserva({ produtoId, quantidade, formaPagamento }: No
     status: 'PENDENTE',
     formaPagamento,
     pago: false,
+    estornoSolicitado: false,
     precoCentavos,
     expiraEm: new Date(agora + PRAZO_NA_LOJA).toISOString(),
     ...(formaPagamento === 'PIX' ? { pix: { copiaECola: pixSimulado(id, precoCentavos), simulado: true } } : {}),
@@ -110,6 +113,22 @@ export function pagarReserva(id: string, agora = Date.now()) {
   }
   reserva.pago = true
   reserva.expiraEm = new Date(agora + PRAZO_PIX_PAGO).toISOString()
+  guardar()
+  return responder(comoResposta(reserva))
+}
+
+/** Cancelar a reserva em aberto: o estoque volta e, se estava paga, o estorno fica pedido. */
+export function cancelarReserva(id: string, agora = Date.now()) {
+  const reserva = RESERVAS.find((r) => r.id === id)
+  if (!reserva) return falhar(404, 'NAO_ENCONTRADO', 'Não achamos essa reserva.')
+  conferirPrazo(reserva, agora)
+  if (!EM_ABERTO.has(reserva.status)) {
+    return falhar(409, 'TRANSICAO_INVALIDA', 'Essa reserva não está mais em aberto: não dá para cancelar.')
+  }
+  reserva.status = 'CANCELADA'
+  reserva.estornoSolicitado = reserva.pago
+  const local = acharProduto(reserva.produto.id)
+  if (local) local.estoque += reserva.quantidade
   guardar()
   return responder(comoResposta(reserva))
 }

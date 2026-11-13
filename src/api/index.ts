@@ -8,7 +8,7 @@ export { listarProdutos, obterProduto } from './produtos'
 export { listarOfertas } from './ofertas'
 export { listarFavoritos } from './favoritos'
 export { listarLojas } from './lojas'
-export { criarReserva, obterReserva, pagarReserva } from './reservas'
+export { cancelarReserva, criarReserva, obterReserva, pagarReserva } from './reservas'
 export { obterCarteira } from './carteira'
 export {
   apagarInteresse,

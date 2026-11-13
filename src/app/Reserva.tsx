@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { QRCodeSVG } from 'qrcode.react'
 import { comoErroApi, obterReserva, pagarReserva, useDados, type ErroApi } from '../api'
@@ -7,30 +7,42 @@ import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
 import type { Reserva as RespostaReserva, ReservaDetalhe } from '../tipos'
 import { Carregando, ErroTela, Esqueleto } from './Estados'
+import { FolhaCancelarReserva } from './FolhaCancelarReserva'
 import { nomeDoPiso, prazoDaReserva } from './formatos'
+
+const EM_ABERTO = ['PENDENTE', 'CONFIRMADA', 'SEPARADA']
 
 /**
  * Reserva: o Pix simulado (quando o cliente escolheu pagar agora) e depois a reserva confirmada,
  * com o status e os próximos passos. Abre pelo link (/reserva/{id}), lendo GET /api/reservas/{id}.
+ * Em aberto, dá para cancelar, com confirmação: o produto volta para a loja.
  */
 export default function Reserva() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const lida = useDados(() => obterReserva(id), id)
-  // A resposta do pagamento atualiza a reserva lida sem carregar tudo de novo.
-  const [paga, setPaga] = useState<RespostaReserva | null>(null)
+  // A resposta do pagamento ou do cancelamento atualiza a reserva lida sem carregar tudo de novo.
+  const [atualizada, setAtualizada] = useState<RespostaReserva | null>(null)
   const [pagando, setPagando] = useState(false)
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
   const [erro, setErro] = useState<ErroApi | null>(null)
   const reserva: ReservaDetalhe | null =
-    lida.tipo === 'ok' ? { ...lida.dados, ...(paga?.id === lida.dados.id ? paga : {}) } : null
-  const esperandoPix = reserva?.formaPagamento === 'PIX' && !reserva.pago
-  const tela = useEntrada<HTMLDivElement>([lida.tipo, esperandoPix])
+    lida.tipo === 'ok' ? { ...lida.dados, ...(atualizada?.id === lida.dados.id ? atualizada : {}) } : null
+  const emAberto = reserva !== null && EM_ABERTO.includes(reserva.status)
+  const esperandoPix = emAberto && reserva?.formaPagamento === 'PIX' && !reserva.pago
+  const tela = useEntrada<HTMLDivElement>([lida.tipo, esperandoPix, reserva?.status])
+  // Cancelada aqui, o botão tocado some com a tela: o foco vai para o título da reserva cancelada.
+  const tituloCancelada = useRef<HTMLHeadingElement>(null)
+  const canceladaAgora = atualizada?.status === 'CANCELADA'
+  useEffect(() => {
+    if (canceladaAgora) tituloCancelada.current?.focus()
+  }, [canceladaAgora])
 
   async function pagar(idReserva: string) {
     setPagando(true)
     setErro(null)
     try {
-      setPaga(await pagarReserva(idReserva))
+      setAtualizada(await pagarReserva(idReserva))
     } catch (falha) {
       setErro(comoErroApi(falha))
     } finally {
@@ -66,6 +78,22 @@ export default function Reserva() {
   // O produto pode ter saído do catálogo: a reserva continua valendo.
   const nome = produto?.nome ?? 'Produto reservado'
 
+  const cancelar = (
+    <>
+      <Button variant="ghost" block disabled={pagando} onClick={() => setConfirmandoCancelar(true)}>
+        Cancelar reserva
+      </Button>
+      <FolhaCancelarReserva
+        reserva={confirmandoCancelar ? reserva : null}
+        onFechar={() => setConfirmandoCancelar(false)}
+        onCancelada={(cancelada) => {
+          setAtualizada(cancelada)
+          setConfirmandoCancelar(false)
+        }}
+      />
+    </>
+  )
+
   if (esperandoPix) {
     return (
       <div ref={tela} className="flex min-h-full flex-col gap-5 px-4 py-6">
@@ -91,10 +119,11 @@ export default function Reserva() {
           <p className="text-caption text-ink-muted">Pix simulado para a demonstração</p>
         </div>
         {erro && <ErroTela erro={erro} />}
-        <div data-anim className="mt-auto">
+        <div data-anim className="mt-auto flex flex-col gap-2">
           <Button variant="primary" size="lg" block disabled={pagando} onClick={() => pagar(reserva.id)}>
             {pagando ? 'Confirmando…' : 'Já paguei'}
           </Button>
+          {cancelar}
         </div>
       </div>
     )
@@ -104,12 +133,17 @@ export default function Reserva() {
     return (
       <div ref={tela} className="flex flex-col gap-5 px-4 py-6">
         <title>{`Reserva · ${APP_NOME}`}</title>
-        <h1 data-anim className="text-title-lg">
+        <h1 ref={tituloCancelada} tabIndex={-1} data-anim className="text-title-lg outline-none">
           {reserva.status === 'CANCELADA' ? 'Reserva cancelada' : 'Reserva expirada'}
         </h1>
         <p data-anim className="text-body-sm text-ink-muted">
           {nome} voltou para o estoque da loja. Você pode reservar de novo.
         </p>
+        {reserva.estornoSolicitado && (
+          <p data-anim className="rounded-md bg-cerrado-soft px-4 py-3 text-body-sm text-cerrado-ink">
+            O estorno do Pix foi pedido. Na demonstração, ele é simulado, como o pagamento.
+          </p>
+        )}
         <div data-anim>
           <Button
             variant="primary"
@@ -143,20 +177,24 @@ export default function Reserva() {
           prazo={reserva.pago ? undefined : prazoDaReserva(reserva.expiraEm)}
         />
       </div>
-      <div data-anim className="mt-auto flex gap-2">
-        <Button block onClick={() => navigate('/carteira')}>
-          Abrir carteira
-        </Button>
-        {produto && (
-          <Button
-            variant="primary"
-            block
-            icon="mapa"
-            onClick={() => navigate(`/mapa?loja=${encodeURIComponent(produto.loja.mapaId)}`)}
-          >
-            Como chegar
+      <div data-anim className="mt-auto flex flex-col gap-2">
+        <div className="flex gap-2">
+          <Button block onClick={() => navigate('/carteira')}>
+            Abrir carteira
           </Button>
-        )}
+          {produto && (
+            <Button
+              variant="primary"
+              block
+              icon="mapa"
+              onClick={() => navigate(`/mapa?loja=${encodeURIComponent(produto.loja.mapaId)}`)}
+            >
+              Como chegar
+            </Button>
+          )}
+        </div>
+        {/* Retirada não cancela mais. */}
+        {emAberto && cancelar}
       </div>
     </div>
   )

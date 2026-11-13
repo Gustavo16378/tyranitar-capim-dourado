@@ -57,6 +57,7 @@ describe('mock de reservas', () => {
       status: 'PENDENTE',
       formaPagamento: 'NA_LOJA',
       pago: false,
+      estornoSolicitado: false,
       precoCentavos: 34990,
       expiraEm: '2026-11-13T16:00:00.000Z',
     })
@@ -99,6 +100,19 @@ describe('mock de reservas', () => {
     expect(await m.reservas.obterReserva(criada.id, depois)).toMatchObject({ status: 'EXPIRADA' })
     expect(m.produtos.acharProduto('p-run')?.estoque).toBe(5)
     expect(m.reservas.reservasEmAberto(depois)).toEqual([])
+  })
+
+  it('cancelar: o estoque volta, a paga por Pix pede o estorno e cancelar de novo dá 409', async () => {
+    const naLoja = await m.reservas.criarReserva({ produtoId: 'p-run', quantidade: 1, formaPagamento: 'NA_LOJA' }, agora)
+    expect(await m.reservas.cancelarReserva(naLoja.id, agora)).toMatchObject({ status: 'CANCELADA', estornoSolicitado: false })
+    expect(m.produtos.acharProduto('p-run')?.estoque).toBe(5)
+    expect(m.reservas.reservasEmAberto(agora)).toEqual([])
+    await expect(m.reservas.cancelarReserva(naLoja.id, agora)).rejects.toMatchObject({ status: 409 })
+
+    const pix = await m.reservas.criarReserva({ produtoId: 'p-pulse', quantidade: 1, formaPagamento: 'PIX' }, agora)
+    await m.reservas.pagarReserva(pix.id, agora)
+    expect(await m.reservas.cancelarReserva(pix.id, agora)).toMatchObject({ status: 'CANCELADA', pago: true, estornoSolicitado: true })
+    await expect(m.reservas.cancelarReserva('r-999')).rejects.toMatchObject({ status: 404 })
   })
 
   it('pagar duas vezes dá 409', async () => {

@@ -55,6 +55,8 @@ function ReservaEncerrada({ reserva, resumo }: { reserva: ReservaDaLoja; resumo:
       <div>
         <div className="text-label">{reserva.produto}</div>
         <div className="text-body-sm text-ink-muted">{resumo}</div>
+        {/* Cancelada depois de paga por Pix: o dinheiro volta para o cliente (simulado). */}
+        {reserva.estornoSolicitado && <div className="text-caption text-ink-muted">Estorno do Pix solicitado</div>}
       </div>
       <Badge {...SELO_ENCERRADA[status]}>
         {ROTULO_DO_STATUS[status]}

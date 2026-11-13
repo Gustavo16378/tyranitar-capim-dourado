@@ -87,6 +87,8 @@ export interface ReservaDaLoja {
   status: StatusReserva
   formaPagamento: FormaPagamento
   pago: boolean
+  /** Cancelada depois de paga por Pix: o estorno (simulado) foi pedido. */
+  estornoSolicitado?: boolean
   /** O total da reserva (preço × quantidade no momento da reserva). */
   precoCentavos: number
   /** ISO 8601 (UTC). */

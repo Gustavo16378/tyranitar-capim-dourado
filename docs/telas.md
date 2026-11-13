@@ -37,9 +37,9 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
 | Pix simulado | QR do Pix e confirmação do pagamento | Button | RF09 |
-| Reserva confirmada | Status da reserva e próximos passos | ReservaStatus, Button | RF08, RF09 |
+| Reserva confirmada | Status da reserva e próximos passos; em aberto, "Cancelar reserva" com confirmação | ReservaStatus, Button | RF08, RF09 |
 | Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota até ela. Na primeira rota, pergunta "Por qual entrada você chegou?" e lembra a resposta por 6 h; `?origem=<entrada>` (o QR de cada entrada, ids em `src/mapa/entradas.ts`) já responde. Sem resposta, a rota sai da entrada mais próxima e nenhuma vira "Você está aqui". Abre sem login, para qualquer visitante (sem a barra de navegação, com o convite "Entrar para reservar e falar com a Capi", que volta ao mesmo mapa) | Badge, Button | RF10 |
-| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo e "Como chegar") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
+| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo, "Como chegar" e "Cancelar reserva") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
 | Minha conta | Nome (editável), e-mail, nível e pontos; trocar a senha pedindo a atual; a ficha que a Capi anotou, com o consentimento e um botão de apagar em cada interesse; baixar os dados em JSON (LGPD); sair e excluir a conta | NivelBadge, Button | RF01, RF13 |
 
 ## Painéis no celular e no tablet

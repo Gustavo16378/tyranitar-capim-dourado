@@ -20,3 +20,12 @@ export function pagarReserva(id: string) {
   if (usarMock('reservas')) return mock.pagarReserva(id)
   return requisitar<Reserva>('POST', `/api/reservas/${encodeURIComponent(id)}/pagamento`)
 }
+
+/**
+ * PATCH /api/reservas/{id}/cancelar: o cliente desiste da reserva em aberto. O produto volta para a
+ * loja e, se estava paga por Pix, o estorno (simulado) fica pedido.
+ */
+export function cancelarReserva(id: string) {
+  if (usarMock('reservas')) return mock.cancelarReserva(id)
+  return requisitar<Reserva>('PATCH', `/api/reservas/${encodeURIComponent(id)}/cancelar`)
+}
