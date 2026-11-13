@@ -22,3 +22,8 @@ export function entrar(email: string, senha: string): Promise<RespostaLogin> {
 export function entrarComDemo(): Promise<RespostaLogin> {
   return responder(SESSAO_DEMO)
 }
+
+/** Mock de POST /api/auth/cadastro: a conta nova entra logada (no mock, sem guardar nada). */
+export function cadastrar(nome: string): Promise<RespostaLogin> {
+  return responder({ token: 'mock', usuario: { id: 'u-novo', nome, perfil: 'CLIENTE', lojaId: null } })
+}
