@@ -19,6 +19,8 @@ Solução da equipe Tyranitar para o tema 04 do HackaRun 2026: a jornada de comp
 - [Design system publicado](https://tyranitar-capim-dourado.pages.dev/design-system)
 - [App no ar](https://tyranitar-capim-dourado.pages.dev)
 
+## A solução
+
 O cliente pergunta à **Capi**, a assistente de IA do shopping, por texto, foto ou link. Ela acha o produto nas lojas, o cliente reserva e segue a rota no mapa. No balcão, o vendedor lê o QR da carteira e já sabe o que o cliente procura. A compra vira pontos de fidelidade e dados para lojistas e para o shopping.
 
 Um site só, com três interfaces:
@@ -31,6 +33,24 @@ Um site só, com três interfaces:
 | `/design-system` | Design system: tokens, componentes e movimentos nos temas claro e escuro |
 
 O app ainda não tem nome definitivo: o nome vem da constante `APP_NOME`, em `src/config.ts`.
+
+### A jornada do cliente
+
+<p align="center">
+  <img src="docs/img/jornada.gif" width="300" alt="A jornada no celular: a Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a Morofit no mapa 3D e abre a carteira com o QR e os pontos.">
+</p>
+
+A Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a loja no mapa 3D e abre a carteira. Gravado com o Playwright num celular de 390 px (`node scripts/gravar-jornada.mjs`).
+
+### Telas
+
+| Abertura | Início | Capi | Produto | Como reservar |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/img/tela-abertura.png" width="150" alt="Abertura do app com a Capi"> | <img src="docs/img/tela-inicio.png" width="150" alt="Início com ofertas e produtos salvos"> | <img src="docs/img/tela-capi.png" width="150" alt="Conversa com a Capi"> | <img src="docs/img/tela-produto.png" width="150" alt="Página do produto"> | <img src="docs/img/tela-reservar.png" width="150" alt="Escolha entre pagar com Pix ou na loja"> |
+
+| Reserva | Mapa | Carteira | Reservas e cupons | Painel da loja |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/img/tela-reserva.png" width="150" alt="Reserva separada, com o andamento"> | <img src="docs/img/tela-mapa.png" width="150" alt="Mapa 3D com a rota até a loja"> | <img src="docs/img/tela-carteira.png" width="150" alt="Carteira com o QR e os pontos"> | <img src="docs/img/tela-carteira-reservas.png" width="150" alt="Reservas e cupons na carteira"> | <img src="docs/img/painel-atendimento.png" width="150" alt="Painel da loja atendendo pelo QR"> |
 
 ## Stack
 
