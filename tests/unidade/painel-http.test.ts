@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ErroApi, paraErroApi, requisitar } from '../../src/loja/api/http'
-import { apagarSessao, gravarSessao, lerSessao, tokenVencido } from '../../src/loja/api/sessao'
+import { criarRequisitar, ErroApi, paraErroApi } from '../../src/painel/api/http'
+import { criarSessao, tokenVencido } from '../../src/painel/api/sessao'
+
+// Um cliente como o de um painel, com os mocks da loja.
+const { apagarSessao, gravarSessao, lerSessao } = criarSessao('teste.sessao')
+const requisitar = criarRequisitar({
+  sessao: { apagarSessao, gravarSessao, lerSessao, useSessao: () => null },
+  mocksLigados: true,
+  carregarMocks: () => import('../../src/mocks/loja'),
+})
 
 function tokenCom(exp: number) {
   const payload = btoa(JSON.stringify({ sub: 'u1', perfil: 'LOJISTA', exp }))

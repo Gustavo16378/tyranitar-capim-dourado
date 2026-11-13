@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { Badge } from '../../componentes'
 import { cx } from '../../componentes/cx'
-import { apagarSessao, MOCKS_LIGADOS, useSessao } from '../api'
+import { MOCKS_LIGADOS, sessao } from '../api'
 import { Carregando, Esqueleto } from '../comum/Estados'
 import { urlDaTela } from '../enderecos'
 import { TELAS_DA_LOJA } from '../navegacao'
@@ -17,7 +17,7 @@ const ATIVO = 'bg-[color-mix(in_srgb,var(--on-terra)_12%,transparent)] font-semi
 
 /** Moldura do painel: barra lateral com as telas e, ao lado, a tela aberta. */
 export function LayoutLoja() {
-  const sessao = useSessao()
+  const atual = sessao.useSessao()
 
   return (
     <div className="min-h-dvh bg-surface text-ink md:grid md:grid-cols-[220px_minmax(0,1fr)]">
@@ -40,8 +40,8 @@ export function LayoutLoja() {
         </nav>
 
         <div className="flex items-center justify-between gap-2 border-t border-[color-mix(in_srgb,var(--on-terra)_20%,transparent)] px-2 pt-3 md:mt-auto md:flex-col md:items-start">
-          <span className="text-body-sm opacity-[.85]">{sessao?.usuario.nome}</span>
-          <button type="button" onClick={apagarSessao} className={cx(ITEM, '-mx-3 cursor-pointer')}>
+          <span className="text-body-sm opacity-[.85]">{atual?.usuario.nome}</span>
+          <button type="button" onClick={sessao.apagarSessao} className={cx(ITEM, '-mx-3 cursor-pointer')}>
             Sair
           </button>
         </div>

@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router'
 import { Button } from '../../../componentes'
 import { APP_NOME } from '../../../config'
 import { useEntrada } from '../../../movimento'
-import { entrar, ErroApi, gravarSessao, MOCKS_LIGADOS, useAcao, useSessao } from '../../api'
+import { entrar, ErroApi, MOCKS_LIGADOS, sessao, useAcao } from '../../api'
 import { Campo } from '../../comum/Campo'
 import { Erro } from '../../comum/Estados'
 import { URL_INICIAL } from '../../enderecos'
@@ -16,7 +16,7 @@ const SO_LOJISTA = new ErroApi({
 
 /** Login do lojista (RF17). Depois de entrar, volta para a tela que pediu o login. */
 export function TelaEntrar() {
-  const sessao = useSessao()
+  const atual = sessao.useSessao()
   const navegar = useNavigate()
   const voltarPara = (useLocation().state as { voltarPara?: string } | null)?.voltarPara ?? URL_INICIAL
   const ref = useEntrada<HTMLDivElement>()
@@ -25,7 +25,7 @@ export function TelaEntrar() {
   const [semPermissao, setSemPermissao] = useState(false)
   const login = useAcao(entrar)
 
-  if (sessao?.usuario.perfil === 'LOJISTA') return <Navigate to={voltarPara} replace />
+  if (atual?.usuario.perfil === 'LOJISTA') return <Navigate to={voltarPara} replace />
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault()
@@ -36,7 +36,7 @@ export function TelaEntrar() {
       setSemPermissao(true)
       return
     }
-    gravarSessao(resposta)
+    sessao.gravarSessao(resposta)
     navegar(voltarPara, { replace: true })
   }
 

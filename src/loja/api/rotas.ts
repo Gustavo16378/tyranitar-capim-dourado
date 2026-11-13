@@ -22,7 +22,7 @@ import type {
   ResultadoImportacao,
   StatusPedidoPelaLoja,
 } from '../../tipos/loja'
-import { requisitar } from './http'
+import { requisitar } from './cliente'
 
 /** POST /api/auth/login */
 export function entrar(pedido: PedidoLogin) {
