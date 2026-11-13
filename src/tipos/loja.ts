@@ -1,5 +1,5 @@
 // Tipos das rotas que o painel da loja usa, no formato de docs/api.md.
-// O front (src/loja/api) e os mocks que sobraram (src/mocks/loja) leem daqui; as Functions
+// O front (src/loja/api) lê daqui; as Functions
 // (functions/api/loja) respondem neste formato. Os gerais (erro, lista, nível, login,
 // cupom) ficam em comum.ts, usuario.ts e cupom.ts e são repetidos aqui, para as telas da
 // loja importarem tudo de um lugar.

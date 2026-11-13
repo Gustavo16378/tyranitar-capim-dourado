@@ -24,11 +24,10 @@ export function LayoutPainel() {
 
         <nav aria-label="Telas do painel" className="-mx-3 overflow-x-auto px-3 md:mx-0 md:overflow-visible md:px-0">
           <ul className="flex gap-1 md:flex-col">
-            {painel.telas.map(({ caminho, rotulo, dadosDeExemplo }) => (
+            {painel.telas.map(({ caminho, rotulo }) => (
               <li key={caminho}>
                 <NavLink to={urlNoPainel(painel, caminho)} className={({ isActive }) => cx(ITEM, 'gap-2', isActive && ATIVO)}>
                   {rotulo}
-                  {dadosDeExemplo && <span className="text-caption font-normal opacity-75">exemplo</span>}
                 </NavLink>
               </li>
             ))}

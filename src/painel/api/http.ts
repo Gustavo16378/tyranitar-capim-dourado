@@ -3,9 +3,9 @@
 // painel, manda JSON (ou texto, como um CSV) e transforma qualquer erro em ErroApi, no
 // formato { status, erro, mensagem } de docs/api.md.
 //
-// Mocks: enquanto uma rota estiver na tabela de mocks do painel (src/mocks/<painel>/index.ts),
-// quem responde é o mock, no mesmo formato da API. Quando a rota real ficar pronta, apague a
-// linha dela lá e nada muda aqui nem nas telas.
+// Mocks: hoje os dois painéis vão direto à API (mocksLigados: false). Uma tela que nascer antes
+// da rota pode ter um mock (src/mocks/<painel>/index.ts, docs/como-fazer-uma-tela.md): enquanto
+// a rota estiver na tabela dele, quem responde é o mock, no mesmo formato da API.
 import type { RespostaErro } from '../../tipos'
 import type { ArmazemDeSessao } from './sessao'
 
@@ -75,7 +75,7 @@ export interface MocksDoPainel {
 export interface ConfigDoCliente {
   sessao: ArmazemDeSessao
   mocksLigados: boolean
-  /** Import dinâmico dos mocks: () => import('../../mocks/loja'). Ficam num pedaço separado do bundle. */
+  /** Import dinâmico dos mocks: () => import('../../mocks/<painel>'). Ficam num pedaço separado do bundle. */
   carregarMocks?: () => Promise<MocksDoPainel>
 }
 

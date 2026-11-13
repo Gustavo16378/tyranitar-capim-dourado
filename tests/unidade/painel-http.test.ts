@@ -1,14 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRequisitar, ErroApi, paraErroApi } from '../../src/painel/api/http'
 import { criarSessao, tokenVencido } from '../../src/painel/api/sessao'
-import { criarTokenFalso } from '../../src/mocks/comum/token'
 
-// Um cliente como o de um painel, com os mocks da loja.
+// Um cliente como o de um painel, com um mock só: GET /api/teste/mockada.
 const { apagarSessao, gravarSessao, lerSessao } = criarSessao('teste.sessao')
 const requisitar = criarRequisitar({
   sessao: { apagarSessao, gravarSessao, lerSessao, useSessao: () => null },
   mocksLigados: true,
-  carregarMocks: () => import('../../src/mocks/loja'),
+  carregarMocks: async () => ({
+    responderMock: async ({ metodo, url }) =>
+      metodo === 'GET' && url === '/api/teste/mockada' ? Response.json({ itens: [], total: 3 }) : null,
+  }),
 })
 
 function tokenCom(exp: number) {
@@ -71,10 +73,9 @@ describe('requisitar', () => {
   it('usa o mock quando a rota está na tabela, sem chamar a rede', async () => {
     const fetch = vi.fn()
     vi.stubGlobal('fetch', fetch)
-    const usuario = { id: 'l-pc01a', nome: 'Equipe da Loja PC01A', perfil: 'LOJISTA' as const, lojaId: 'loja-pc01a' }
-    gravarSessao({ token: criarTokenFalso({ sub: usuario.id, perfil: 'LOJISTA', lojaId: usuario.lojaId }), usuario })
-    const resposta = await requisitar<{ total: number }>('GET', '/api/loja/produtos')
-    expect(resposta.total).toBeGreaterThan(0)
+    gravarSessao({ token: tokenCom(Date.now() / 1000 + 60), usuario: LOJISTA })
+    const resposta = await requisitar<{ total: number }>('GET', '/api/teste/mockada')
+    expect(resposta.total).toBe(3)
     expect(fetch).not.toHaveBeenCalled()
   })
 })

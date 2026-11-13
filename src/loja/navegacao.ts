@@ -2,7 +2,6 @@
 // acrescente uma linha aqui; a rota e o item da barra lateral saem desta lista.
 import { lazy } from 'react'
 import type { TelaDoPainel } from '../painel/painel'
-import { MOCKS_LIGADOS } from './api/cliente'
 import { TelaAtendimento } from './telas/atendimento/TelaAtendimento'
 import { TelaCupons } from './telas/cupons/TelaCupons'
 import { TelaExtrato } from './telas/extrato/TelaExtrato'
@@ -19,9 +18,8 @@ export const TELAS_DA_LOJA: readonly TelaDoPainel[] = [
   { caminho: 'atendimento', rotulo: 'Atendimento', Tela: TelaAtendimento },
   { caminho: 'reservas', rotulo: 'Reservas', Tela: TelaReservas },
   { caminho: 'produtos', rotulo: 'Produtos', Tela: TelaProdutos },
-  // Cupons e Desempenho ainda respondem com mocks (src/mocks/loja): a API não tem as rotas.
-  { caminho: 'cupons', rotulo: 'Cupons', Tela: TelaCupons, dadosDeExemplo: MOCKS_LIGADOS },
-  { caminho: 'desempenho', rotulo: 'Desempenho', Tela: TelaDesempenho, dadosDeExemplo: MOCKS_LIGADOS },
+  { caminho: 'cupons', rotulo: 'Cupons', Tela: TelaCupons },
+  { caminho: 'desempenho', rotulo: 'Desempenho', Tela: TelaDesempenho },
   { caminho: 'extrato', rotulo: 'Extrato', Tela: TelaExtrato },
 ]
 

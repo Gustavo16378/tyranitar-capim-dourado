@@ -12,8 +12,11 @@ export interface TelaDoPainel {
   /** Nome na barra lateral. */
   rotulo: string
   Tela: ComponentType
-  /** A tela ainda responde com mocks: mostra o selo "Dados de exemplo" no título e na barra. */
-  dadosDeExemplo?: boolean
+  /**
+   * Aviso discreto ao lado do título, como "Dados de demonstração" (as buscas da Demanda vêm do
+   * seed) ou "Dados de exemplo" (a tela ainda responde com um mock).
+   */
+  selo?: string
 }
 
 export interface ConfigDoPainel {

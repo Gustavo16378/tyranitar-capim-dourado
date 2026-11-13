@@ -1,6 +1,6 @@
 // Uma função por rota da API que o painel usa, com os tipos de src/tipos/loja.ts.
 // As telas chamam estas funções, nunca fetch direto. Rota nova: escreva a função aqui
-// e, enquanto a API não existir, o mock em src/mocks/loja/.
+// (e a rota em functions/api/loja, com teste em tests/api).
 import type {
   Atendimento,
   Compra,

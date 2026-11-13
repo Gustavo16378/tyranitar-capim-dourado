@@ -14,7 +14,7 @@ npm run dev                               # o front com recarga, em http://local
 
 O login é um só, em `/entrar`, para o app e os dois painéis: depois de entrar, cada perfil vai para o seu lugar (cliente para o Início, lojista para `/loja`, administração para `/shopping`). `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela. Com o modo demonstração ligado (`DEMO=1`, já no `wrangler.toml`), a tela mostra um botão por conta de teste: **Cliente (Ana)**, **Lojista** (a loja da unidade PC01A) e **Shopping (admin)**. Cada perfil guarda a sessão dele, então dá para ter o app numa aba e os painéis em outras. No Atendimento, **Simular leitura** abre a carteira da Ana.
 
-Quase tudo responde pela API real (`functions/`). Só Produtos, Cupons e Desempenho da loja ainda usam mocks, porque a API não tem essas rotas: eles mostram o selo **Dados de exemplo** no título e "exemplo" na barra lateral, e os dados ficam na memória (recarregar volta ao início).
+Todas as telas dos dois painéis respondem pela API real (`functions/`). No modo demonstração, Demanda e Lojas vagas mostram o aviso **Dados de demonstração** ao lado do título, porque as buscas que elas contam vêm do seed.
 
 ## Onde fica cada coisa
 
@@ -49,9 +49,7 @@ src/
 │   │   ├── rotas.ts          2. uma função por rota da API
 │   │   └── index.ts          o que as telas importam: rotas, useConsulta, useAcao, ErroApi
 │   └── telas/<tela>/         4. uma pasta por tela
-└── mocks/                    as rotas que a API ainda não tem, no formato dela
-    ├── comum/                servidor de mentira, respostas, token falso, validação de cupom
-    └── loja/                 produtos, cupons e relatórios (index.ts: ROTAS_MOCKADAS)
+└── mocks/                    (só se precisar) as rotas que a API ainda não tem, no formato dela
 
 functions/                    3. a API (Cloudflare Pages Functions, com o D1)
 ├── api/<painel>/...          uma rota por arquivo, no caminho da URL: api/shopping/vagas.ts
@@ -134,7 +132,7 @@ export const onRequestGet: Rota = async ({ request, env }) => json(await montarJ
 - **Teste:** em `tests/api/`, chamando a rota como o Pages chama, com um token de verdade e o banco de `tests/seed.sql` limpo a cada teste (`tests/api/shopping.test.ts`). Rode com `npm run test:api`.
 - **Banco:** coluna ou tabela nova é uma migration nova em `migrations/`; dado de demonstração vai no seed (`scripts/gerar-seed.mjs`), nunca na migration. Veja `docs/banco.md`.
 
-**Quando a rota ainda não existe e outra pessoa vai fazê-la**, a tela pode nascer com um mock: um manipulador em `src/mocks/<painel>/` que responde exatamente como a API vai responder (ajudantes em `mocks/comum/resposta.ts`, perfil com `exigirLojista`), uma linha em `ROTAS_MOCKADAS` e `dadosDeExemplo: MOCKS_LIGADOS` na tela, em `navegacao.ts`, para o selo aparecer. Os mocks de Produtos, Cupons e Desempenho são o exemplo, com os testes em `tests/unidade/loja-produtos.test.ts`. Os testes de `tests/unidade` rodam sem JSX: no código que eles importam, use `componentes/formatar` e `componentes/nivel`, não o índice `componentes`.
+**Quando a rota ainda não existe e outra pessoa vai fazê-la**, a tela pode nascer com um mock: um manipulador em `src/mocks/<painel>/` que responde exatamente como a API vai responder, numa tabela `ROTAS_MOCKADAS` com `responderMock` (o formato está em `MocksDoPainel`, em `src/painel/api/http.ts`), `mocksLigados: true` e `carregarMocks` no `api/cliente.ts` do painel e `selo: 'Dados de exemplo'` na tela, em `navegacao.ts`, para o aviso aparecer. Hoje nenhuma tela usa mock: os de Produtos, Cupons e Desempenho saíram quando as rotas ficaram prontas (estão no histórico do Git, antes do commit que criou `functions/api/loja/cupons.ts`). Os testes de `tests/unidade` rodam sem JSX: no código que eles importam, use `componentes/formatar` e `componentes/nivel`, não o índice `componentes`.
 
 ### 4. A tela
 
@@ -260,18 +258,11 @@ Um painel é uma `ConfigDoPainel` (`src/painel/painel.ts`) entregue ao `RotasDoP
 
 Quando a rota de uma tela que ainda usa mock existir em `functions/`:
 
-1. Apague a linha dela em `ROTAS_MOCKADAS` (`src/mocks/loja/index.ts`), o manipulador e o `dadosDeExemplo` da tela em `navegacao.ts`.
+1. Apague a linha dela em `ROTAS_MOCKADAS` (`src/mocks/<painel>/index.ts`), o manipulador e o `selo` da tela em `navegacao.ts`.
 2. Rode `npm run dev:api` e, em outro terminal, `npm run dev`, e confira a tela.
 3. Se a resposta real vier diferente do tipo, corrija o tipo em `src/tipos/` e o registro em `docs/api.md`. A tela não muda.
 
-Para ver as telas da loja só com a API real (as que ainda não têm rota dão erro):
-
-```bash
-VITE_LOJA_MOCKS=0 npm run dev                     # bash
-$env:VITE_LOJA_MOCKS='0'; npm run dev             # PowerShell
-```
-
-Quando a tabela ficar vazia, apague `src/mocks/` inteira e ponha `mocksLigados: false` em `src/loja/api/cliente.ts`, como já está no shopping.
+Quando a tabela ficar vazia, apague `src/mocks/<painel>/` e ponha `mocksLigados: false` no `api/cliente.ts` do painel, como já está na loja e no shopping.
 
 ## Antes do commit
 
