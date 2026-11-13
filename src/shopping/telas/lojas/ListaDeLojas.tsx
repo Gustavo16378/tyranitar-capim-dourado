@@ -3,6 +3,7 @@ import { Badge, Button } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
 import { useEntrada } from '../../../movimento'
 import { Campo } from '../../../painel/comum/Campo'
+import { CapaDaCategoria } from '../../../painel/comum/CapaDaCategoria'
 import { rotuloDaCategoria } from '../../../painel/comum/categorias'
 import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
 import { formatarArea, rotuloDoPiso } from '../../../painel/comum/formatos'
@@ -104,6 +105,12 @@ function Unidades({ lojas, atualizando, aoEditar }: { lojas: LojaDoShopping[]; a
   )
 }
 
+/** A capa da loja: a da primeira categoria dela; na praça de alimentação, a de alimentação. Vaga, nenhuma. */
+function categoriaDaCapa(loja: LojaDoShopping) {
+  if (!loja.ativa) return null
+  return loja.categorias[0] ?? (loja.tipo === 'alimentacao' ? 'alimentacao' : null)
+}
+
 function LinhaDaLoja({ loja, aoEditar }: { loja: LojaDoShopping; aoEditar: () => void }) {
   const onde = [rotuloDoPiso(loja.piso), loja.areaM2 ? formatarArea(loja.areaM2) : null].filter(Boolean).join(' · ')
   return (
@@ -113,9 +120,12 @@ function LinhaDaLoja({ loja, aoEditar }: { loja: LojaDoShopping; aoEditar: () =>
         loja.ativa ? 'border-line' : 'border-dashed border-line-strong',
       )}
     >
-      <div className="flex min-w-[220px] flex-1 flex-col gap-0.5">
-        <span className="text-caption font-semibold uppercase tracking-wider text-ink-muted">{loja.unidade}</span>
-        <h3 className={cx('text-label', !loja.ativa && 'text-ink-muted')}>{loja.ativa ? loja.nome : 'Unidade vaga'}</h3>
+      <div className="flex min-w-[220px] flex-1 items-center gap-4">
+        <CapaDaCategoria categoria={categoriaDaCapa(loja)} className="h-12 w-[72px] flex-none rounded-sm" />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-caption font-semibold uppercase tracking-wider text-ink-muted">{loja.unidade}</span>
+          <h3 className={cx('text-label', !loja.ativa && 'text-ink-muted')}>{loja.ativa ? loja.nome : 'Unidade vaga'}</h3>
+        </div>
       </div>
       <p className="min-w-[160px] text-body-sm text-ink-muted">
         {onde}

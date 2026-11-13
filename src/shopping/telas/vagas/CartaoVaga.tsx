@@ -1,5 +1,6 @@
 import { Badge, formatarNumero } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
+import { CapaDaCategoria } from '../../../painel/comum/CapaDaCategoria'
 import { rotuloDaCategoria } from '../../../painel/comum/categorias'
 import { formatarArea, rotuloDoPiso } from '../../../painel/comum/formatos'
 import type { VagaComSugestao } from '../../../tipos/shopping'
@@ -25,8 +26,10 @@ export function CartaoVaga({ vaga, numero, noPeriodo }: CartaoVagaProps) {
     <article
       id={`vaga-${vaga.mapaId}`}
       aria-label={`${vaga.unidade}${sugestao ? `: buscar ${rotuloDaCategoria(sugestao.categoria)}` : ''}`}
-      className="flex h-full scroll-mt-6 flex-col gap-3 rounded-md border border-line bg-surface-raised p-5"
+      className="flex h-full scroll-mt-6 flex-col gap-3 overflow-hidden rounded-md border border-line bg-surface-raised p-5"
     >
+      {/* A capa do tipo de loja sugerido, de ponta a ponta no topo do cartão. */}
+      <CapaDaCategoria categoria={sugestao?.categoria} className="-mx-5 -mt-5 mb-1 aspect-[3/2] max-h-40 w-[calc(100%+2.5rem)]" />
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="flex items-center gap-2 text-caption font-semibold uppercase tracking-wider text-ink-muted">
           <span className="sr-only">Prioridade {numero}:</span>
