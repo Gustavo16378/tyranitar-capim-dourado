@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { gsap } from 'gsap'
-import { obterCarteira, sair, useDados, useSessao } from '../api'
-import { Button, CarteiraQR, CupomTicket, NIVEIS, NivelBadge, ProgressoNivel } from '../componentes'
+import { obterCarteira, useDados, useSessao } from '../api'
+import { CarteiraQR, CupomTicket, NIVEIS, NivelBadge, ProgressoNivel } from '../componentes'
 import { APP_NOME } from '../config'
 import { comMovimento, DURACAO, EASE, encherBarra, somarPontos, subirDeNivel, useEntrada, useGSAP } from '../movimento'
 import { desdeAUltimaVista, guardarVista, lerVista } from './carteiraVista'
@@ -138,7 +138,7 @@ export default function Carteira() {
               {carteira.dados.cupons.length === 0 ? (
                 <Vazio>Você ainda não tem cupons. As ofertas do Início aparecem aqui quando valem para você.</Vazio>
               ) : (
-                <ul className="flex flex-col gap-3 pt-2.5">
+                <ul className="flex flex-col gap-3 pt-2.5 md:grid md:grid-cols-2">
                   {carteira.dados.cupons.map((cupom) => (
                     <li key={cupom.id}>
                       <CupomTicket
@@ -157,10 +157,6 @@ export default function Carteira() {
           </>
         )}
       </div>
-      {/* Sair apaga a sessão; o app volta sozinho para a tela de login. */}
-      <Button variant="ghost" className="self-center" onClick={sair}>
-        Sair da conta
-      </Button>
     </div>
   )
 }

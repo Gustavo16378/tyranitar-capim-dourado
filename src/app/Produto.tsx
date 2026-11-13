@@ -117,7 +117,7 @@ export default function Produto() {
               <h2 id="titulo-outras" className="text-title-sm text-marrom-ink">
                 Também no shopping
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-2 md:grid md:grid-cols-2">
                 {produto.dados.outrasLojas.map((outro) => (
                   <li key={outro.id}>
                     <Link

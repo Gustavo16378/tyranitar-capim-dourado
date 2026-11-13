@@ -9,4 +9,10 @@ export interface DadosDosTestes {
   jwtSecret: string
 }
 
-export const dados: DadosDosTestes = JSON.parse(readFileSync(new URL('./dados.json', import.meta.url), 'utf8'))
+const lidos: DadosDosTestes = JSON.parse(readFileSync(new URL('./dados.json', import.meta.url), 'utf8'))
+
+/**
+ * Com E2E_PORTA, o site dos testes sobe em outra porta: duas cópias do projeto (dois worktrees,
+ * por exemplo) podem rodar os testes no navegador ao mesmo tempo na mesma máquina.
+ */
+export const dados: DadosDosTestes = { ...lidos, porta: Number(process.env.E2E_PORTA) || lidos.porta }

@@ -7,6 +7,7 @@ import Entrar from './Entrar'
 import Inicio from './Inicio'
 import LayoutApp from './LayoutApp'
 import Mapa from './MapaSobDemanda'
+import MinhaConta from './MinhaConta'
 import PortaDoApp from './PortaDoApp'
 import Produto from './Produto'
 import Reserva from './Reserva'
@@ -24,6 +25,7 @@ export const rotasDoApp = (
       <Route path="/reserva/:id" element={<Reserva />} />
       <Route path="/mapa" element={<Mapa />} />
       <Route path="/carteira" element={<Carteira />} />
+      <Route path="/conta" element={<MinhaConta />} />
     </Route>
   </Route>
 )

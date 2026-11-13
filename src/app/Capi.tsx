@@ -269,7 +269,7 @@ export default function Capi() {
         <div ref={lista} role="log" aria-live="polite" aria-label="Conversa com a Capi" className="flex flex-col gap-3">
           {itens.map((item) =>
             'produtos' in item ? (
-              <ul key={item.id} className="flex flex-col gap-2 pl-10">
+              <ul key={item.id} className="flex flex-col gap-2 pl-10 md:grid md:grid-cols-2">
                 {item.produtos.map((p) => (
                   <li key={p.id}>
                     <Link to={`/produto/${p.id}`} className="block rounded-md">

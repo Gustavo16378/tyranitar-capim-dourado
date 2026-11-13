@@ -4,17 +4,123 @@
 // diferentes. Para rodar bem no celular: cores sólidas, sem sombras e renderizando só
 // quando algo muda (frameloop "demand").
 import { Edges, Line, OrbitControls } from '@react-three/drei'
-import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber'
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { gsap } from 'gsap'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref, type RefObject } from 'react'
 import * as THREE from 'three'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
+import { cx } from '../componentes/cx'
 import { comMovimento, DURACAO, EASE } from '../movimento'
 import { useCoresDoMapa, type CoresDoMapa } from './cores'
-import { acharNaPlanta, CAIXAS, PLANTAS, rotaAte } from './dados'
+import { acharNaPlanta, CAIXAS, GRAFO, LOJAS_DA_PLANTA, PLANTAS, rotaAte } from './dados'
 import { RotulosDasLojas } from './Rotulos'
 import { trechoDaRota, type Piso, type Rota } from './grafo'
+import { lojasGrandes, rotuloDaLoja } from './nomesNaPlanta'
 import type { Caixa } from './svg'
+
+/** O que os botões da tela (fora do canvas) pedem ao mapa. */
+export interface ControleDoMapa {
+  aproximar: () => void
+  afastar: () => void
+  /** Volta ao enquadramento da rota (ou do piso inteiro). */
+  recentralizar: () => void
+}
+
+/** O que o mapa usa dos OrbitControls do drei. */
+interface Orbita {
+  target: THREE.Vector3
+  minDistance: number
+  maxDistance: number
+  update: () => void
+}
+
+/** Quanto cada toque em aproximar (ou afastar, ao contrário) muda a distância da câmera. */
+const PASSO_DO_ZOOM = 0.7
+
+/**
+ * Etiqueta sobre o mapa (nome da loja, entrada, "Você está aqui"): HTML do próprio app, numa
+ * camada por cima do canvas, nítido em qualquer zoom e sem pegar o toque. O Projetor, dentro da
+ * cena, leva cada uma até o ponto 3D dela a cada quadro desenhado.
+ */
+interface Etiqueta {
+  id: string
+  texto: string
+  posicao: [x: number, y: number, z: number]
+  estilo: keyof typeof ESTILO_DA_ETIQUETA
+}
+
+const ETIQUETA =
+  'pointer-events-none absolute left-0 top-0 select-none whitespace-nowrap rounded-pill border px-2 py-0.5 text-caption shadow-card invisible'
+
+const ESTILO_DA_ETIQUETA = {
+  loja: 'border-line bg-surface-raised text-ink',
+  escolhida: 'border-marrom bg-surface-raised font-semibold text-ink',
+  entrada: 'border-line-strong bg-surface-raised text-ink',
+  voce: 'border-cerrado bg-cerrado font-semibold text-on-cerrado',
+} as const
+
+/** As etiquetas de um piso: entradas (a da rota vira "Você está aqui") e lojas com rótulo. */
+function etiquetasDoPiso(
+  piso: Piso,
+  {
+    destinoAqui,
+    saida,
+    sobre,
+    nomes,
+    grandes,
+  }: {
+    destinoAqui?: string
+    saida?: string
+    sobre: string | null
+    nomes?: Record<string, string>
+    grandes: Set<string>
+  },
+): Etiqueta[] {
+  const altura = alturaDoPiso(CAIXAS[piso])
+  const entradas: Etiqueta[] = [...GRAFO.pontos.values()]
+    .filter((p) => p.tipo === 'entrada' && p.piso === piso)
+    .map((p) => ({
+      id: `entrada-${p.id}`,
+      texto: p.id === saida ? 'Você está aqui' : 'Entrada',
+      posicao: [p.x, ESPESSURA_DO_PISO + altura * 1.6, p.y],
+      estilo: p.id === saida ? 'voce' : 'entrada',
+    }))
+  // As grandes com nome já têm o nome deitado sobre o bloco (RotulosDasLojas): etiqueta só nas vagas.
+  const grandesSemNome = [...grandes].filter((id) => !nomes?.[id])
+  const comRotulo = new Set([...grandesSemNome, destinoAqui, sobre])
+  const lojas: Etiqueta[] = LOJAS_DA_PLANTA[piso]
+    .filter((l) => comRotulo.has(l.mapaId))
+    .map((l) => ({
+      id: `loja-${l.mapaId}`,
+      texto: rotuloDaLoja(l.mapaId, nomes),
+      posicao: [l.centro.x, ESPESSURA_DO_PISO + altura * (l.mapaId === destinoAqui ? 2.6 : 1.4), l.centro.y],
+      estilo: l.mapaId === destinoAqui ? 'escolhida' : 'loja',
+    }))
+  return [...entradas, ...lojas]
+}
+
+/** Dentro da cena: põe cada etiqueta sobre o seu ponto 3D, ou a esconde se ele saiu da tela. */
+function Projetor({ etiquetas, elementos }: { etiquetas: Etiqueta[]; elementos: RefObject<Map<string, HTMLElement>> }) {
+  const invalidate = useThree((s) => s.invalidate)
+  // Etiqueta nova precisa de um quadro para achar o lugar (o mapa só desenha quando algo muda).
+  useEffect(() => invalidate(), [etiquetas, invalidate])
+  const ponto = useMemo(() => new THREE.Vector3(), [])
+  useFrame(({ camera, size }) => {
+    for (const etiqueta of etiquetas) {
+      const el = elementos.current.get(etiqueta.id)
+      if (!el) continue
+      ponto.set(...etiqueta.posicao).project(camera)
+      const fora = ponto.z > 1 || Math.abs(ponto.x) > 1.1 || Math.abs(ponto.y) > 1.1
+      el.style.visibility = fora ? 'hidden' : 'visible'
+      if (!fora) {
+        const x = ((ponto.x + 1) / 2) * size.width
+        const y = ((1 - ponto.y) / 2) * size.height
+        el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
+      }
+    }
+  })
+  return null
+}
 
 export interface Mapa3DProps {
   piso: Piso
@@ -23,6 +129,8 @@ export interface Mapa3DProps {
   /** Nomes das lojas ativas (GET /api/lojas). Com a lista, as que não estão nela aparecem como vagas. */
   nomes?: Record<string, string>
   onSelecionarLoja?: (mapaId: string) => void
+  /** Para os botões de aproximar, afastar e recentralizar. */
+  controle?: Ref<ControleDoMapa>
 }
 
 interface Bloco {
@@ -73,7 +181,10 @@ function Prisma({
   onPointerOver?: (e: ThreeEvent<PointerEvent>) => void
   onPointerOut?: (e: ThreeEvent<PointerEvent>) => void
 }) {
-  const geometria = useMemo(() => new THREE.ExtrudeGeometry(formas, { depth: altura, bevelEnabled: false }), [formas, altura])
+  const geometria = useMemo(
+    () => new THREE.ExtrudeGeometry(formas, { depth: altura, bevelEnabled: false }),
+    [formas, altura],
+  )
   useEffect(() => () => geometria.dispose(), [geometria])
   return (
     <mesh geometry={geometria} rotation-x={Math.PI / 2} position-y={base + altura} {...eventos}>
@@ -88,11 +199,20 @@ function Prisma({
  * (celular), a câmera recua mais, para nada ficar de fora pelos lados.
  */
 function enquadrar(caixa: Caixa, foco: { x: number; y: number }[], proporcao: number) {
-  const pontos = foco.length ? foco : [{ x: caixa.x, y: caixa.y }, { x: caixa.x + caixa.largura, y: caixa.y + caixa.altura }]
+  const pontos = foco.length
+    ? foco
+    : [
+        { x: caixa.x, y: caixa.y },
+        { x: caixa.x + caixa.largura, y: caixa.y + caixa.altura },
+      ]
   const xs = pontos.map((p) => p.x)
   const ys = pontos.map((p) => p.y)
   const centro = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }
-  const tamanho = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), Math.max(caixa.largura, caixa.altura) * 0.4)
+  const tamanho = Math.max(
+    Math.max(...xs) - Math.min(...xs),
+    Math.max(...ys) - Math.min(...ys),
+    Math.max(caixa.largura, caixa.altura) * 0.4,
+  )
   const distancia = (tamanho * 1.45) / Math.min(1, Math.max(0.45, proporcao))
   return {
     alvo: new THREE.Vector3(centro.x, 0, centro.y),
@@ -101,7 +221,7 @@ function enquadrar(caixa: Caixa, foco: { x: number; y: number }[], proporcao: nu
 }
 
 /** Leva câmera e controles até o enquadramento, com GSAP (ou direto, com movimento reduzido). */
-function Camera({ alvo, posicao }: { alvo: THREE.Vector3; posicao: THREE.Vector3 }) {
+function Camera({ alvo, posicao, vez }: { alvo: THREE.Vector3; posicao: THREE.Vector3; vez: number }) {
   const { camera, controls, invalidate } = useThree()
   useEffect(() => {
     const orbita = controls as unknown as { target: THREE.Vector3; update: () => void } | null
@@ -112,8 +232,13 @@ function Camera({ alvo, posicao }: { alvo: THREE.Vector3; posicao: THREE.Vector3
     const mm = comMovimento(
       () => {
         const tl = gsap.timeline({ onUpdate: atualizar })
-        tl.to(camera.position, { x: posicao.x, y: posicao.y, z: posicao.z, duration: DURACAO.lenta, ease: EASE.suave }, 0)
-        if (orbita) tl.to(orbita.target, { x: alvo.x, y: alvo.y, z: alvo.z, duration: DURACAO.lenta, ease: EASE.suave }, 0)
+        tl.to(
+          camera.position,
+          { x: posicao.x, y: posicao.y, z: posicao.z, duration: DURACAO.lenta, ease: EASE.suave },
+          0,
+        )
+        if (orbita)
+          tl.to(orbita.target, { x: alvo.x, y: alvo.y, z: alvo.z, duration: DURACAO.lenta, ease: EASE.suave }, 0)
       },
       () => {
         camera.position.copy(posicao)
@@ -123,7 +248,8 @@ function Camera({ alvo, posicao }: { alvo: THREE.Vector3; posicao: THREE.Vector3
     )
     // kill sem reverter: a câmera fica onde chegou.
     return () => mm.kill(false)
-  }, [alvo, posicao, camera, controls, invalidate])
+    // vez muda quando a pessoa pede para recentralizar.
+  }, [alvo, posicao, vez, camera, controls, invalidate])
   return null
 }
 
@@ -151,7 +277,9 @@ function LinhaDaRota({ rota, altura, cores }: { rota: Rota; altura: number; core
   const fim = rota.pontos.at(-1)!
   return (
     <group>
-      {trecho.length > 1 && <Line points={trecho.map((p) => [p.x, altura, p.y] as const)} color={cores.rota} lineWidth={5} />}
+      {trecho.length > 1 && (
+        <Line points={trecho.map((p) => [p.x, altura, p.y] as const)} color={cores.rota} lineWidth={5} />
+      )}
       {/* Onde a pessoa entra e onde ela chega. */}
       <mesh position={[inicio.x, altura, inicio.y]}>
         <cylinderGeometry args={[altura * 1.2, altura * 1.2, altura * 0.6, 24]} />
@@ -167,12 +295,71 @@ function LinhaDaRota({ rota, altura, cores }: { rota: Rota; altura: number; core
   )
 }
 
-function Cena({ piso, destino, nomes, onSelecionarLoja }: Mapa3DProps) {
+/** Aproximar, afastar e recentralizar, a pedido dos botões da tela. */
+function useControleDoMapa(controle: Ref<ControleDoMapa> | undefined, recentralizar: () => void) {
+  const { camera, controls, invalidate } = useThree()
+  const animacao = useRef<gsap.MatchMedia | null>(null)
+  useEffect(() => () => void animacao.current?.kill(false), [])
+  useImperativeHandle(controle, () => {
+    const zoom = (fator: number) => {
+      const orbita = controls as unknown as Orbita | null
+      if (!orbita) return
+      const direcao = camera.position.clone().sub(orbita.target)
+      const distancia = THREE.MathUtils.clamp(direcao.length() * fator, orbita.minDistance, orbita.maxDistance)
+      const destino = orbita.target.clone().add(direcao.setLength(distancia))
+      const atualizar = () => {
+        orbita.update()
+        invalidate()
+      }
+      animacao.current?.kill(false)
+      animacao.current = comMovimento(
+        () => {
+          gsap.to(camera.position, {
+            x: destino.x,
+            y: destino.y,
+            z: destino.z,
+            duration: DURACAO.rapida,
+            ease: EASE.saida,
+            onUpdate: atualizar,
+          })
+        },
+        () => {
+          camera.position.copy(destino)
+          atualizar()
+        },
+      )
+    }
+    return { aproximar: () => zoom(PASSO_DO_ZOOM), afastar: () => zoom(1 / PASSO_DO_ZOOM), recentralizar }
+  }, [camera, controls, invalidate, recentralizar])
+}
+
+function Cena({
+  piso,
+  destino,
+  nomes,
+  onSelecionarLoja,
+  controle,
+  sobre,
+  setSobre,
+  etiquetas,
+  elementos,
+}: Mapa3DProps & {
+  sobre: string | null
+  setSobre: (atualizar: (atual: string | null) => string | null) => void
+  etiquetas: Etiqueta[]
+  elementos: RefObject<Map<string, HTMLElement>>
+}) {
   const cores = useCoresDoMapa()
+  const [vez, setVez] = useState(0)
+  const recentralizar = useMemo(() => () => setVez((v) => v + 1), [])
+  useControleDoMapa(controle, recentralizar)
+  const entradas = useMemo(
+    () => [...GRAFO.pontos.values()].filter((p) => p.tipo === 'entrada' && p.piso === piso),
+    [piso],
+  )
   const caixa = CAIXAS[piso]
   const altura = alturaDoPiso(caixa)
   const planta = useMemo(() => lerPlanta(PLANTAS[piso]), [piso])
-  const [sobre, setSobre] = useState<string | null>(null)
 
   const achado = destino ? acharNaPlanta(destino) : undefined
   const destinoAqui = achado?.piso === piso ? destino : undefined
@@ -198,8 +385,14 @@ function Cena({ piso, destino, nomes, onSelecionarLoja }: Mapa3DProps) {
     <>
       <ambientLight intensity={1.7} />
       <directionalLight position={[caixa.x, Math.max(caixa.largura, caixa.altura), caixa.y]} intensity={1.6} />
-      <OrbitControls makeDefault enableDamping={false} maxPolarAngle={Math.PI * 0.42} minDistance={altura * 3} maxDistance={Math.max(caixa.largura, caixa.altura) * 2} />
-      <Camera alvo={alvo} posicao={posicao} />
+      <OrbitControls
+        makeDefault
+        enableDamping={false}
+        maxPolarAngle={Math.PI * 0.42}
+        minDistance={altura * 3}
+        maxDistance={Math.max(caixa.largura, caixa.altura) * 2}
+      />
+      <Camera alvo={alvo} posicao={posicao} vez={vez} />
 
       {planta.chao && <Prisma formas={planta.chao.formas} base={0} altura={ESPESSURA_DO_PISO} cor={cores.piso} />}
       {planta.blocos.map((bloco) => {
@@ -215,7 +408,7 @@ function Cena({ piso, destino, nomes, onSelecionarLoja }: Mapa3DProps) {
             realce={sobre === bloco.id ? cores.borda : undefined}
             onPointerOver={(e) => {
               e.stopPropagation()
-              setSobre(bloco.id)
+              setSobre(() => bloco.id)
             }}
             onPointerOut={() => setSobre((atual) => (atual === bloco.id ? null : atual))}
             onClick={(e) => {
@@ -237,22 +430,67 @@ function Cena({ piso, destino, nomes, onSelecionarLoja }: Mapa3DProps) {
       )}
 
       {rota && <LinhaDaRota rota={rota} altura={ESPESSURA_DO_PISO + altura * 0.25} cores={cores} />}
+
+      {/* Marco de cada entrada; a de onde sai a rota já tem o ponto do "Você está aqui". */}
+      {entradas.map(
+        (entrada) =>
+          rota?.pontos[0]?.id !== entrada.id && (
+            <mesh key={entrada.id} position={[entrada.x, ESPESSURA_DO_PISO + altura * 0.15, entrada.y]}>
+              <cylinderGeometry args={[altura * 0.9, altura * 0.9, altura * 0.3, 24]} />
+              <meshLambertMaterial color={cores.entrada} />
+            </mesh>
+          ),
+      )}
+
+      <Projetor etiquetas={etiquetas} elementos={elementos} />
     </>
   )
 }
 
 /** O mapa 3D de um piso. Ocupa o pai: dê a altura pelo contêiner. */
 export function Mapa3D(props: Mapa3DProps) {
-  const caixa = CAIXAS[props.piso]
+  const { piso, destino, nomes } = props
+  const caixa = CAIXAS[piso]
   const inicial = enquadrar(caixa, [], 1)
+  const [sobre, setSobre] = useState<string | null>(null)
+  const elementos = useRef(new Map<string, HTMLElement>())
+  const grandes = useMemo(() => lojasGrandes(LOJAS_DA_PLANTA[piso]), [piso])
+  const achado = destino ? acharNaPlanta(destino) : undefined
+  const destinoAqui = achado?.piso === piso ? destino : undefined
+  const saida = useMemo(() => (destinoAqui ? rotaAte(destinoAqui)?.pontos[0]?.id : undefined), [destinoAqui])
+  const etiquetas = useMemo(
+    () => etiquetasDoPiso(piso, { destinoAqui, saida, sobre, nomes, grandes }),
+    [piso, destinoAqui, saida, sobre, nomes, grandes],
+  )
   return (
-    <Canvas
-      frameloop="demand"
-      dpr={[1, 2]}
-      camera={{ fov: 40, near: 0.5, far: Math.max(caixa.largura, caixa.altura) * 10, position: inicial.posicao.toArray() }}
-      className="touch-none"
-    >
-      <Cena {...props} />
-    </Canvas>
+    <div className="relative size-full">
+      <Canvas
+        frameloop="demand"
+        dpr={[1, 2]}
+        camera={{
+          fov: 40,
+          near: 0.5,
+          far: Math.max(caixa.largura, caixa.altura) * 10,
+          position: inicial.posicao.toArray(),
+        }}
+        className="touch-none"
+      >
+        <Cena {...props} sobre={sobre} setSobre={setSobre} etiquetas={etiquetas} elementos={elementos} />
+      </Canvas>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        {etiquetas.map((etiqueta) => (
+          <span
+            key={etiqueta.id}
+            ref={(el) => {
+              if (el) elementos.current.set(etiqueta.id, el)
+              else elementos.current.delete(etiqueta.id)
+            }}
+            className={cx(ETIQUETA, ESTILO_DA_ETIQUETA[etiqueta.estilo])}
+          >
+            {etiqueta.texto}
+          </span>
+        ))}
+      </div>
+    </div>
   )
 }

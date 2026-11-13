@@ -24,13 +24,23 @@ export default function Inicio() {
       <div ref={topo} className="flex flex-col gap-5">
         <header data-anim className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-body-sm text-ink-muted">
-              {saudacao()}
-              {usuario && `, ${primeiroNome(usuario.nome)}`}
-            </p>
-            <h1 className="mt-0.5 text-title-lg">O que você procura hoje?</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-body-sm text-ink-muted">
+                {saudacao()}
+                {usuario && `, ${primeiroNome(usuario.nome)}`}
+              </p>
+              {carteira.tipo === 'ok' && <NivelBadge nivel={paraNivel(carteira.dados.nivel)} />}
+            </div>
+            <h1 className="mt-1 text-title-lg">O que você procura hoje?</h1>
           </div>
-          {carteira.tipo === 'ok' && <NivelBadge nivel={paraNivel(carteira.dados.nivel)} />}
+          {/* O avatar abre a Minha conta. A partir de 768 px, quem faz isso é a barra lateral. */}
+          <Link
+            to="/conta"
+            aria-label="Minha conta"
+            className="grid size-11 flex-none place-items-center rounded-full bg-terra text-title-sm text-on-terra md:hidden"
+          >
+            <span aria-hidden="true">{usuario ? primeiroNome(usuario.nome).charAt(0).toUpperCase() : '?'}</span>
+          </Link>
         </header>
 
         <Link
@@ -107,7 +117,7 @@ export default function Inicio() {
                 (favoritos.dados.itens.length === 0 ? (
                   <Vazio>Você ainda não salvou nenhum produto. Pergunte à Capi.</Vazio>
                 ) : (
-                  <ul className="flex flex-col gap-3">
+                  <ul className="flex flex-col gap-3 md:grid md:grid-cols-2 xl:grid-cols-3">
                     {favoritos.dados.itens.map((p) => (
                       <li key={p.id} data-anim>
                         <Link to={`/produto/${p.id}`} className="block rounded-md">
