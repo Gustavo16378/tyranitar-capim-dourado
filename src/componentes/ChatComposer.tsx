@@ -4,8 +4,12 @@ import { Icon } from './Icon'
 
 export interface ChatComposerProps {
   placeholder?: string
-  /** Texto inicial do campo. */
+  /** Texto inicial do campo. Para trocar o texto depois (uma sugestão tocada), mude a key. */
   valor?: string
+  /** O campo já abre com o foco e o cursor no fim do texto. */
+  focar?: boolean
+  /** Envia mesmo com o campo vazio (há uma foto anexada fora dele). */
+  permitirVazio?: boolean
   /** Recebe o texto digitado (sem espaços nas pontas, com as quebras de linha) e limpa o campo. */
   onEnviar?: (texto: string) => void
   onFoto?: () => void
@@ -18,8 +22,18 @@ const LINHAS_NO_MAXIMO = 5
 /** Tela de toque (celular): o teclado da tela não tem Shift, então Enter quebra a linha e quem envia é o botão. */
 const TOQUE = '(pointer: coarse)'
 
-export function ChatComposer({ placeholder = 'Pergunte à Capi', valor, onEnviar, onFoto, onLink }: ChatComposerProps) {
+export function ChatComposer({
+  placeholder = 'Pergunte à Capi',
+  valor,
+  focar,
+  permitirVazio,
+  onEnviar,
+  onFoto,
+  onLink,
+}: ChatComposerProps) {
   const campo = useRef<HTMLTextAreaElement>(null)
+  /** Só na montagem: o foco não volta para o campo a cada render. */
+  const focarAoAbrir = useRef(focar)
 
   /** Altura do texto, até LINHAS_NO_MAXIMO linhas. */
   function ajustarAltura() {
@@ -33,15 +47,22 @@ export function ChatComposer({ placeholder = 'Pergunte à Capi', valor, onEnviar
     el.style.overflowY = el.scrollHeight > maximo ? 'auto' : 'hidden'
   }
 
-  // Com um texto inicial, o campo já abre na altura dele.
-  useLayoutEffect(ajustarAltura, [])
+  // Com um texto inicial, o campo já abre na altura dele (e, se pedido, com o foco no fim).
+  useLayoutEffect(() => {
+    ajustarAltura()
+    const el = campo.current
+    if (focarAoAbrir.current && el) {
+      el.focus()
+      el.setSelectionRange(el.value.length, el.value.length)
+    }
+  }, [])
 
   function enviar(evento?: FormEvent) {
     evento?.preventDefault()
     const el = campo.current
     if (!el || !onEnviar) return
     const texto = el.value.trim()
-    if (!texto) return
+    if (!texto && !permitirVazio) return
     onEnviar(texto)
     el.value = ''
     ajustarAltura()
