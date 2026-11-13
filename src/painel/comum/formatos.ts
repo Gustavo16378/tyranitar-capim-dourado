@@ -48,6 +48,11 @@ export function formatarDataHora(iso: string) {
   return DATA_E_HORA.format(new Date(iso))
 }
 
+/** "2026-11-14T02:00:00Z" (um instante) → "13/11", o dia em Palmas. */
+export function formatarData(iso: string) {
+  return DATA_CURTA.format(new Date(iso))
+}
+
 /** "2026-12-31" (dia, sem hora) → "31/12". */
 export function formatarDia(dia: string) {
   return DATA_CURTA.format(new Date(`${dia}T12:00:00-03:00`))

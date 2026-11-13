@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatarData,
   formatarDataHora,
   formatarDia,
   lerValorEmCentavos,
@@ -40,6 +41,7 @@ describe('datas em Palmas (UTC-3)', () => {
     expect(formatarDataHora('2026-11-14T18:00:00Z')).toBe('14/11, 15:00')
     expect(formatarDataHora('2026-11-14T01:30:00Z')).toBe('13/11, 22:30')
     expect(formatarDia('2026-12-31')).toBe('31/12')
+    expect(formatarData('2026-11-14T02:00:00Z')).toBe('13/11')
   })
 
   it('diz quanto falta para o prazo', () => {

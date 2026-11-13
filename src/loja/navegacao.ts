@@ -4,6 +4,7 @@ import { lazy } from 'react'
 import type { TelaDoPainel } from '../painel/painel'
 import { TelaAtendimento } from './telas/atendimento/TelaAtendimento'
 import { TelaCupons } from './telas/cupons/TelaCupons'
+import { TelaExtrato } from './telas/extrato/TelaExtrato'
 import { TelaProdutos } from './telas/produtos/TelaProdutos'
 import { TelaReservas } from './telas/reservas/TelaReservas'
 
@@ -19,5 +20,6 @@ export const TELAS_DA_LOJA: readonly TelaDoPainel[] = [
   { caminho: 'produtos', rotulo: 'Produtos', Tela: TelaProdutos },
   { caminho: 'cupons', rotulo: 'Cupons', Tela: TelaCupons },
   { caminho: 'desempenho', rotulo: 'Desempenho', Tela: TelaDesempenho },
+  { caminho: 'extrato', rotulo: 'Extrato', Tela: TelaExtrato },
 ]
 

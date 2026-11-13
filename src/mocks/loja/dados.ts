@@ -239,7 +239,7 @@ function historicoDeCompras() {
       descontoLojaCentavos: descontoLoja,
       descontoShoppingCentavos: descontoShopping,
       pagoCentavos: bruto - descontoLoja - descontoShopping,
-      retirada: i % 6 === 0,
+      retirada: i % 7 === 3,
     })
     if (cupom) usos.push({ cupomId: cupom.cupomId, clienteId, compraId: id, centavos: cupom.centavos })
   }
