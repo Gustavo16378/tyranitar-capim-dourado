@@ -92,12 +92,14 @@ Outros comandos: `npm run build`, `npm run lint`, `npm run typecheck` e `npm tes
 
 ## Modo demonstração
 
-Para o pitch e para a banca testar sem cadastro. São três chaves, ligadas com `1`; nenhuma é segredo.
+Para o pitch e para a banca testar sem cadastro. **Produtos, preços e buscas fictícios, para demonstração:** as lojas são as do shopping, mas os produtos do `seed/produtos.csv`, os preços e as buscas da Demanda são inventados. Com o modo ligado, o app avisa isso em letra pequena no rodapé da tela de entrar e na tela de produto, e o painel do shopping marca Demanda e Lojas vagas com "Dados de demonstração".
+
+São três chaves, ligadas com `1`; nenhuma é segredo.
 
 | Chave | Quem lê | No hackathon | O que faz |
 | --- | --- | --- | --- |
-| `VITE_MODO_DEMO` | Front, no build | `1`, no `.env.local` | A Capi abre tocando o roteiro da demonstração (o print do tênis). Desligada, abre vazia. |
-| `DEMO` | Functions | `1`, no `[vars]` do `wrangler.toml` | Liga `POST /api/auth/demo`, o botão "Entrar com a conta de demonstração" (entra como a cliente Ana, sem senha). Desligada, a rota responde 404. |
+| `VITE_MODO_DEMO` | Front, no build | `1`, no `.env.local` | A Capi abre tocando o roteiro da demonstração (o print do tênis), e os avisos de dados fictícios aparecem. Desligada, a Capi abre vazia e os avisos somem. |
+| `DEMO` | Functions | `1`, no `[vars]` do `wrangler.toml` | Liga `/api/auth/demo` e os botões de conta de demonstração da tela de entrar, sem senha: Cliente (Ana), Lojista (a loja do roteiro) e Shopping (admin). Desligada, a rota responde 404 e os botões somem. |
 | `CAPI_MODO_DEMO` | Functions | `0`, no `[vars]` do `wrangler.toml` | Com `0`, a Capi é o Claude de verdade, também no roteiro, e as respostas salvas (`functions/_lib/capi/demonstracao.json`) só entram se ele falhar. Com `1`, o roteiro sai sempre das respostas salvas, sem chamar o Claude (para apresentar sem internet). |
 
 Na máquina:
@@ -152,7 +154,7 @@ Declaração do item 6.3 do edital.
 - **Para quê:** ideação, requisitos, protótipo, programação, testes, documentação e o desenho do mapa das lojas.
 - **Revisão:** a equipe revisou e testou tudo o que foi feito com IA.
 - **No produto:** a Capi, a assistente do app, usa a API do Claude. A chamada sai só do servidor, que entende a pergunta por texto, foto ou link e busca nos produtos das lojas do shopping.
-- **Dados:** os usuários e as buscas do seed são fictícios.
+- **Dados:** os usuários, os produtos, os preços e as buscas do seed são fictícios; as lojas são as do shopping.
 
 ## Licença
 
