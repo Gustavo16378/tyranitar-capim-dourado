@@ -1,7 +1,7 @@
-// Mock de POST /api/auth/login e POST /api/auth/demo. A conta é a da Ana, cliente de teste do
+// Mock de POST /api/auth/login e GET e POST /api/auth/demo. A conta é a da Ana, cliente de teste do
 // seed. O mock não guarda senha: aceita o e-mail da Ana com qualquer senha de 8 caracteres ou
 // mais (o mínimo do cadastro). A senha de verdade fica no .dev.vars de cada um.
-import type { RespostaLogin } from '../../tipos'
+import type { ContaDeDemonstracao, Perfil, RespostaLogin } from '../../tipos'
 import { falhar, responder } from './atraso'
 
 export const EMAIL_DEMO = 'ana.souza@demo.test'
@@ -19,7 +19,13 @@ export function entrar(email: string, senha: string): Promise<RespostaLogin> {
   return responder(SESSAO_DEMO)
 }
 
-export function entrarComDemo(): Promise<RespostaLogin> {
+/** Com mock só existe a conta da Ana: os painéis precisam da API (npm run dev:api). */
+export function contasDeDemonstracao(): Promise<ContaDeDemonstracao[]> {
+  return responder([{ perfil: 'CLIENTE', nome: SESSAO_DEMO.usuario.nome, loja: null }])
+}
+
+export function entrarComDemo(perfil: Perfil = 'CLIENTE'): Promise<RespostaLogin> {
+  if (perfil !== 'CLIENTE') return falhar(404, 'NAO_ENCONTRADO', 'Essa conta de demonstração não está no banco.')
   return responder(SESSAO_DEMO)
 }
 

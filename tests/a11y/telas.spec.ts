@@ -2,11 +2,16 @@
 // de impacto serious ou critical das regras WCAG 2.1 A e AA, nos temas claro e escuro.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { comSessaoDaAna, esperarRoteiroDaCapi } from '../e2e/apoio'
+import { comSessaoDaAna, entrarNoPainelDaLoja, esperarRoteiroDaCapi } from '../e2e/apoio'
 
 const GRAVES = new Set(['serious', 'critical'])
 
 async function semViolacoesGraves(page: Page) {
+  // Com movimento reduzido a entrada ainda é um fade curto (src/movimento): as cores só valem
+  // quando todo bloco com data-anim chegou à opacidade final.
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('[data-anim]')].every((el) => getComputedStyle(el).opacity === '1'),
+  )
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   const graves = violations
     .filter((v) => GRAVES.has(v.impact ?? ''))
@@ -76,8 +81,26 @@ for (const tema of ['light', 'dark'] as const) {
       await semViolacoesGraves(page)
     })
 
-    // TX06 e TX07 são telas do painel da loja, que ainda estão na branch fase-4.
-    test.fixme('TX06: atendimento do painel da loja, também só pelo teclado', async () => {})
-    test.fixme('TX07: relatórios do painel da loja', async () => {})
+    test('TX06: atendimento do painel da loja, também só pelo teclado', async ({ page }) => {
+      await entrarNoPainelDaLoja(page)
+      await expect(page.getByRole('heading', { name: 'Atendimento', level: 1 })).toBeVisible()
+      await semViolacoesGraves(page)
+
+      // Só com o teclado: Tab até "Simular leitura" e Enter; a ficha da Ana e o caixa aparecem.
+      const simular = page.getByRole('button', { name: 'Simular leitura' })
+      for (let i = 0; i < 40 && !(await simular.evaluate((el) => el === document.activeElement)); i++) {
+        await page.keyboard.press('Tab')
+      }
+      await expect(simular).toBeFocused()
+      await page.keyboard.press('Enter')
+      await expect(page.getByRole('button', { name: 'Registrar compra' })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
+
+    test('TX07: relatórios do painel da loja', async ({ page }) => {
+      await entrarNoPainelDaLoja(page, '/loja/desempenho')
+      await expect(page.getByRole('heading', { name: 'Mais vendidos' })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
   })
 }

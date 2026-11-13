@@ -48,3 +48,25 @@ export async function criarCliente(
     .bind(cliente.id, cliente.nome, cliente.email, cliente.senhaHash, cliente.qrToken, cliente.consentimentoFicha ? 1 : 0)
     .run()
 }
+
+/** Quem administra a loja no painel. */
+export async function lojistasDaLoja(db: D1Database, lojaId: string) {
+  const { results } = await db
+    .prepare("SELECT id, nome, email FROM usuario WHERE loja_id = ?1 AND perfil = 'LOJISTA' ORDER BY nome, email")
+    .bind(lojaId)
+    .all<{ id: string; nome: string; email: string }>()
+  return results
+}
+
+export async function criarLojista(
+  db: D1Database,
+  lojista: { id: string; nome: string; email: string; senhaHash: string; lojaId: string },
+) {
+  await db
+    .prepare(
+      `INSERT INTO usuario (id, nome, email, senha_hash, perfil, loja_id)
+       VALUES (?1, ?2, ?3, ?4, 'LOJISTA', ?5)`,
+    )
+    .bind(lojista.id, lojista.nome, lojista.email, lojista.senhaHash, lojista.lojaId)
+    .run()
+}

@@ -1,6 +1,7 @@
 import { Badge } from './Badge'
 import { cx } from './cx'
 import { Icon } from './Icon'
+import { MiniaturaProduto } from './MiniaturaProduto'
 
 export interface ReservaStatusProps {
   produto: string
@@ -9,6 +10,8 @@ export interface ReservaStatusProps {
   pago?: boolean
   /** Prazo correndo, como "Expira em 4 h". Quando existe, aparece no lugar do selo de pagamento. */
   prazo?: string
+  /** A foto do produto, ao lado do nome. undefined: sem miniatura; null: a espiral no lugar da foto. */
+  foto?: string | null
 }
 
 const PASSOS = [
@@ -24,7 +27,7 @@ const ESTILO = {
 } as const
 
 /** Ocupa a largura do pai (no design system, 340 px). */
-export function ReservaStatus({ produto, loja, status, pago, prazo }: ReservaStatusProps) {
+export function ReservaStatus({ produto, loja, status, pago, prazo, foto }: ReservaStatusProps) {
   const atual = status === 'CONFIRMADA' ? 0 : PASSOS.findIndex((p) => p.id === status)
   const retirada = status === 'RETIRADA'
   const tom = status === 'SEPARADA' || retirada ? 'cerrado' : 'ouro'
@@ -32,9 +35,12 @@ export function ReservaStatus({ produto, loja, status, pago, prazo }: ReservaSta
   return (
     <article className="w-full rounded-md border border-line bg-surface-raised px-5 py-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-label">{produto}</div>
-          <div className="text-body-sm text-ink-muted">{loja}</div>
+        <div className="flex min-w-0 items-center gap-3">
+          {foto !== undefined && <MiniaturaProduto foto={foto} className="size-11" />}
+          <div className="min-w-0">
+            <div className="text-label">{produto}</div>
+            <div className="text-body-sm text-ink-muted">{loja}</div>
+          </div>
         </div>
         {prazo ? (
           <Badge tone="aviso" icon="relogio">

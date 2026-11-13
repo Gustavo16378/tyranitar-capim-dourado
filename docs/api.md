@@ -22,8 +22,8 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | 401 | Sem token, token inválido ou vencido (`NAO_AUTENTICADO`) |
 | 403 | Perfil sem permissão ou recurso de outra loja (`SEM_PERMISSAO`) |
 | 404 | Recurso não existe (`NAO_ENCONTRADO`) |
-| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`) |
-| 422 | Regra de negócio violada: cupom inválido, combinação proibida, loja fora do shopping (`CUPOM_INVALIDO`, `CUPONS_INCOMPATIVEIS`, `LOJA_NAO_CADASTRADA`) |
+| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada, e-mail ou CNPJ já cadastrado (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`, `EMAIL_EM_USO`, `CNPJ_EM_USO`) |
+| 422 | Regra de negócio violada: cupom inválido, combinação proibida, loja fora do shopping, lojista numa unidade vaga (`CUPOM_INVALIDO`, `CUPONS_INCOMPATIVEIS`, `LOJA_NAO_CADASTRADA`, `LOJA_VAGA`) |
 | 503 | A IA não respondeu (`IA_INDISPONIVEL`); o app mostra a busca comum |
 
 **Paginação:** listas aceitam `?pagina=1&tamanho=20` e respondem `{ "itens": [...], "total": 42 }`.
@@ -34,7 +34,8 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | --- | --- | --- |
 | `POST /api/auth/cadastro` | Público | RF01 |
 | `POST /api/auth/login` | Público | RF01, RF17 |
-| `POST /api/auth/demo` | Público | RF01 |
+| `GET /api/auth/demo` | Público (só com `DEMO=1`) | RF01 |
+| `POST /api/auth/demo` | Público (só com `DEMO=1`) | RF01 |
 | `GET /api/lojas` | Público | RF07, RF10 |
 | `GET /api/produtos` | Público | RF05 |
 | `GET /api/produtos/{id}` | Público | RF07 |
@@ -53,6 +54,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `POST /api/avaliacoes` | CLIENTE | RF15 |
 | `GET /api/me/favoritos`, `PUT /api/me/favoritos/{produtoId}`, `DELETE ...` | CLIENTE | RF16 |
 | `GET /api/loja/atendimento/{qr}` | LOJISTA | RF18 |
+| `POST /api/loja/compras/previa` | LOJISTA | RF19 |
 | `POST /api/loja/compras` | LOJISTA | RF19 |
 | `GET /api/loja/reservas` | LOJISTA | RF20 |
 | `PATCH /api/loja/reservas/{id}` | LOJISTA | RF20 |
@@ -62,10 +64,12 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/loja/relatorios` | LOJISTA | RF24 |
 | `GET /api/loja/extrato` | LOJISTA | RF25 |
 | `GET /api/shopping/lojas`, `POST`, `PUT /{id}` | ADMIN_SHOPPING | RF27 |
+| `GET /api/shopping/lojas/{id}/lojistas` | ADMIN_SHOPPING | RF27 |
 | `POST /api/shopping/lojistas` | ADMIN_SHOPPING | RF27 |
 | `GET /api/shopping/configuracao`, `PUT` | ADMIN_SHOPPING | RF28 |
-| `POST /api/shopping/cupons` | ADMIN_SHOPPING | RF28 |
+| `GET /api/shopping/cupons`, `POST` | ADMIN_SHOPPING | RF28 |
 | `GET /api/shopping/demanda` | ADMIN_SHOPPING | RF29 |
+| `GET /api/shopping/vagas` | ADMIN_SHOPPING | RF29 |
 | `GET /api/shopping/jornada` | ADMIN_SHOPPING | RF30 |
 | `GET /api/shopping/reembolsos`, `PATCH /{id}` | ADMIN_SHOPPING | RF31 |
 
@@ -102,13 +106,39 @@ Resposta `200`:
 
 Erro `401` com a mesma mensagem para e-mail inexistente e senha errada, para não revelar quais e-mails existem.
 
-### `POST /api/auth/demo`
+### `GET /api/auth/demo` e `POST /api/auth/demo`
 
-Entra com a conta de demonstração, a cliente Ana do seed, sem senha. É o botão "Entrar com a conta de demonstração" da tela de login, para a banca testar o app sem cadastro. Não tem corpo.
+As contas de demonstração, para a banca testar o app e os dois painéis sem cadastro: são os botões da tela de login (`/entrar`). São três usuários fixos do seed, um por perfil, e nenhum outro entra por aqui:
 
-Só existe com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README). Sempre devolve um token de `CLIENTE`: não abre os painéis.
+| Perfil | Conta | Abre |
+| --- | --- | --- |
+| `CLIENTE` | `ana.souza@demo.test` (Ana) | o app |
+| `LOJISTA` | `lojista.loja-pc01a@demo.test` (Loja PC01A) | o painel da loja |
+| `ADMIN_SHOPPING` | `admin@demo.test` | o painel do shopping |
 
-Resposta `200`: o mesmo formato do login, com o token da Ana (perfil `CLIENTE`, vale 12 horas como qualquer outro). Erro `404` (`NAO_ENCONTRADO`) com `DEMO` desligado ou se a conta de demonstração não estiver no banco.
+As duas rotas só existem com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README); desligado, respondem `404` (`NAO_ENCONTRADO`) e a tela de login não mostra os botões.
+
+O `GET` diz quais contas estão no banco, para a tela mostrar um botão por conta (`loja` só no lojista, e o lojista só aparece se a loja dele estiver ativa):
+
+```json
+{
+  "contas": [
+    { "perfil": "CLIENTE", "nome": "Ana Souza", "loja": null },
+    { "perfil": "LOJISTA", "nome": "Equipe da Loja PC01A", "loja": "Loja PC01A" },
+    { "perfil": "ADMIN_SHOPPING", "nome": "Administração do shopping", "loja": null }
+  ]
+}
+```
+
+O `POST` entra com a conta do perfil pedido, sem senha:
+
+```json
+{ "perfil": "LOJISTA" }
+```
+
+Sem corpo, entra como a Ana (`CLIENTE`). Resposta `200`: o mesmo formato do login, com o token do perfil da conta (vale 12 horas como qualquer outro). Erros: `400` (`DADOS_INVALIDOS`, perfil que não é um dos três) e `404` (`DEMO` desligado, ou a conta não está no banco com esse perfil).
+
+**Login único.** O app e os painéis entram pela mesma tela, `/entrar`. Depois do login (com senha ou pelos botões), ela segue pelo perfil do token: `CLIENTE` para o Início (ou a tela que pediu o login), `LOJISTA` para `/loja` e `ADMIN_SHOPPING` para `/shopping`. Cada perfil guarda a sessão dele no navegador, então dá para ter o app numa aba e um painel em outra. `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela depois do login.
 
 ## Catálogo
 
@@ -316,12 +346,30 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 {
   "cliente": { "nome": "Ana", "nivel": "CAPIM" },
   "ficha": [ "Tênis de corrida, número 42, até R$ 400, prefere preto", "Camisetas dry-fit" ],
-  "reservas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "status": "SEPARADA", "pago": true } ],
+  "reservas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "foto": "/produtos/tenis-pulse.webp", "status": "SEPARADA", "pago": true } ],
   "cupons": [ { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" }, { "id": "cp2", "titulo": "R$ 20 do shopping", "origem": "SHOPPING" } ]
 }
 ```
 
-`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04).
+`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `foto` é a primeira foto do produto (a miniatura no balcão), ou `null` quando ele não tem. `cupons` traz os da loja primeiro e depois os vouchers do shopping; em cada grupo, os que dão desconto antes dos brindes (o caixa já marca o primeiro de cada grupo).
+
+### `POST /api/loja/compras/previa`
+
+O mesmo corpo de `POST /api/loja/compras`, mas não grava nada: calcula a compra para o caixa mostrar "Cliente paga" enquanto o vendedor marca os cupons, antes de registrar. Aplica as mesmas regras.
+
+Resposta `200`: a compra como ficaria, sem `id`.
+
+```json
+{
+  "valorBrutoCentavos": 45980,
+  "descontos": [ { "cupom": "cp1", "centavos": 4598 }, { "cupom": "cp2", "centavos": 2000 } ],
+  "valorPagoCentavos": 39382,
+  "pontosGerados": 393,
+  "reembolsoGerado": { "cupom": "cp2", "centavos": 2000 }
+}
+```
+
+Erros: os mesmos de `POST /api/loja/compras`.
 
 ### `POST /api/loja/compras`
 
@@ -329,7 +377,7 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 { "qrToken": "q-7f3a...", "valorCentavos": 45980, "cupons": ["cp1", "cp2"] }
 ```
 
-Para registrar a retirada de uma reserva, envie também `reservaId`. Se ela foi paga por Pix, a compra entra com o valor da reserva, o caixa não cobra de novo e os pontos são somados na retirada.
+Para registrar a retirada de uma reserva, envie também `reservaId`. Se ela foi paga por Pix, envie `valorCentavos: 0` e nenhum cupom: a compra entra com o valor da reserva, o caixa não cobra de novo e os pontos são somados na retirada.
 
 Resposta `201`:
 
@@ -346,13 +394,31 @@ Resposta `201`:
 
 Erros: `422` (`CUPOM_INVALIDO` por validade, limite ou nível; `CUPONS_INCOMPATIVEIS` para dois cupons da mesma loja), `409` (reserva já retirada).
 
-### `POST /api/loja/compras/previa`
-
-O mesmo corpo de `POST /api/loja/compras`, mas não grava nada: devolve `valorBrutoCentavos`, `descontos`, `valorPagoCentavos`, `pontosGerados` e `reembolsoGerado` (sem `id`), com os mesmos erros. Serve para o caixa mostrar "Cliente paga" enquanto o vendedor marca os cupons.
-
 ### `GET /api/loja/reservas`
 
-Parâmetros `status` (um ou mais, separados por vírgula; padrão: todos), `pagina` e `tamanho`. As que vencem primeiro vêm na frente. Cada item: `{ id, produto, cliente, quantidade, status, formaPagamento, pago, precoCentavos, expiraEm, criadoEm }`, com o cliente só pelo primeiro nome e `precoCentavos` pelo total da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido.
+Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,SEPARADA`; sem ele, todos), `pagina` e `tamanho` (até 100). Vem primeiro a que expira primeiro.
+
+```json
+{
+  "itens": [
+    {
+      "id": "r1",
+      "produto": "Tênis de corrida Pulse",
+      "cliente": "Ana",
+      "quantidade": 1,
+      "status": "SEPARADA",
+      "formaPagamento": "PIX",
+      "pago": true,
+      "precoCentavos": 39990,
+      "expiraEm": "2026-11-14T18:00:00Z",
+      "criadoEm": "2026-11-12T18:00:00Z"
+    }
+  ],
+  "total": 7
+}
+```
+
+`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o total da reserva, pelo preço do momento da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido (RN01, RN02, RN03).
 
 ### `PATCH /api/loja/reservas/{id}`
 
@@ -360,21 +426,326 @@ Parâmetros `status` (um ou mais, separados por vírgula; padrão: todos), `pagi
 { "status": "SEPARADA" }
 ```
 
-Segue as transições do diagrama de estados. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`). A loja pode pedir `CONFIRMADA`, `SEPARADA`, `RETIRADA` e `CANCELADA`; cancelar devolve o estoque e separar avisa o cliente. Reserva de outra loja: `403`. Resposta: a reserva no formato da lista.
+Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`; cancelar devolve o estoque e separar avisa o cliente. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`); reserva de outra loja, `403`. Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
+
+### `GET /api/loja/produtos`
+
+O catálogo da loja, ativos e inativos (os inativos não aparecem na busca nem para a Capi). Parâmetros: `q` (texto no nome, sem diferenciar acento), `pagina` e `tamanho`. Vêm os ativos primeiro, em ordem alfabética.
+
+```json
+{
+  "itens": [
+    {
+      "id": "p1",
+      "nome": "Tênis de corrida Pulse",
+      "descricao": "Leve e com amortecimento",
+      "categoria": "calcados",
+      "precoCentavos": 39990,
+      "estoque": 2,
+      "fotos": [ "https://.../pulse.webp" ],
+      "atributos": { "numeracao": [ 38, 39, 40, 41, 42, 43 ], "cor": "preto" },
+      "ativo": true
+    }
+  ],
+  "total": 9
+}
+```
+
+### `POST /api/loja/produtos` e `PUT /api/loja/produtos/{id}`
+
+O corpo é um item de `GET /api/loja/produtos` sem o `id`. `categoria` é uma das categorias do shopping (`calcados`, `roupas`, `acessorios`, `perfumaria`); uma categoria nova no catálogo passa a valer para o filtro da ficha (RN04). Os atributos mudam por categoria: `numeracao` (lista de números) e `cor` em calçados, `tamanhos` (lista) e `cor` em roupas, `cor` e `material` em acessórios, `ml` (número) e `familia` em perfumaria.
+
+Resposta: `201` (criar) ou `200` (editar) com o produto. Erros: `400` (`DADOS_INVALIDOS`: nome de 2 a 120 caracteres, preço maior que zero, estoque inteiro de zero ou mais, categoria conhecida), `404` (produto de outra loja ou inexistente).
 
 ### `POST /api/loja/produtos/importar`
 
-Recebe um CSV (`text/csv`) com as colunas `nome,descricao,categoria,preco,estoque,fotos,atributos`. O preço vai em reais com vírgula ou ponto; `atributos` em JSON. Resposta com `importados` e a lista de `erros` por linha, sem salvar as linhas com erro.
+Recebe um CSV (`text/csv`) com as colunas `nome,descricao,categoria,preco,estoque,fotos,atributos`. O preço vai em reais com vírgula ou ponto; `fotos` separadas por `|` (ou uma lista JSON); `atributos` em JSON. Uma linha com o nome de um produto que já está no catálogo atualiza esse produto, para dar para reimportar a planilha corrigida. As linhas com erro não são salvas; `linha` conta o cabeçalho como linha 1, como na planilha.
+
+```json
+{ "importados": 12, "erros": [ { "linha": 4, "mensagem": "O preço precisa estar em reais, como 399,90." } ] }
+```
+
+Erro `400` quando falta alguma das colunas.
+
+### `GET /api/loja/cupons`
+
+Os cupons da loja (não traz os vouchers do shopping), com quantas compras usaram cada um e o desconto que deram. Vêm primeiro os que valem hoje, os que vencem antes no topo.
+
+```json
+{
+  "itens": [
+    {
+      "id": "cp1",
+      "titulo": "10% em calçados",
+      "tipo": "PERCENTUAL",
+      "valor": 10,
+      "categoriaAlvo": "calcados",
+      "nivelMinimo": "SEMENTE",
+      "limitePorCliente": 1,
+      "validade": "2026-12-31",
+      "ativo": true,
+      "usos": 12,
+      "descontoCentavos": 62940
+    }
+  ],
+  "total": 4
+}
+```
+
+`valor` segue o `tipo`: de 1 a 100 em `PERCENTUAL`, centavos em `VALOR` e 0 em `BRINDE`. `validade` é o último dia de uso, em Palmas.
+
+### `POST /api/loja/cupons`
+
+```json
+{
+  "titulo": "R$ 30 em tênis",
+  "tipo": "VALOR",
+  "valor": 3000,
+  "categoriaAlvo": "calcados",
+  "nivelMinimo": "BROTO",
+  "limitePorCliente": 1,
+  "validade": "2026-12-13"
+}
+```
+
+Resposta `201` com o cupom, no formato de um item de `GET /api/loja/cupons`. Ele já aparece no atendimento dos clientes do nível. Erro `400` (`DADOS_INVALIDOS`: título de 3 a 60 caracteres, valor fora da regra do tipo, limite de 1 a 99, validade antes de hoje, categoria desconhecida).
 
 ### `GET /api/loja/relatorios`
 
-Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, `naoEncontrados`, `parados`, `picos` (por dia da semana e hora), `cupons` (usos e desconto), `ticketMedio` (com e sem ficha) e `comparativoCategoria` (só com 3 lojas ou mais na categoria, RN13).
+Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, `naoEncontrados`, `parados`, `picos` (por dia da semana e hora), `cupons` (usos e desconto), `ticketMedio` (com e sem ficha), `comparativoCategoria` (só com 3 lojas ou mais na categoria, RN13) e `reservas` (o que aconteceu com as reservas feitas no período).
+
+```json
+{
+  "periodo": "30d",
+  "maisVendidos": [ { "produtoId": "p3", "nome": "Camiseta dry-fit Trilha", "quantidade": 41, "valorCentavos": 368590 } ],
+  "maisBuscados": [ { "termo": "tênis de corrida", "buscas": 214 } ],
+  "naoEncontrados": [ { "termo": "tênis de trilha", "buscas": 120 } ],
+  "parados": [ { "produtoId": "p9", "nome": "Jaqueta corta-vento", "estoque": 3, "diasSemVenda": 54 } ],
+  "picos": [ { "diaDaSemana": 6, "hora": 17, "compras": 24 } ],
+  "cupons": [ { "cupomId": "cp1", "titulo": "10% em calçados", "usos": 12, "descontoCentavos": 62940 } ],
+  "ticketMedio": { "comFichaCentavos": 31240, "semFichaCentavos": 18990 },
+  "comparativoCategoria": [ { "categoria": "calcados", "ticketMedioLojaCentavos": 34990, "ticketMedioCategoriaCentavos": 29870 } ],
+  "reservas": { "feitas": 64, "retiradas": 41, "emAberto": 7, "canceladas": 9, "expiradas": 7 }
+}
+```
+
+`naoEncontrados` são buscas nas categorias da loja sem resultado em nenhuma loja do shopping (RN12). `diaDaSemana` vai de 0 (domingo) a 6 e `hora` está em Palmas. `ticketMedio` traz `null` no lado sem compras no período; `comparativoCategoria` vem `null` quando nenhuma categoria da loja tem 3 lojas ou mais (RN13). Em `reservas`, `feitas` é a soma das outras quatro.
+
+### `GET /api/loja/extrato`
+
+Parâmetros: `periodo` (`7d`, `30d`, `90d`), `pagina` e `tamanho`. As compras registradas no caixa pela plataforma no período (as que o cliente cadastra por nota fiscal ficam fora), os descontos de cada lado e os reembolsos dos vouchers do shopping (RN11).
+
+```json
+{
+  "periodo": "30d",
+  "resumo": {
+    "compras": 19,
+    "brutoCentavos": 530620,
+    "descontoLojaCentavos": 26938,
+    "descontoShoppingCentavos": 10000,
+    "pagoCentavos": 493682
+  },
+  "reembolsos": { "pendenteCentavos": 10000, "pagoNoPeriodoCentavos": 2000 },
+  "lancamentos": {
+    "itens": [
+      {
+        "id": "co101",
+        "criadoEm": "2026-11-13T06:01:00Z",
+        "cliente": "Ana",
+        "brutoCentavos": 45980,
+        "descontoLojaCentavos": 4598,
+        "descontoShoppingCentavos": 2000,
+        "pagoCentavos": 39382,
+        "retirada": false,
+        "reembolso": { "status": "PENDENTE", "pagoEm": null }
+      }
+    ],
+    "total": 19
+  }
+}
+```
+
+`descontoLojaCentavos` é o dos cupons da loja (a loja dá); `descontoShoppingCentavos`, o dos vouchers (o shopping devolve). `reembolsos.pendenteCentavos` é tudo o que falta receber, de qualquer data. `lancamentos` vem da compra mais nova para a mais antiga; `reembolso` é `null` na compra sem voucher. `cliente` é só o primeiro nome.
 
 ## Painel do shopping
 
+Todas as rotas exigem o perfil `ADMIN_SHOPPING`.
+
+### `GET /api/shopping/lojas`
+
+As unidades da planta e a loja de cada uma. Unidade vaga é uma loja com `ativa: false` (RF27, "Lojas vagas e demanda"). Parâmetros: `q` (nome ou número da unidade), `situacao` (`ATIVA` ou `VAGA`), `pagina` e `tamanho` (até 200). Ordem: térreo, depois 2º piso, pelo número da unidade.
+
+```json
+{
+  "itens": [
+    {
+      "id": "l19",
+      "nome": "Loja de esportes",
+      "unidade": "LOJA 19",
+      "piso": 1,
+      "areaM2": 102,
+      "tipo": "loja",
+      "categorias": ["calcados", "roupas", "acessorios"],
+      "mapaId": "loja-19",
+      "cnpj": "11222333000101",
+      "ativa": true,
+      "lojistas": 1
+    },
+    {
+      "id": "l47",
+      "nome": "Vaga",
+      "unidade": "LOJA 47",
+      "piso": 1,
+      "areaM2": 229.9,
+      "tipo": "loja",
+      "categorias": [],
+      "mapaId": "loja-47",
+      "cnpj": null,
+      "ativa": false,
+      "lojistas": 0
+    }
+  ],
+  "total": 148
+}
+```
+
+**De onde vêm `unidade` e `areaM2`:** das colunas `numero` e `area_m2` da tabela `loja` (migration `0003`), que o seed preenche a partir da planilha das lojas (`kit/seed/lojas.csv`). `unidade` é `LOJA ` mais o número; numa unidade gravada sem número, ele sai do `mapa_id` (`loja-47` é a `LOJA 47`). Sem área, a vaga fica fora do cruzamento com a demanda (`GET /api/shopping/vagas`).
+
+### `PUT /api/shopping/lojas/{id}` e `POST /api/shopping/lojas`
+
+O `PUT` ocupa uma vaga, edita a loja ou libera a unidade:
+
+```json
+{ "nome": "Eletrônicos do Cerrado", "cnpj": "12345678000190", "tipo": "loja", "categorias": ["eletronicos"], "ativa": true }
+```
+
+Com `ativa: true`, o nome (2 a 80 caracteres) e o CNPJ (14 dígitos, aceita pontuação) são obrigatórios, e as categorias filtram a ficha que o lojista vê (RN04). Com `ativa: false`, a unidade volta a ser vaga: nome `Vaga`, sem CNPJ nem categorias, e os lojistas da loja perdem o acesso (as contas deles são apagadas). Os produtos e cupons da loja ficam no banco, mas somem do app, que só mostra lojas ativas. Resposta `200` com a loja. Erros: `400`, `404`, `409` (`CNPJ_EM_USO`). O `POST` cria uma unidade nova e leva, além disso, `unidade` (`"LOJA 150"` ou só `"150"`), `piso`, `areaM2` e `mapaId` (o id do polígono na planta); `ativa: false` cria a unidade vaga. Resposta `201`; unidade ou `mapaId` que já está na planta dá `400`.
+
+### `GET /api/shopping/lojas/{id}/lojistas`
+
+Quem administra a loja: `[ { "id": "u1", "nome": "Equipe da Loja PC01A", "email": "lojista.loja-pc01a@demo.test" } ]`, em ordem de nome.
+
+### `POST /api/shopping/lojistas`
+
+```json
+{ "lojaId": "l47", "nome": "Equipe de eletrônicos", "email": "eletronicos@demo.test" }
+```
+
+Resposta `201` com o lojista e a `senhaProvisoria`, que só aparece nesta resposta: `{ "id": "u9", "nome": "...", "email": "...", "lojaId": "l47", "senhaProvisoria": "7ds3vrn4gt" }`. A senha tem 10 letras e números, sem os que se confundem; o lojista entra com ela no login único (`/entrar`). Erros: `400`, `404`, `409` (`EMAIL_EM_USO`, o e-mail já tem uma conta, de qualquer perfil), `422` (`LOJA_VAGA`: cadastre a loja na unidade antes do lojista).
+
+### `GET /api/shopping/configuracao` e `PUT`
+
+As regras da fidelidade (tabela `configuracao`):
+
+```json
+{
+  "niveis": { "SEMENTE": 0, "BROTO": 500, "CAPIM": 2000, "DOURADO": 5000 },
+  "pontosPorReal": 1,
+  "prazoReservaHoras": { "NA_LOJA": 4, "PIX": 48 }
+}
+```
+
+O `PUT` recebe o mesmo corpo. Regras: `SEMENTE` é 0 e cada nível precisa de mais pontos que o anterior (RN08); `pontosPorReal` de 1 a 10 (RN07); `NA_LOJA` de 1 a 24 horas e `PIX` de 1 a 168 (RN01, RN02). Valem a partir da próxima compra e da próxima reserva. Erro `400` com a regra que falhou.
+
+### `GET /api/shopping/cupons` e `POST`
+
+Os vouchers do shopping (cupons sem loja), no mesmo formato de `GET /api/loja/cupons`. Aqui `usos` conta as compras com o voucher e `descontoCentavos` é o que o shopping devolveu ou deve às lojas por eles (RN11; um brinde conta o uso com desconto zero). O `POST` recebe o mesmo corpo de `POST /api/loja/cupons`, com `categoriaAlvo` entre todas as categorias do shopping. O voucher criado já vale no atendimento das lojas e aparece na vitrine do app (`GET /api/ofertas`) para os clientes do nível.
+
 ### `GET /api/shopping/demanda`
 
-Parâmetro `periodo`. Traz os termos mais buscados e os buscados sem resultado em nenhuma loja, por categoria, sem identificar clientes (RN12).
+Parâmetro `periodo` (`7d`, `30d`, `90d`). Os termos mais buscados e os buscados sem resultado em nenhuma loja, por categoria, sem identificar clientes (RN12).
+
+```json
+{
+  "periodo": "30d",
+  "buscas": 6840,
+  "semResultado": 1412,
+  "maisBuscados": [ { "termo": "tênis de corrida", "buscas": 214 } ],
+  "semResultadoPorCategoria": [
+    { "categoria": "eletronicos", "buscas": 269, "termos": [ { "termo": "fone bluetooth", "buscas": 96 } ] }
+  ]
+}
+```
+
+`semResultadoPorCategoria` vem da categoria com mais buscas sem resultado para a com menos; `semResultado` é a soma delas. As categorias são as do shopping: `calcados`, `roupas`, `acessorios`, `perfumaria`, `eletronicos`, `infantil`, `alimentacao`, `pet`, `casa`, `otica`, `livraria`, `esportes` e `joias`.
+
+### `GET /api/shopping/vagas`
+
+O cruzamento das buscas sem resultado do período (a mesma base de `GET /api/shopping/demanda`) com as unidades vagas que têm área: que tipo de loja buscar para cada vaga. Parâmetro `periodo`.
+
+```json
+{
+  "periodo": "30d",
+  "resumo": { "vagas": 13, "areaTotalM2": 1117.22, "buscasSemResultado": 1412, "buscasComVaga": 1340 },
+  "vagas": [
+    {
+      "id": "l143",
+      "unidade": "LOJA 143",
+      "piso": 1,
+      "areaM2": 116.1,
+      "mapaId": "loja-143",
+      "sugestao": {
+        "categoria": "eletronicos",
+        "buscas": 269,
+        "termos": [ { "termo": "fone bluetooth", "buscas": 96 } ],
+        "encaixe": "IDEAL",
+        "motivo": "A unidade serve: 116,1 m² é o tamanho típico de Eletrônicos (60 a 250 m²).",
+        "repetida": false
+      },
+      "alternativas": [ { "categoria": "infantil", "buscas": 187, "encaixe": "IDEAL" } ]
+    }
+  ],
+  "demanda": [
+    {
+      "categoria": "livraria",
+      "buscas": 53,
+      "termos": [ { "termo": "livro infantil", "buscas": 28 } ],
+      "vagas": [],
+      "faixaM2": { "min": 80, "max": 350 },
+      "motivoSemVaga": "As vagas do tamanho certo ficaram com categorias mais procuradas."
+    }
+  ]
+}
+```
+
+**A regra** (`functions/_lib/regras/vagas.ts`, testada em `tests/unidade/regras/vagas.test.ts` com as 13 vagas da planta):
+
+1. Cada categoria tem uma faixa de área típica e um piso. Hoje: alimentação de 25 a 120 m², só no 2º piso (a praça de alimentação); eletrônicos de 60 a 250; artigos esportivos de 150 a 500; casa e decoração de 100 a 400; livraria de 80 a 350; bebê e brinquedos de 60 a 200; pet shop de 50 a 150; roupas de 40 a 300; calçados de 35 a 120; ótica de 25 a 60; perfumaria de 25 a 90; acessórios de 20 a 60; joias de 20 a 50 (todas no térreo).
+2. Encaixe `IDEAL`: a área está na faixa. `POSSIVEL`: até 20% menor que o mínimo ou 25% maior que o máximo.
+3. A nota de um par (vaga, categoria) é buscas sem resultado × 1 (ideal) ou 0,6 (possível), × 0,25 para cada vaga que a categoria já ganhou: uma segunda loja do mesmo tipo só entra quando a procura, dividida, ainda ganha das outras.
+4. Repete: o par de maior nota entre as vagas livres ganha, até não sobrar par que caiba. No empate, a vaga com a área mais perto do meio da faixa (média geométrica).
+
+`vagas` vem da sugestão mais forte para a mais fraca, com a segunda loja de uma categoria depois e as sem sugestão no fim. `alternativas` são até três outras categorias que cabem, da mais procurada. `buscasComVaga` soma as buscas das categorias que ganharam ao menos uma vaga. Uma unidade ocupada (`PUT` com `ativa: true`) sai do cruzamento na hora.
+
+### `GET /api/shopping/reembolsos`
+
+O que o shopping deve a cada loja pelos vouchers usados nela (RN11). Parâmetro `status` (`PENDENTE` ou `PAGO`; sem ele, todos). Agrupado por loja, a que mais tem a receber primeiro; os reembolsos de cada loja, do mais novo para o mais antigo.
+
+```json
+{
+  "totais": { "pendenteCentavos": 22500, "lojasComPendencia": 6, "pagoUltimos30DiasCentavos": 10000 },
+  "lojas": [
+    {
+      "loja": { "id": "l19", "nome": "Loja de esportes", "unidade": "LOJA 19" },
+      "pendenteCentavos": 8000,
+      "pagoCentavos": 8000,
+      "itens": [
+        {
+          "id": "re1",
+          "compraId": "co-v8",
+          "cupom": { "id": "cp2", "titulo": "R$ 20 do shopping" },
+          "centavos": 2000,
+          "status": "PENDENTE",
+          "criadoEm": "2026-11-09T18:28:00Z",
+          "pagoEm": null
+        }
+      ]
+    }
+  ]
+}
+```
+
+Os totais são de todos os reembolsos, qualquer que seja o filtro; `pendenteCentavos` e `pagoCentavos` de cada loja também.
 
 ### `PATCH /api/shopping/reembolsos/{id}`
 
@@ -382,4 +753,4 @@ Parâmetro `periodo`. Traz os termos mais buscados e os buscados sem resultado e
 { "status": "PAGO" }
 ```
 
-Preenche `pago_em`. Um reembolso pago não volta para pendente.
+Preenche `pago_em`. Um reembolso pago não volta para pendente: pedir `PAGO` de novo devolve `409` (`TRANSICAO_INVALIDA`), e qualquer outro status, `400`. Resposta `200` com o reembolso, no formato de um item da lista. O extrato da loja (`GET /api/loja/extrato`) passa a mostrar o reembolso como pago.

@@ -21,7 +21,7 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
     await expect(page.getByRole('heading', { name: 'Oi, eu sou a Capi.' })).toBeVisible()
     await page.getByRole('button', { name: 'Começar' }).click()
     await expect(page).toHaveURL(/\/entrar$/)
-    await page.getByRole('button', { name: 'Entrar com a conta de demonstração' }).click()
+    await page.getByRole('button', { name: 'Cliente (Ana)' }).click()
     await expect(page).toHaveURL(/\/inicio$/)
     await expect(page.getByText(/, Ana$/)).toBeVisible()
   })
@@ -122,7 +122,7 @@ test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => 
 test('TE07: sem sessão, ou com ela vencida, volta para o login e depois para a tela pedida', async ({ page }) => {
   await page.goto('/carteira')
   await expect(page).toHaveURL(/\/entrar$/)
-  await page.getByRole('button', { name: 'Entrar com a conta de demonstração' }).click()
+  await page.getByRole('button', { name: 'Cliente (Ana)' }).click()
   await expect(page).toHaveURL(/\/carteira$/)
   await expect(page.getByRole('heading', { name: 'Sua carteira' })).toBeVisible()
 
@@ -133,7 +133,7 @@ test('TE07: sem sessão, ou com ela vencida, volta para o login e depois para a 
   })
   await page.reload()
   await expect(page).toHaveURL(/\/entrar$/)
-  await page.getByRole('button', { name: 'Entrar com a conta de demonstração' }).click()
+  await page.getByRole('button', { name: 'Cliente (Ana)' }).click()
   await expect(page).toHaveURL(/\/carteira$/)
 })
 

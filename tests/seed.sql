@@ -1,10 +1,15 @@
 -- Dados dos testes de API e da Capi (docs/testes.md), separados dos dados da demo.
 -- Ids fixos para os testes e as respostas gravadas da Capi citarem. Um comando por bloco, terminando em ";".
 
-INSERT INTO loja (id, nome, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES
-  ('loja-a', 'Loja A', '11111111000191', 1, 'loja', '["calcados","roupas"]', 'mapa-loja-a', 1),
-  ('loja-b', 'Loja B', '22222222000191', 1, 'loja', '["perfumaria"]', 'mapa-loja-b', 1),
-  ('restaurante-c', 'Restaurante C', '33333333000191', 2, 'alimentacao', '["alimentacao"]', 'mapa-restaurante-c', 1);
+-- As vagas (ativa 0, sem CNPJ) são as do painel do shopping (tests/api/shopping.test.ts).
+INSERT INTO loja (id, nome, numero, area_m2, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES
+  ('loja-a', 'Loja A', '10', 102, '11111111000191', 1, 'loja', '["calcados","roupas"]', 'mapa-loja-a', 1),
+  ('loja-b', 'Loja B', '11', 48.5, '22222222000191', 1, 'loja', '["perfumaria"]', 'mapa-loja-b', 1),
+  ('restaurante-c', 'Restaurante C', '201', 40, '33333333000191', 2, 'alimentacao', '["alimentacao"]', 'mapa-restaurante-c', 1),
+  ('vaga-47', 'Vaga', '47', 229.9, NULL, 1, 'loja', '[]', 'mapa-vaga-47', 0),
+  ('vaga-143', 'Vaga', '143', 116.1, NULL, 1, 'loja', '[]', 'mapa-vaga-143', 0),
+  ('vaga-203', 'Vaga', '203', 58.81, NULL, 2, 'alimentacao', '[]', 'mapa-vaga-203', 0),
+  ('vaga-sem-area', 'Vaga', '99', NULL, NULL, 1, 'loja', '[]', 'mapa-vaga-99', 0);
 
 INSERT INTO produto (id, loja_id, nome, descricao, categoria, preco_centavos, estoque, atributos, ativo) VALUES
   ('p-pulse', 'loja-a', 'Tênis de corrida Pulse', 'Amortecimento para corrida de rua', 'calcados', 39990, 2, '{"numeracao":[40,41,42,43],"cor":"preto","marca":"Pulse"}', 1),

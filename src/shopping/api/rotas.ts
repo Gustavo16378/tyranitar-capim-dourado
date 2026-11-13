@@ -1,0 +1,87 @@
+// Uma função por rota da API que o painel do shopping usa, com os tipos de src/tipos/shopping.ts.
+// As telas chamam estas funções, nunca fetch direto. Rota nova: escreva a função aqui e,
+// enquanto a API não existir, um mock (veja docs/como-fazer-uma-tela.md).
+import type {
+  ConfiguracaoDoShopping,
+  Demanda,
+  FiltroLojas,
+  LojaDoShopping,
+  LojistaCriado,
+  LojistaDaLoja,
+  Lista,
+  PedidoCupom,
+  PedidoLoja,
+  PedidoLojista,
+  Periodo,
+  ReembolsoDoShopping,
+  Reembolsos,
+  StatusReembolso,
+  VagasEDemanda,
+  VoucherDoShopping,
+} from '../../tipos/shopping'
+import { requisitar } from './cliente'
+
+/** GET /api/shopping/lojas: as unidades da planta, com a loja de cada uma ou vaga (RF27). */
+export function listarLojas(filtro: FiltroLojas = {}, sinal?: AbortSignal) {
+  return requisitar<Lista<LojaDoShopping>>('GET', '/api/shopping/lojas', {
+    busca: { q: filtro.q, situacao: filtro.situacao, pagina: filtro.pagina, tamanho: filtro.tamanho },
+    sinal,
+  })
+}
+
+/** PUT /api/shopping/lojas/{id}: ocupar uma vaga, editar a loja ou liberar a unidade. */
+export function editarLoja(id: string, loja: PedidoLoja) {
+  return requisitar<LojaDoShopping>('PUT', `/api/shopping/lojas/${encodeURIComponent(id)}`, { corpo: loja })
+}
+
+/** GET /api/shopping/lojas/{id}/lojistas: quem administra a loja. */
+export function listarLojistas(lojaId: string, sinal?: AbortSignal) {
+  return requisitar<LojistaDaLoja[]>('GET', `/api/shopping/lojas/${encodeURIComponent(lojaId)}/lojistas`, { sinal })
+}
+
+/** POST /api/shopping/lojistas: cria o acesso de um lojista, com senha provisória (RF27). */
+export function criarLojista(pedido: PedidoLojista) {
+  return requisitar<LojistaCriado>('POST', '/api/shopping/lojistas', { corpo: pedido })
+}
+
+/** GET /api/shopping/configuracao: níveis, pontos por real e prazos das reservas (RF28). */
+export function buscarConfiguracao(sinal?: AbortSignal) {
+  return requisitar<ConfiguracaoDoShopping>('GET', '/api/shopping/configuracao', { sinal })
+}
+
+/** PUT /api/shopping/configuracao */
+export function salvarConfiguracao(configuracao: ConfiguracaoDoShopping) {
+  return requisitar<ConfiguracaoDoShopping>('PUT', '/api/shopping/configuracao', { corpo: configuracao })
+}
+
+/** GET /api/shopping/cupons: os vouchers do shopping, com uso e o que foi devolvido às lojas (RF28). */
+export function listarVouchers(sinal?: AbortSignal) {
+  return requisitar<Lista<VoucherDoShopping>>('GET', '/api/shopping/cupons', { busca: { tamanho: 100 }, sinal })
+}
+
+/** POST /api/shopping/cupons: um voucher que vale em qualquer loja e aparece na vitrine do app. */
+export function criarVoucher(voucher: PedidoCupom) {
+  return requisitar<VoucherDoShopping>('POST', '/api/shopping/cupons', { corpo: voucher })
+}
+
+/** GET /api/shopping/demanda: o que os clientes buscam e não acham em nenhuma loja (RF29). */
+export function buscarDemanda(periodo: Periodo, sinal?: AbortSignal) {
+  return requisitar<Demanda>('GET', '/api/shopping/demanda', { busca: { periodo }, sinal })
+}
+
+/** GET /api/shopping/vagas: as lojas vagas cruzadas com a demanda, com a sugestão para cada vaga. */
+export function buscarVagas(periodo: Periodo, sinal?: AbortSignal) {
+  return requisitar<VagasEDemanda>('GET', '/api/shopping/vagas', { busca: { periodo }, sinal })
+}
+
+/** GET /api/shopping/reembolsos: o que o shopping deve a cada loja pelos vouchers (RF31, RN11). */
+export function listarReembolsos(status: StatusReembolso | undefined, sinal?: AbortSignal) {
+  return requisitar<Reembolsos>('GET', '/api/shopping/reembolsos', { busca: { status }, sinal })
+}
+
+/** PATCH /api/shopping/reembolsos/{id}: marca como pago. Um reembolso pago não volta para pendente. */
+export function pagarReembolso(id: string) {
+  return requisitar<ReembolsoDoShopping>('PATCH', `/api/shopping/reembolsos/${encodeURIComponent(id)}`, {
+    corpo: { status: 'PAGO' },
+  })
+}

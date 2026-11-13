@@ -3,7 +3,7 @@ import { env } from 'cloudflare:test'
 import { describe, expect, it } from 'vitest'
 import { lerToken } from '../../functions/_lib/auth/jwt'
 import { onRequestPost as cadastro } from '../../functions/api/auth/cadastro'
-import { onRequestPost as demo } from '../../functions/api/auth/demo'
+import { onRequestGet as contas, onRequestPost as demo } from '../../functions/api/auth/demo'
 import { onRequestGet as carteira } from '../../functions/api/me/carteira'
 import { onRequestGet as favoritos } from '../../functions/api/me/favoritos/index'
 import { onRequestGet as lerReserva } from '../../functions/api/reservas/[id]/index'
@@ -17,18 +17,59 @@ const HORA = 60 * 60 * 1000
 const novaReserva = (corpo: Record<string, unknown>, usuario = ANA) =>
   chamar(reservar, { metodo: 'POST', url: '/api/reservas', corpo, usuario })
 
-describe('POST /api/auth/demo', () => {
-  it('desligada (sem DEMO=1) responde 404', async () => {
-    const r = await chamar(demo, { metodo: 'POST', url: '/api/auth/demo' })
-    expect(r.status).toBe(404)
+describe('contas de demonstração: GET e POST /api/auth/demo', () => {
+  const DEMO = { DEMO: '1' }
+  const entrarComo = (corpo?: unknown) => chamar(demo, { metodo: 'POST', url: '/api/auth/demo', corpo, ambiente: DEMO })
+
+  /** As três contas do seed (scripts/gerar-seed.mjs), nos usuários de tests/seed.sql. */
+  async function contasDoSeed() {
+    await env.DB.batch([
+      env.DB.prepare("UPDATE usuario SET email = 'ana.souza@demo.test' WHERE id = 'c-ana'"),
+      env.DB.prepare("UPDATE usuario SET email = 'lojista.loja-pc01a@demo.test' WHERE id = 'l-a'"),
+      env.DB.prepare("UPDATE usuario SET email = 'admin@demo.test' WHERE id = 'admin'"),
+    ])
+  }
+
+  it('desligadas (sem DEMO=1) respondem 404', async () => {
+    await contasDoSeed()
+    expect((await chamar(demo, { metodo: 'POST', url: '/api/auth/demo', corpo: { perfil: 'CLIENTE' } })).status).toBe(404)
+    expect((await chamar(contas, { url: '/api/auth/demo' })).status).toBe(404)
   })
 
-  it('com DEMO=1, entra como a Ana, sempre com perfil de cliente', async () => {
-    await env.DB.prepare("UPDATE usuario SET email = 'ana.souza@demo.test' WHERE id = 'c-ana'").run()
-    const r = await chamar(demo, { metodo: 'POST', url: '/api/auth/demo', ambiente: { DEMO: '1' } })
-    expect(r.status).toBe(200)
-    expect(r.corpo.usuario).toEqual({ id: 'c-ana', nome: 'Ana Souza', perfil: 'CLIENTE', lojaId: null })
-    expect((await lerToken(r.corpo.token, env.JWT_SECRET)).perfil).toBe('CLIENTE')
+  it('com DEMO=1, lista as três contas, uma por perfil', async () => {
+    await contasDoSeed()
+    const r = await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })
+    expect(r.corpo).toEqual({
+      contas: [
+        { perfil: 'CLIENTE', nome: 'Ana Souza', loja: null },
+        { perfil: 'LOJISTA', nome: 'Equipe da Loja A', loja: 'Loja A' },
+        { perfil: 'ADMIN_SHOPPING', nome: 'Administração', loja: null },
+      ],
+    })
+  })
+
+  it('entra com o perfil pedido; sem corpo, como a Ana', async () => {
+    await contasDoSeed()
+    const ana = await chamar(demo, { metodo: 'POST', url: '/api/auth/demo', ambiente: DEMO })
+    expect(ana.corpo.usuario).toEqual({ id: 'c-ana', nome: 'Ana Souza', perfil: 'CLIENTE', lojaId: null })
+    expect((await lerToken(ana.corpo.token, env.JWT_SECRET)).perfil).toBe('CLIENTE')
+
+    const lojista = await entrarComo({ perfil: 'LOJISTA' })
+    expect(lojista.corpo.usuario).toEqual({ id: 'l-a', nome: 'Equipe da Loja A', perfil: 'LOJISTA', lojaId: 'loja-a' })
+    expect(await lerToken(lojista.corpo.token, env.JWT_SECRET)).toMatchObject({ perfil: 'LOJISTA', lojaId: 'loja-a' })
+
+    const admin = await entrarComo({ perfil: 'ADMIN_SHOPPING' })
+    expect((await lerToken(admin.corpo.token, env.JWT_SECRET)).perfil).toBe('ADMIN_SHOPPING')
+  })
+
+  it('só aceita os três perfis e só os usuários do seed, cada um com o perfil dele', async () => {
+    expect((await entrarComo({ perfil: 'ROOT' })).status).toBe(400)
+    // Sem as contas do seed no banco (os e-mails de tests/seed.sql são outros), nada entra.
+    expect((await entrarComo({ perfil: 'LOJISTA' })).status).toBe(404)
+    // O e-mail da conta de lojista com perfil de cliente não vira lojista.
+    await env.DB.prepare("UPDATE usuario SET email = 'lojista.loja-pc01a@demo.test' WHERE id = 'c-bruno'").run()
+    expect((await entrarComo({ perfil: 'LOJISTA' })).status).toBe(404)
+    expect((await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })).corpo).toEqual({ contas: [] })
   })
 })
 
