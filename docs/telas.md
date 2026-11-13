@@ -70,7 +70,7 @@ Toda tela prevê quatro estados, todos com os componentes do design system:
 
 ## Prévia
 
-Telas do app do cliente no protótipo:
+Telas reais do app do cliente, num Chrome emulando celular (390 × 844), com os dados do seed e a Capi de verdade respondendo ao roteiro da demonstração:
 
 ![Abertura](img/tela-abertura.png)
 ![Início](img/tela-inicio.png)
@@ -80,8 +80,9 @@ Telas do app do cliente no protótipo:
 ![Reserva confirmada](img/tela-reserva.png)
 ![Mapa](img/tela-mapa.png)
 ![Carteira](img/tela-carteira.png)
+![Carteira, minhas reservas](img/tela-carteira-reservas.png)
 
-Atendimento no painel da loja:
+Atendimento no painel da loja, depois de ler o QR da Ana (painel da branch fase-4, com os dados de exemplo dela):
 
 ![Painel da loja, atendimento](img/painel-atendimento.png)
 
