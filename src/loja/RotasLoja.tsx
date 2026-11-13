@@ -3,7 +3,8 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { ExigirLojista } from './layout/ExigirLojista'
 import { LayoutLoja } from './layout/LayoutLoja'
-import { TELAS_DA_LOJA, URL_INICIAL } from './navegacao'
+import { URL_INICIAL } from './enderecos'
+import { TELAS_DA_LOJA } from './navegacao'
 import { TelaEntrar } from './telas/entrar/TelaEntrar'
 
 export default function RotasLoja() {

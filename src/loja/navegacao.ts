@@ -7,8 +7,6 @@ import { TelaDesempenho } from './telas/desempenho/TelaDesempenho'
 import { TelaProdutos } from './telas/produtos/TelaProdutos'
 import { TelaReservas } from './telas/reservas/TelaReservas'
 
-export const BASE_DA_LOJA = '/loja'
-
 export interface TelaDaLoja {
   /** Pedaço da URL depois de /loja/. */
   caminho: string
@@ -25,10 +23,3 @@ export const TELAS_DA_LOJA: readonly TelaDaLoja[] = [
   { caminho: 'desempenho', rotulo: 'Desempenho', Tela: TelaDesempenho },
 ]
 
-/** URL completa de uma tela: urlDaTela('reservas') → '/loja/reservas'. */
-export function urlDaTela(caminho: string) {
-  return `${BASE_DA_LOJA}/${caminho}`
-}
-
-export const URL_INICIAL = urlDaTela(TELAS_DA_LOJA[0].caminho)
-export const URL_DE_ENTRAR = `${BASE_DA_LOJA}/entrar`

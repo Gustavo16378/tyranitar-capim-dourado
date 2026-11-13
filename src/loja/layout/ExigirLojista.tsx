@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import { useSessao } from '../api'
-import { URL_DE_ENTRAR } from '../navegacao'
+import { URL_DE_ENTRAR } from '../enderecos'
 
 /** Sem sessão de lojista, vai para o login e volta para a mesma tela depois de entrar. */
 export function ExigirLojista({ children }: { children: ReactNode }) {

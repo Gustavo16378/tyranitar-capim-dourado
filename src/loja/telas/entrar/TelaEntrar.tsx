@@ -6,7 +6,7 @@ import { useEntrada } from '../../../movimento'
 import { entrar, ErroApi, gravarSessao, MOCKS_LIGADOS, useAcao, useSessao } from '../../api'
 import { Campo } from '../../comum/Campo'
 import { Erro } from '../../comum/Estados'
-import { URL_INICIAL } from '../../navegacao'
+import { URL_INICIAL } from '../../enderecos'
 
 const SO_LOJISTA = new ErroApi({
   status: 403,

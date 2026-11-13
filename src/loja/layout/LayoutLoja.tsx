@@ -2,7 +2,8 @@ import { NavLink, Outlet } from 'react-router'
 import { Badge } from '../../componentes'
 import { cx } from '../../componentes/cx'
 import { apagarSessao, MOCKS_LIGADOS, useSessao } from '../api'
-import { TELAS_DA_LOJA, urlDaTela } from '../navegacao'
+import { urlDaTela } from '../enderecos'
+import { TELAS_DA_LOJA } from '../navegacao'
 
 // Itens da barra lateral, sobre terra. A aba ativa ganha fundo claro translúcido e negrito;
 // o foco usa on-terra, porque o focus-ring some sobre o terra.
