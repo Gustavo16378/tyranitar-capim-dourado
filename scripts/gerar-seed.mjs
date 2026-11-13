@@ -213,9 +213,9 @@ const usuarios = [
 ]
 for (const u of usuarios) u.senhaHash = await hashSenha(senhas[u.perfil])
 
-/** QR do cliente: estável pelo e-mail. O da Ana (q-9aa3272102ed0fa6e570fe54) é o do botão
- *  "Simular leitura" do painel da loja: não mude a regra sem mudar lá. */
-const qrDoCliente = (email) => `q-${sha256(`qr:${email.split('@')[0]}`).toString('hex').slice(0, 24)}`
+/** QR do cliente: estável pelo e-mail inteiro. O da Ana (q-e08f6d74302d293349fda714) é o do botão
+ *  "Simular leitura" do painel da loja (QR_DA_ANA, branch fase-4): não mude a regra sem mudar lá. */
+const qrDoCliente = (email) => `q-${sha256(`qr:${email}`).toString('hex').slice(0, 24)}`
 
 // ---------- cupons ----------
 
@@ -280,7 +280,8 @@ SELECT ${lista([u.id, u.nome, u.email, u.senhaHash, u.perfil])}, ${u.mapaId ? 'l
     }, ${u.email === ANA ? pontosDaAna : 0}, ${u.email === ANA ? 1 : 0}
 FROM ${u.mapaId ? `loja l WHERE l.mapa_id = ${v(u.mapaId)}` : '(SELECT 1) WHERE true'}
 ON CONFLICT (email) DO UPDATE SET
-  nome = excluded.nome, senha_hash = excluded.senha_hash, perfil = excluded.perfil, loja_id = excluded.loja_id;`,
+  nome = excluded.nome, senha_hash = excluded.senha_hash, perfil = excluded.perfil, loja_id = excluded.loja_id,
+  qr_token = excluded.qr_token;`,
   ),
 
   // Ficha da Ana (só se o consentimento dela continuar dado).
