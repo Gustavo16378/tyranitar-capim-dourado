@@ -82,7 +82,8 @@ export default function Inicio() {
                     className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-3 pt-2.5 [scrollbar-width:none]"
                   >
                     {ofertas.dados.itens.map((cupom) => (
-                      <div key={cupom.id} className="w-[300px] flex-none">
+                      // flex: o cupom estica até a altura do mais alto, sem buraco embaixo dos baixos.
+                      <div key={cupom.id} className="flex w-[300px] flex-none">
                         <CupomTicket
                           origem={cupom.origem === 'SHOPPING' ? 'shopping' : 'loja'}
                           titulo={cupom.titulo}
