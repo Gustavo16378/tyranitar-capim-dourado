@@ -70,7 +70,13 @@ export default function LayoutApp() {
     <div className="flex h-dvh bg-surface">
       <BarraLateral ativo={aba} naConta={pathname.startsWith('/conta')} />
       <div className="mx-auto flex min-w-0 max-w-md flex-1 flex-col md:max-w-none">
-        <main ref={palco} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Focável: a área rola, e uma tela sem botão nem link (a Carteira sem reservas) também
+            precisa rolar pelo teclado (WCAG 2.1.1). O anel fica por dentro, para não ser cortado. */}
+        <main
+          ref={palco}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden focus-visible:-outline-offset-2"
+        >
           <div className={cx('mx-auto w-full', larguraDaTela(pathname))}>
             <Outlet />
           </div>
