@@ -17,7 +17,7 @@ O app ainda não tem nome definitivo: o nome vem da constante `APP_NOME`, em `sr
 
 ## Stack
 
-React 18, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 (SQLite) no back, no mesmo deploy. A Capi usa a API do Claude, chamada só pelo servidor.
+React 19, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 (SQLite) no back, no mesmo deploy. A Capi usa a API do Claude, chamada só pelo servidor.
 
 ## Como rodar
 
@@ -37,6 +37,26 @@ Com os dois rodando, o front do `npm run dev` chama a API pelo proxy de `/api`. 
 O seed não é migration: as migrations só criam o esquema. `npm run seed:local` e `npm run seed:remoto` podem rodar quantas vezes for preciso (atualizam em vez de duplicar), então quando os CSVs das lojas e dos produtos mudarem basta rodar de novo.
 
 Outros comandos: `npm run build`, `npm run lint` e `npm test`.
+
+## Modo demonstração
+
+Para o pitch e para a banca testar sem cadastro. São três chaves, ligadas com `1`; nenhuma é segredo.
+
+| Chave | Quem lê | Onde fica | O que faz |
+| --- | --- | --- | --- |
+| `VITE_MODO_DEMO` | Front | `.env.local` (lido no build) | A Capi abre tocando o roteiro da demonstração (o print do tênis). Desligada, abre vazia. |
+| `DEMO` | Functions | `.dev.vars` e `[vars]` do `wrangler.toml` | Liga `POST /api/auth/demo`, o botão "Entrar com a conta de demonstração" (entra como a cliente Ana, sem senha). Desligada, a rota responde 404. |
+| `CAPI_MODO_DEMO` | Functions | `.dev.vars` e `[vars]` do `wrangler.toml` | A Capi responde as mensagens do roteiro com as respostas salvas (`functions/_lib/capi/demonstracao.json`), sem chamar o Claude. As outras mensagens vão para o Claude. |
+
+Na máquina:
+
+```bash
+echo VITE_MODO_DEMO=1 > .env.local   # o Vite não lê o .dev.vars; o .env.local fica fora do Git
+# DEMO=1 e CAPI_MODO_DEMO=1 já vêm no .dev.vars.exemplo
+npm run dev:api                      # http://localhost:8788
+```
+
+Em produção, `DEMO` e `CAPI_MODO_DEMO` vão no deploy pelo `[vars]` do `wrangler.toml`. O `VITE_MODO_DEMO` entra no build: o deploy sobe o `dist/` pronto, então o `npm run build` precisa rodar com o `.env.local` acima. Para desligar depois do hackathon, troque as duas do `wrangler.toml` para `"0"` e apague o `.env.local`.
 
 ## Documentação
 
