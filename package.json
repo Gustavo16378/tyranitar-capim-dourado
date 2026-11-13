@@ -16,6 +16,7 @@
     "test:unidade": "vitest run tests/unidade"
   },
   "dependencies": {
+    "qrcode.react": "^4.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^7.18.5"
