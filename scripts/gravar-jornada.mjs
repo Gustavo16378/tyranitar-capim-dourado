@@ -130,9 +130,11 @@ await tocar(pagina.getByRole('button', { name: 'Já paguei' }))
 await pagina.getByRole('heading', { name: 'Separado para você' }).waitFor()
 await pausa(2000)
 
-// A rota até a loja no mapa 3D.
+// A rota até a loja no mapa 3D: o mapa pergunta por qual entrada a Ana chegou.
 await tocar(pagina.getByRole('button', { name: 'Como chegar' }))
 await pagina.getByRole('img', { name: /rota/ }).waitFor()
+await pausa(1800)
+await tocar(pagina.getByRole('button', { name: 'Entrada A' }))
 await pausa(3500)
 
 // A carteira: o QR do balcão, os pontos e o nível.
