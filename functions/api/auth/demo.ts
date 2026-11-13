@@ -1,7 +1,9 @@
 // GET e POST /api/auth/demo (públicos): as contas de demonstração, para a banca testar o app e
 // os dois painéis sem cadastro. Só funcionam com DEMO=1 (wrangler.toml); desligadas, 404.
-// São três usuários fixos do seed, um por perfil: a cliente Ana, o lojista da Loja PC01A e a
+// São três usuários do seed, um por perfil: a cliente Ana, o lojista da loja da demonstração e a
 // administração do shopping. Nenhum outro usuário entra por aqui, e cada um só com o perfil dele.
+// O lojista é o da loja do primeiro produto do produtos.csv (a do roteiro): o seed grava o e-mail
+// dele em configuracao (chave conta_demo_lojista); sem essa linha, vale o e-mail padrão abaixo.
 //
 //   GET  → { contas: [{ perfil, nome, loja }] }: as que estão no banco (a tela mostra um botão por conta)
 //   POST { perfil } → o mesmo formato do login. Sem corpo, entra como a Ana (CLIENTE).
@@ -10,10 +12,11 @@ import { abrirSessao } from '../../_lib/auth/sessao'
 import type { Rota } from '../../_lib/contexto'
 import { ErroApi } from '../../_lib/erros'
 import { json } from '../../_lib/http'
+import { lerConfiguracao } from '../../_lib/repo/configuracao'
 import { buscarLojaAtiva } from '../../_lib/repo/lojas'
 import { buscarUsuarioPorEmail } from '../../_lib/repo/usuarios'
 
-/** O e-mail da conta de demonstração de cada perfil (scripts/gerar-seed.mjs). */
+/** O e-mail padrão da conta de demonstração de cada perfil (scripts/gerar-seed.mjs). */
 const CONTAS: Record<Perfil, string> = {
   CLIENTE: 'ana.souza@demo.test',
   LOJISTA: 'lojista.loja-pc01a@demo.test',
@@ -25,9 +28,18 @@ function exigirDemo(env: Env) {
   if (env.DEMO !== '1') throw new ErroApi('NAO_ENCONTRADO', 'As contas de demonstração estão desligadas.')
 }
 
+/** O e-mail da conta do perfil: o do lojista pode vir do seed (configuracao). */
+async function emailDaConta(db: D1Database, perfil: Perfil) {
+  if (perfil === 'LOJISTA') {
+    const doSeed = await lerConfiguracao(db, 'conta_demo_lojista')
+    if (typeof doSeed === 'string' && doSeed) return doSeed
+  }
+  return CONTAS[perfil]
+}
+
 /** O usuário da conta do perfil, se ele estiver no banco com esse perfil. */
 async function contaDe(db: D1Database, perfil: Perfil) {
-  const usuario = await buscarUsuarioPorEmail(db, CONTAS[perfil])
+  const usuario = await buscarUsuarioPorEmail(db, await emailDaConta(db, perfil))
   return usuario?.perfil === perfil ? usuario : null
 }
 

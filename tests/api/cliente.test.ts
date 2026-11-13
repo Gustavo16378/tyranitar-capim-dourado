@@ -62,6 +62,23 @@ describe('contas de demonstração: GET e POST /api/auth/demo', () => {
     expect((await lerToken(admin.corpo.token, env.JWT_SECRET)).perfil).toBe('ADMIN_SHOPPING')
   })
 
+  it('o lojista da demonstração é o que o seed gravou em configuracao, se houver', async () => {
+    await contasDoSeed()
+    await env.DB.prepare("UPDATE usuario SET email = 'lojista.loja-x@demo.test' WHERE id = 'l-b'").run()
+    await env.DB.prepare(
+      "INSERT INTO configuracao (chave, valor) VALUES ('conta_demo_lojista', '\"lojista.loja-x@demo.test\"')",
+    ).run()
+    try {
+      const r = await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })
+      expect(r.corpo.contas[1]).toEqual({ perfil: 'LOJISTA', nome: 'Equipe da Loja B', loja: 'Loja B' })
+      const lojista = await entrarComo({ perfil: 'LOJISTA' })
+      expect(lojista.corpo.usuario).toMatchObject({ id: 'l-b', perfil: 'LOJISTA', lojaId: 'loja-b' })
+    } finally {
+      // A configuração não é apagada entre os testes (tests/workers/preparar-banco.ts).
+      await env.DB.prepare("DELETE FROM configuracao WHERE chave = 'conta_demo_lojista'").run()
+    }
+  })
+
   it('só aceita os três perfis e só os usuários do seed, cada um com o perfil dele', async () => {
     expect((await entrarComo({ perfil: 'ROOT' })).status).toBe(400)
     // Sem as contas do seed no banco (os e-mails de tests/seed.sql são outros), nada entra.

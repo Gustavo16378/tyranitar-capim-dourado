@@ -12,7 +12,7 @@ npm run dev:api                           # o app e a API juntos, em http://loca
 npm run dev                               # o front com recarga, em http://localhost:5173 (o /api vai para o 8788)
 ```
 
-O login é um só, em `/entrar`, para o app e os dois painéis: depois de entrar, cada perfil vai para o seu lugar (cliente para o Início, lojista para `/loja`, administração para `/shopping`). `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela. Com o modo demonstração ligado (`DEMO=1`, já no `wrangler.toml`), a tela mostra um botão por conta de teste: **Cliente (Ana)**, **Lojista** (a loja da unidade PC01A) e **Shopping (admin)**. Cada perfil guarda a sessão dele, então dá para ter o app numa aba e os painéis em outras. No Atendimento, **Simular leitura** abre a carteira da Ana.
+O login é um só, em `/entrar`, para o app e os dois painéis: depois de entrar, cada perfil vai para o seu lugar (cliente para o Início, lojista para `/loja`, administração para `/shopping`). `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela. Com o modo demonstração ligado (`DEMO=1`, já no `wrangler.toml`), a tela mostra um botão por conta de teste: **Cliente (Ana)**, **Lojista** (a loja do primeiro produto do seed, hoje a Centauro) e **Shopping (admin)**. Cada perfil guarda a sessão dele, então dá para ter o app numa aba e os painéis em outras. No Atendimento, **Simular leitura** abre a carteira da Ana.
 
 Todas as telas dos dois painéis respondem pela API real (`functions/`). No modo demonstração, Demanda e Lojas vagas mostram o aviso **Dados de demonstração** ao lado do título, porque as buscas que elas contam vêm do seed.
 

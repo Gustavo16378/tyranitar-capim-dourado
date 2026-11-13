@@ -109,15 +109,15 @@ Erro `401` com a mesma mensagem para e-mail inexistente e senha errada, para nã
 
 ### `GET /api/auth/demo` e `POST /api/auth/demo`
 
-As contas de demonstração, para a banca testar o app e os dois painéis sem cadastro: são os botões da tela de login (`/entrar`). São três usuários fixos do seed, um por perfil, e nenhum outro entra por aqui:
+As contas de demonstração, para a banca testar o app e os dois painéis sem cadastro: são os botões da tela de login (`/entrar`). São três usuários do seed, um por perfil, e nenhum outro entra por aqui:
 
 | Perfil | Conta | Abre |
 | --- | --- | --- |
 | `CLIENTE` | `ana.souza@demo.test` (Ana) | o app |
-| `LOJISTA` | `lojista.loja-pc01a@demo.test` (Loja PC01A) | o painel da loja |
+| `LOJISTA` | o lojista da loja do primeiro produto do `produtos.csv` (hoje `lojista.loja-ancora-05@demo.test`, a Centauro) | o painel da loja |
 | `ADMIN_SHOPPING` | `admin@demo.test` | o painel do shopping |
 
-As duas rotas só existem com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README); desligado, respondem `404` (`NAO_ENCONTRADO`) e a tela de login não mostra os botões.
+O seed grava o e-mail do lojista em `configuracao` (chave `conta_demo_lojista`), para a conta seguir a loja do roteiro; sem essa linha, vale `lojista.loja-pc01a@demo.test`. As duas rotas só existem com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README); desligado, respondem `404` (`NAO_ENCONTRADO`) e a tela de login não mostra os botões.
 
 O `GET` diz quais contas estão no banco, para a tela mostrar um botão por conta (`loja` só no lojista, e o lojista só aparece se a loja dele estiver ativa):
 
@@ -125,7 +125,7 @@ O `GET` diz quais contas estão no banco, para a tela mostrar um botão por cont
 {
   "contas": [
     { "perfil": "CLIENTE", "nome": "Ana Souza", "loja": null },
-    { "perfil": "LOJISTA", "nome": "Equipe da Loja PC01A", "loja": "Loja PC01A" },
+    { "perfil": "LOJISTA", "nome": "Equipe da Centauro", "loja": "Centauro" },
     { "perfil": "ADMIN_SHOPPING", "nome": "Administração do shopping", "loja": null }
   ]
 }

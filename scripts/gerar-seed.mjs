@@ -249,7 +249,12 @@ const qrDoCliente = (email) => `q-${sha256(`qr:${email}`).toString('hex').slice(
 
 // ---------- cupons ----------
 
-const lojaCalcados = lojasComProduto.find((l) => l.categorias.includes('calcados')) ?? lojasComProduto[0]
+// A loja da demonstração é a do primeiro produto do produtos.csv (o tênis do roteiro): o lojista
+// dela é a conta de demonstração do painel (functions/api/auth/demo.ts lê de configuracao).
+const lojaDaDemo = lojas.find((l) => l.mapaId === produtos[0]?.mapaId)
+// Os cupons da loja vão para a loja do primeiro calçado, para valerem no roteiro.
+const primeiroCalcado = produtos.find((p) => p.categoria === 'calcados')
+const lojaCalcados = lojas.find((l) => l.mapaId === primeiroCalcado?.mapaId) ?? lojasComProduto[0]
 const cupons = [
   lojaCalcados && { id: uuid('cupom:10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
   // Segundo cupom da mesma loja: não combina com o de 10% na mesma compra (RN05).
@@ -340,6 +345,12 @@ WHERE id IN (SELECT value FROM json_each(COALESCE((SELECT valor FROM configuraca
   AND id NOT IN (SELECT value FROM json_each(${v(JSON.stringify(produtos.map((p) => p.id)))}));`,
   `INSERT INTO configuracao (chave, valor) VALUES ('seed_produtos', ${v(JSON.stringify(produtos.map((p) => p.id)))})
 ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor;`,
+  ...(lojaDaDemo
+    ? [
+        `INSERT INTO configuracao (chave, valor) VALUES ('conta_demo_lojista', ${v(JSON.stringify(`lojista.${lojaDaDemo.mapaId}@demo.test`))})
+ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor;`,
+      ]
+    : []),
 
   ...usuarios.map(
     (u) => `INSERT INTO usuario (id, nome, email, senha_hash, perfil, loja_id, qr_token, pontos, consentimento_ficha)
