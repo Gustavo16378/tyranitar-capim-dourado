@@ -1,25 +1,10 @@
-import { useId, useState, type ComponentProps, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router'
 import { comoErroApi, entrar, entrarComDemo, useSessao, type ErroApi } from '../api'
 import { Button, CapiMark, Icon } from '../componentes'
 import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
-
-function Campo({ rotulo, ...props }: { rotulo: string } & ComponentProps<'input'>) {
-  const id = useId()
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-label">
-        {rotulo}
-      </label>
-      <input
-        id={id}
-        {...props}
-        className="h-11 rounded-sm border border-line-strong bg-surface-raised px-3 text-body text-ink placeholder:text-ink-muted"
-      />
-    </div>
-  )
-}
+import { Campo } from './Campo'
 
 /** Para onde voltar depois de entrar: a tela que pediu o login, ou o Início. */
 function destinoDe(estado: unknown) {
