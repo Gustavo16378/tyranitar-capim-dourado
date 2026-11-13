@@ -141,7 +141,7 @@ Cupons ativos e válidos das lojas e do shopping. Com token de cliente, já vem 
 
 ### `POST /api/chat`
 
-Envia uma mensagem. Os campos `imagem` e `link` são opcionais e excludentes.
+Envia uma mensagem. `texto` (até 1.000 caracteres) é obrigatório quando não há foto nem link. `imagem` e `link` são opcionais e excludentes.
 
 ```json
 {
@@ -150,33 +150,30 @@ Envia uma mensagem. Os campos `imagem` e `link` são opcionais e excludentes.
 }
 ```
 
+- `imagem`: JPEG, PNG, WebP ou GIF, até 4 MB (o app reduz antes de enviar). `base64` aceita também a data URL do navegador (`data:image/jpeg;base64,...`).
+- `link`: endereço http ou https de um produto de outra loja. O servidor abre a página (até 5 s) e lê título, imagem e preço pelo Open Graph ou pelo JSON-LD.
+
 Resposta `200`:
 
 ```json
 {
-  "resposta": "Achei dois parecidos aqui no térreo. O Pulse preto está R$ 399,90 e tem o seu número.",
+  "resposta": "Achei dois parecidos aqui no térreo, na Loja de esportes. Quer que eu separe um para você?",
   "produtos": [
-    {
-      "id": "p1",
-      "nome": "Tênis de corrida Pulse",
-      "categoria": "calcados",
-      "precoCentavos": 39990,
-      "estoque": 2,
-      "foto": null,
-      "loja": { "id": "l1", "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" }
-    }
+    { "id": "p1", "nome": "Tênis de corrida Pulse", "categoria": "calcados", "precoCentavos": 39990, "estoque": 2, "foto": null,
+      "loja": { "id": "l1", "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" } }
   ],
-  "acoes": [ { "tipo": "RESERVAR", "produtoId": "p1" }, { "tipo": "ROTA", "mapaId": "loja-esportes", "piso": 1 } ]
+  "acoes": [ { "tipo": "RESERVAR", "produtoId": "p1" }, { "tipo": "ROTA", "lojaId": "l1", "mapaId": "loja-esportes", "piso": 1 } ]
 }
 ```
 
-Os `produtos` vêm no mesmo formato da busca (`GET /api/produtos`), com o estoque e o piso da loja, para o app mostrar o mesmo card da vitrine. `resposta` pode ter mais de um parágrafo, separados por uma linha em branco; o app mostra cada um num balão.
+- `produtos`: no máximo 3 cartões, no mesmo formato da busca, e só produtos que vieram das ferramentas da Capi (RN14).
+- `acoes`: `RESERVAR` (o primeiro cartão com estoque, para o botão de reservar), `ROTA` (quando a Capi mostrou o caminho; o app desenha no mapa) e `RESERVA_CRIADA` (`{ "tipo": "RESERVA_CRIADA", "reserva": { "id", "produtoId", "lojaId", "quantidade", "precoCentavos", "status", "formaPagamento", "pago", "expiraEm" } }`, quando o cliente confirmou na conversa e a Capi reservou; com `PIX`, o app abre o pagamento).
 
-Limites: imagem de até 4 MB (o app reduz antes de enviar), texto de até 1.000 caracteres. Erro `503` (`IA_INDISPONIVEL`) quando o Claude falha ou demora mais de 15 s.
+Erros: `400` (`DADOS_INVALIDOS`: mensagem vazia, texto longo, foto acima de 4 MB ou fora dos formatos, foto e link juntos, link que não é http/https) e `503` (`IA_INDISPONIVEL`, quando o Claude falha ou passa de 15 s; o app usa a busca comum). Com `CAPI_MODO_DEMO=1`, ou quando o Claude falha, mensagens do roteiro da demonstração recebem uma resposta salva, com produtos buscados no banco.
 
 ### `GET /api/chat`
 
-As últimas 50 mensagens do cliente, para reabrir a conversa.
+As últimas 50 mensagens do cliente, para reabrir a conversa: `{ "itens": [ { "id", "papel": "CLIENTE" | "CAPI", "conteudo", "criadoEm" } ], "total" }`, da mais antiga para a mais nova. Fotos não são guardadas: a mensagem aparece como `[foto]`.
 
 ## Reservas
 
