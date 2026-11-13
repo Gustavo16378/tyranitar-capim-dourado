@@ -80,4 +80,5 @@ Fica em [`docs/`](docs/):
 - [API](docs/api.md)
 - [UML](docs/uml.md)
 - [Plano de testes](docs/testes.md)
+- [Créditos das imagens](docs/creditos.md)
 - [Primeira entrega](docs/primeira-entrega.md)
