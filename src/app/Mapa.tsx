@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { useSearchParams } from 'react-router'
-import { listarLojas, useDados } from '../api'
+import { Link, useLocation, useSearchParams } from 'react-router'
+import { listarLojas, useDados, useSessao } from '../api'
 import { Badge, Button, Icon, type IconName } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
@@ -131,6 +131,9 @@ function MapaAte({
   const daLoja = nome ?? 'a loja'
   const naTela = Boolean(rota && achado?.piso === piso)
   const perguntar = naTela && escolhas[piso] === undefined
+  // O mapa abre sem login (o QR da entrada); quem não entrou vê o convite para entrar e volta aqui.
+  const visitante = useSessao()?.usuario.perfil !== 'CLIENTE'
+  const { pathname, search } = useLocation()
 
   // Setas do teclado trocam de piso, como numa lista de abas.
   function aoTeclar(evento: KeyboardEvent) {
@@ -227,6 +230,16 @@ function MapaAte({
           <Button size="sm" variant="ghost" onClick={() => escolher(undefined)}>
             Trocar a entrada
           </Button>
+        )}
+        {visitante && (
+          <Link
+            to="/entrar"
+            state={{ de: pathname + search }}
+            className="inline-flex min-h-11 items-center gap-2 rounded-pill border border-line-strong px-4 text-label text-marrom-ink"
+          >
+            <Icon name="seta" className="size-4" />
+            Entrar para reservar e falar com a Capi
+          </Link>
         )}
       </div>
     </div>

@@ -10,6 +10,12 @@ import { BarraLateral } from './BarraLateral'
 /** As abas do app do cliente, na ordem da barra (a busca fica com a Capi). */
 const ABAS: AbaId[] = ['inicio', 'capi', 'mapa', 'carteira']
 
+/**
+ * Telas abertas a qualquer visitante, sem login: o mapa (o QR de cada entrada abre
+ * /mapa?origem=...). Reservar, a Capi e a carteira continuam pedindo login.
+ */
+const TELAS_PUBLICAS = ['/mapa']
+
 /** A aba marcada é a primeira parte do caminho. Produto, Reserva e Conta não são abas: nenhuma fica marcada. */
 function abaDaRota(caminho: string): AbaId {
   const primeiro = caminho.split('/')[1]
@@ -33,7 +39,8 @@ function larguraDaTela(caminho: string) {
  * Casca do app do cliente. No celular: uma coluna, a tela rolando no meio e a BottomNav fixa
  * embaixo. A partir de 768 px: a barra lateral no lugar da BottomNav e a tela na largura dela.
  * A cada troca de tela, ela entra deslizando 16 px. Sem sessão de cliente, manda para o login e
- * volta para a mesma tela depois.
+ * volta para a mesma tela depois; só o mapa abre sem login, numa casca sem a navegação (as outras
+ * abas pedem login).
  */
 export default function LayoutApp() {
   const { pathname, search } = useLocation()
@@ -62,7 +69,20 @@ export default function LayoutApp() {
   )
 
   if (sessao?.usuario.perfil !== 'CLIENTE') {
-    return <Navigate to="/entrar" replace state={{ de: pathname + search }} />
+    if (!TELAS_PUBLICAS.includes(pathname)) return <Navigate to="/entrar" replace state={{ de: pathname + search }} />
+    return (
+      <div className="flex h-dvh flex-col bg-surface">
+        <main
+          ref={palco}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden focus-visible:-outline-offset-2"
+        >
+          <div className={cx('mx-auto w-full md:max-w-none', larguraDaTela(pathname))}>
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    )
   }
 
   const aba = abaDaRota(pathname)

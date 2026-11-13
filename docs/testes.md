@@ -207,6 +207,7 @@ Com o Claude simulado:
 | TE24 | Webcam no computador | RF03 | "Tirar foto" abre a webcam numa folha; "Capturar" anexa a foto, que vai com o texto quando a pessoa toca em enviar |
 | TE25 | Computador sem câmera | RF03 | A folha mostra só "Escolher da galeria", com um aviso |
 | TE26 | Permissão da câmera negada | RF03 | A folha volta só com a galeria, com um aviso, e a foto escolhida fica anexada |
+| TE27 | QR da entrada lido sem sessão | RF10 | O mapa abre sem login já na entrada certa (também com a loja no link); reservar, a Capi e a carteira continuam pedindo login; o convite para entrar volta ao mesmo mapa |
 
 ### Acessibilidade (TX)
 
