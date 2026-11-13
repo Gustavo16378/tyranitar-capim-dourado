@@ -508,7 +508,7 @@ Os cupons da loja (não traz os vouchers do shopping), com quantas compras usara
 }
 ```
 
-Resposta `201` com o cupom, no formato de um item de `GET /api/loja/cupons`. Ele já aparece no atendimento dos clientes do nível. Erro `400` (`DADOS_INVALIDOS`: título de 3 a 60 caracteres, valor fora da regra do tipo, limite de 1 a 99, validade antes de hoje, categoria desconhecida).
+Resposta `201` com o cupom, no formato de um item de `GET /api/loja/cupons`. Ele já aparece no atendimento dos clientes do nível. `categoriaAlvo` é uma das categorias do shopping, ou `null` para qualquer uma. Erro `400` (`DADOS_INVALIDOS`: título de 3 a 60 caracteres, valor fora da regra do tipo, limite de 1 a 99, validade antes de hoje, categoria desconhecida).
 
 ### `GET /api/loja/relatorios`
 
@@ -529,7 +529,7 @@ Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, 
 }
 ```
 
-`naoEncontrados` são buscas nas categorias da loja sem resultado em nenhuma loja do shopping (RN12). `diaDaSemana` vai de 0 (domingo) a 6 e `hora` está em Palmas. `ticketMedio` traz `null` no lado sem compras no período; `comparativoCategoria` vem `null` quando nenhuma categoria da loja tem 3 lojas ou mais (RN13). Em `reservas`, `feitas` é a soma das outras quatro.
+Tudo sai do banco, no período. A compra não guarda os itens: `maisVendidos` conta as retiradas de reserva (a compra ligada a uma reserva diz o produto e a quantidade), e `parados` são os produtos ativos com estoque que não tiveram retirada no período, os parados há mais tempo primeiro (desde a última retirada ou, sem nenhuma, desde o cadastro). `maisVendidos`, `maisBuscados`, `naoEncontrados` e `parados` trazem até 5 linhas. `maisBuscados` são as buscas nas categorias da loja, com ou sem resultado; `naoEncontrados` são buscas nas categorias da loja sem resultado em nenhuma loja do shopping (RN12). `picos` só traz os horários com compra. O ticket médio conta as compras com valor pago maior que zero. `diaDaSemana` vai de 0 (domingo) a 6 e `hora` está em Palmas. `ticketMedio` traz `null` no lado sem compras no período; `comparativoCategoria` vem `null` quando nenhuma categoria da loja tem 3 lojas ativas ou mais (RN13), ou quando não há compras para comparar. O ticket da loja é o mesmo em todas as categorias dela, porque a compra não guarda a categoria. Em `reservas`, `feitas` é a soma das outras quatro.
 
 ### `GET /api/loja/extrato`
 
