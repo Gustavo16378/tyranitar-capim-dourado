@@ -203,6 +203,10 @@ Com o Claude simulado:
 | TE20 | Mapa até uma loja | RF10 | Pergunta por qual entrada o cliente chegou (sem "Você está aqui" inventado), lembra a escolha, aceita `?origem=` do QR da entrada e escreve o nome da loja de destino uma vez só |
 | TE21 | Foto da câmera na Capi | RF03 | A foto escolhida fica anexada no campo, com prévia e um X para tirar; nada vai antes de tocar em enviar, e o texto escrito vai junto |
 | TE22 | QR das entradas no painel do shopping | RF10 | Um cartão por entrada (letra, piso e o QR com o link `/mapa?origem=`); na impressão, sem a barra lateral e um por página; o link abre o mapa na entrada |
+| TE23 | Folha da câmera no celular | RF03 | "Tirar foto" abre o seletor com `capture="environment"` (a câmera traseira) e "Escolher da galeria" o mesmo sem capture; a foto fica anexada e nada vai antes do enviar |
+| TE24 | Webcam no computador | RF03 | "Tirar foto" abre a webcam numa folha; "Capturar" anexa a foto, que vai com o texto quando a pessoa toca em enviar |
+| TE25 | Computador sem câmera | RF03 | A folha mostra só "Escolher da galeria", com um aviso |
+| TE26 | Permissão da câmera negada | RF03 | A folha volta só com a galeria, com um aviso, e a foto escolhida fica anexada |
 
 ### Acessibilidade (TX)
 

@@ -43,7 +43,9 @@ export function Folha({ aberta, onFechar, titulo, children }: FolhaProps) {
     <dialog
       ref={dialogo}
       aria-labelledby={idTitulo}
-      onClose={onFechar}
+      // O evento close chega depois, numa tarefa à parte: se a folha já foi aberta de novo (a da foto
+      // volta quando a câmera é negada), o aviso é velho e não fecha nada.
+      onClose={() => !dialogo.current?.open && onFechar()}
       onClick={(evento) => evento.target === evento.currentTarget && onFechar()}
       className="mx-auto mb-0 mt-auto w-full max-w-md rounded-t-lg border-0 bg-surface-raised p-0 text-ink shadow-sheet backdrop:bg-terra backdrop:opacity-50"
     >

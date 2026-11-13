@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { gsap } from 'gsap'
 import {
@@ -17,6 +17,7 @@ import { APP_NOME } from '../config'
 import { cascata, comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
 import type { AcaoChat, MensagemChat, MensagemDoHistorico, ProdutoResumo, RespostaChat } from '../tipos'
 import { acoesNaConversa } from './acoesDoChat'
+import { FolhaFoto } from './FolhaFoto'
 import { FolhaLink } from './FolhaLink'
 import { nomeDoPiso, partesDoLink } from './formatos'
 import { reduzirFoto } from './foto'
@@ -179,13 +180,13 @@ export default function Capi() {
   const [ocupada, setOcupada] = useState(false)
   const [paraTentarDeNovo, setParaTentarDeNovo] = useState<Envio | null>(null)
   const [folhaLink, setFolhaLink] = useState(false)
+  const [folhaFoto, setFolhaFoto] = useState(false)
   /** O texto que uma sugestão pôs no campo: a versão nova remonta o campo com ele. */
   const [rascunho, setRascunho] = useState({ texto: '', versao: 0 })
   const [anexo, setAnexo] = useState<FotoAnexada | null>(null)
 
   const lista = useRef<HTMLDivElement>(null)
   const fim = useRef<HTMLDivElement>(null)
-  const seletorDeFoto = useRef<HTMLInputElement>(null)
   const proximoId = useRef(0)
   /** Muda a cada recomeço: uma resposta de uma conversa antiga não entra na nova. */
   const conversa = useRef(0)
@@ -320,12 +321,8 @@ export default function Capi() {
     }
   }
 
-  /** A foto da câmera ou da galeria fica anexada no campo; vai quando a pessoa tocar em enviar. */
-  async function aoEscolherFoto(evento: ChangeEvent<HTMLInputElement>) {
-    const arquivo = evento.target.files?.[0]
-    // Limpa o seletor para dar para escolher a mesma foto de novo.
-    evento.target.value = ''
-    if (!arquivo) return
+  /** A foto da câmera, da webcam ou da galeria fica anexada no campo; vai quando a pessoa tocar em enviar. */
+  async function anexarFoto(arquivo: File) {
     try {
       const { imagem, previa } = await reduzirFoto(arquivo)
       setAnexo({ imagem, previa })
@@ -504,13 +501,17 @@ export default function Capi() {
           focar={rascunho.versao > 0}
           permitirVazio={Boolean(anexo)}
           onEnviar={enviarDoCampo}
-          onFoto={() => seletorDeFoto.current?.click()}
+          onFoto={() => setFolhaFoto(true)}
           onLink={() => setFolhaLink(true)}
         />
-        {/* Sem "capture": no celular, o sistema oferece câmera ou galeria. */}
-        <input ref={seletorDeFoto} type="file" accept="image/*" className="hidden" onChange={aoEscolherFoto} />
       </div>
 
+      <FolhaFoto
+        aberta={folhaFoto}
+        onAbrir={() => setFolhaFoto(true)}
+        onFechar={() => setFolhaFoto(false)}
+        onArquivo={anexarFoto}
+      />
       <FolhaLink
         aberta={folhaLink}
         onFechar={() => setFolhaLink(false)}

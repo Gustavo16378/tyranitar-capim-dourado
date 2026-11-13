@@ -117,9 +117,11 @@ test('TE21: a foto da câmera fica anexada com prévia e um X, e só vai quando 
   const campo = page.getByRole('textbox', { name: 'Mensagem para a Capi' })
   const anexada = page.getByRole('img', { name: 'Foto anexada' })
   async function escolherFoto() {
+    // O botão da câmera abre a folha; "Escolher da galeria" abre o seletor de arquivo.
+    await page.getByRole('button', { name: 'Enviar foto ou print' }).click()
     const [seletor] = await Promise.all([
       page.waitForEvent('filechooser'),
-      page.getByRole('button', { name: 'Enviar foto ou print' }).click(),
+      page.getByRole('dialog', { name: 'Foto ou print' }).getByRole('button', { name: 'Escolher da galeria' }).click(),
     ])
     await seletor.setFiles(FOTO)
   }
