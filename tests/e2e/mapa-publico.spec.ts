@@ -13,6 +13,9 @@ test('TE27: ler o QR da entrada sem sessão abre o mapa na entrada certa', async
   await expect(page.getByText(/Você está na Entrada A\./)).toBeVisible()
   await expect(page.getByText('Você está aqui', { exact: true })).toHaveCount(1)
   await expect(page.getByRole('link', { name: CONVITE })).toBeVisible()
+  // Sem login, o texto não manda pedir à Capi: o convite embaixo cobre isso.
+  await expect(page.getByText('Toque numa loja para ver o caminho. Arraste', { exact: false })).toBeVisible()
+  await expect(page.getByText(/peça à Capi/)).toHaveCount(0)
   // Sem a navegação do app: as outras abas pedem login.
   await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toHaveCount(0)
 
@@ -35,4 +38,6 @@ test('TE27: ler o QR da entrada sem sessão abre o mapa na entrada certa', async
   await expect(page).toHaveURL(/\/mapa\?origem=p1-c34$/)
   await expect(page.getByText(/Você está na Entrada A\./)).toBeVisible()
   await expect(page.getByRole('link', { name: CONVITE })).toHaveCount(0)
+  // Com login, a Capi volta a aparecer no texto.
+  await expect(page.getByText(/Toque numa loja para ver o caminho, ou peça à Capi\./)).toBeVisible()
 })

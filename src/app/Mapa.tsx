@@ -219,7 +219,8 @@ function MapaAte({
         )}
         <p className="text-body-sm text-ink-muted">
           {!destino
-            ? `${aqui ? `Você está na ${aqui.nome}. ` : ''}Toque numa loja para ver o caminho, ou peça à Capi. Arraste para girar e use dois dedos para aproximar.`
+            ? // Sem login, a Capi não está à mão: o convite embaixo leva até ela.
+              `${aqui ? `Você está na ${aqui.nome}. ` : ''}Toque numa loja para ver o caminho${visitante ? '' : ', ou peça à Capi'}. Arraste para girar e use dois dedos para aproximar.`
             : !achado
               ? 'Essa loja ainda não está na planta.'
               : achado.piso !== piso
