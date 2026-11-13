@@ -132,3 +132,14 @@ Fica em [`docs/`](docs/):
 - [Plano de testes](docs/testes.md)
 - [Créditos das imagens](docs/creditos.md)
 - [Primeira entrega](docs/primeira-entrega.md)
+
+## Equipe
+
+| Integrante | Papel |
+| --- | --- |
+| Gustavo Barbosa Lima | Desenvolvimento back-end, Capi (IA) e integração |
+| Gustavo Ferreira | Design, front-end e mapa do shopping |
+| Kauã | Documentação e modelo de negócio |
+| Diogo | Pitch, roteiro e vídeo |
+
+**Orientadores:** Haroldo Soares e Paulo Rafael.
