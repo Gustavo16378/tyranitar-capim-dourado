@@ -52,9 +52,24 @@ A Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a l
 | :---: | :---: | :---: | :---: | :---: |
 | <img src="docs/img/tela-reserva.png" width="150" alt="Reserva separada, com o andamento"> | <img src="docs/img/tela-mapa.png" width="150" alt="Mapa 3D com a rota até a loja"> | <img src="docs/img/tela-carteira.png" width="150" alt="Carteira com o QR e os pontos"> | <img src="docs/img/tela-carteira-reservas.png" width="150" alt="Reservas e cupons na carteira"> | <img src="docs/img/painel-atendimento.png" width="150" alt="Painel da loja atendendo pelo QR"> |
 
-## Stack
+## Arquitetura
 
-React 19, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 (SQLite) no back, no mesmo deploy. A Capi usa a API do Claude, chamada só pelo servidor.
+```mermaid
+flowchart LR
+  pessoas(["Cliente, lojista<br/>e shopping"])
+  subgraph cf["Cloudflare"]
+    front["Front em React (PWA)<br/>no Cloudflare Pages"]
+    fn["API em Pages Functions<br/>JWT, perfis e regras"]
+    d1[("D1 (SQLite)<br/>lojas, produtos,<br/>reservas, pontos")]
+  end
+  claude["API do Claude<br/>(Anthropic)"]
+  pessoas -->|HTTPS| front
+  front -->|"/api"| fn
+  fn --> d1
+  fn -->|"Capi: texto, foto<br/>e tool use"| claude
+```
+
+React 19, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 (SQLite) no back, no mesmo deploy. A Capi usa a API do Claude, chamada só pelo servidor: a chave nunca vai para o navegador. Os detalhes, as tecnologias e as pastas estão em [docs/arquitetura.md](docs/arquitetura.md).
 
 ## Como rodar
 
