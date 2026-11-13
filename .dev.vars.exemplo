@@ -1,0 +1,4 @@
+# Copie este arquivo para .dev.vars (que fica fora do Git) e preencha os valores.
+# Em produção, cadastre os mesmos nomes como secrets do Cloudflare.
+ANTHROPIC_API_KEY=
+JWT_SECRET=

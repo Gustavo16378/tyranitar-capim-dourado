@@ -1,0 +1,13 @@
+# Cloudflare Pages: o front (dist/) e a API (functions/) num deploy só.
+name = "tyranitar-capim-dourado"
+compatibility_date = "2026-11-01"
+pages_build_output_dir = "dist"
+
+# Banco D1. Localmente o wrangler cria o banco em .wrangler/ (fora do Git).
+# Antes do primeiro deploy: rode `npx wrangler d1 create tyranitar` e troque o
+# database_id abaixo pelo id que o comando imprimir.
+[[d1_databases]]
+binding = "DB"
+database_name = "tyranitar"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

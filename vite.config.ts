@@ -15,4 +15,8 @@ function appNome(): Plugin {
 
 export default defineConfig({
   plugins: [react(), appNome()],
+  server: {
+    // Com `npm run dev:api` rodando, as chamadas a /api vão para as Functions.
+    proxy: { '/api': 'http://localhost:8788' },
+  },
 })
