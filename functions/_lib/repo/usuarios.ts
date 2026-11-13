@@ -24,6 +24,10 @@ export function buscarUsuarioPorId(db: D1Database, id: string) {
   return db.prepare(`SELECT ${COLUNAS} FROM usuario WHERE id = ?1`).bind(id).first<UsuarioLinha>()
 }
 
+export async function atualizarSenhaHash(db: D1Database, id: string, senhaHash: string) {
+  await db.prepare('UPDATE usuario SET senha_hash = ?2 WHERE id = ?1').bind(id, senhaHash).run()
+}
+
 export async function criarCliente(
   db: D1Database,
   cliente: { id: string; nome: string; email: string; senhaHash: string; qrToken: string },

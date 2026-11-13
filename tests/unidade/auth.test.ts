@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emitirToken, lerToken, VALIDADE_SEGUNDOS, type UsuarioSessao } from '../../functions/_lib/auth/jwt'
-import { gerarHashSenha, verificarSenha } from '../../functions/_lib/auth/senha'
+import { gerarHashSenha, precisaAtualizar, verificarSenha } from '../../functions/_lib/auth/senha'
 
 const SEGREDO = 'segredo-de-teste-com-pelo-menos-32-caracteres'
 const ANA: UsuarioSessao = { id: 'c1', nome: 'Ana Souza', perfil: 'CLIENTE', lojaId: null }
@@ -22,6 +22,14 @@ describe('senha (TU25)', () => {
   it('recusa hash fora do formato', async () => {
     expect(await verificarSenha('qualquer', 'texto-solto')).toBe(false)
     expect(await verificarSenha('qualquer', 'pbkdf2_sha256$999999999$AAAA$AAAA')).toBe(false)
+  })
+
+  it('usa as iterações gravadas no hash e pede para regravar quando mudam', async () => {
+    const antigo = await gerarHashSenha('minimo8caracteres', 1_000)
+    expect(antigo).toMatch(/^pbkdf2_sha256\$1000\$/)
+    expect(await verificarSenha('minimo8caracteres', antigo)).toBe(true)
+    expect(precisaAtualizar(antigo)).toBe(true)
+    expect(precisaAtualizar(await gerarHashSenha('minimo8caracteres'))).toBe(false)
   })
 })
 
