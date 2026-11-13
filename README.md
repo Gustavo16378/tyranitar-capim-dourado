@@ -153,3 +153,7 @@ Declaração do item 6.3 do edital.
 - **Revisão:** a equipe revisou e testou tudo o que foi feito com IA.
 - **No produto:** a Capi, a assistente do app, usa a API do Claude. A chamada sai só do servidor, que entende a pergunta por texto, foto ou link e busca nos produtos das lojas do shopping.
 - **Dados:** os usuários e as buscas do seed são fictícios.
+
+## Licença
+
+O código é distribuído sob a [licença MIT](LICENSE), © 2026 Equipe Tyranitar. As fotos dos produtos e das capas são do Unsplash, com a licença própria descrita em [docs/creditos.md](docs/creditos.md).
