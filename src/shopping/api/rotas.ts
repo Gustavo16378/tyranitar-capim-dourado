@@ -3,6 +3,7 @@
 // enquanto a API não existir, o mock em src/mocks/shopping/.
 import type {
   ConfiguracaoDoShopping,
+  Demanda,
   FiltroLojas,
   LojaDoShopping,
   LojistaCriado,
@@ -12,6 +13,7 @@ import type {
   PedidoCupom,
   PedidoLoja,
   PedidoLojista,
+  Periodo,
   RespostaLogin,
   VoucherDoShopping,
 } from '../../tipos/shopping'
@@ -63,4 +65,9 @@ export function listarVouchers(sinal?: AbortSignal) {
 /** POST /api/shopping/cupons: um voucher que vale em qualquer loja e aparece na vitrine do app. */
 export function criarVoucher(voucher: PedidoCupom) {
   return requisitar<VoucherDoShopping>('POST', '/api/shopping/cupons', { corpo: voucher })
+}
+
+/** GET /api/shopping/demanda: o que os clientes buscam e não acham em nenhuma loja (RF29). */
+export function buscarDemanda(periodo: Periodo, sinal?: AbortSignal) {
+  return requisitar<Demanda>('GET', '/api/shopping/demanda', { busca: { periodo }, sinal })
 }
