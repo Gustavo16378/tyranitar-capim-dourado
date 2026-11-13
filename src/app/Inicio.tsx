@@ -74,7 +74,13 @@ export default function Inicio() {
                 (ofertas.dados.itens.length === 0 ? (
                   <Vazio>Nenhuma oferta para você agora. Volte amanhã.</Vazio>
                 ) : (
-                  <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-3 pt-2.5 [scrollbar-width:none]">
+                  // Focável para dar para rolar as ofertas pelo teclado (setas).
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Cupons em oferta"
+                    className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-3 pt-2.5 [scrollbar-width:none]"
+                  >
                     {ofertas.dados.itens.map((cupom) => (
                       <div key={cupom.id} className="w-[300px] flex-none">
                         <CupomTicket
