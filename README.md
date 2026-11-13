@@ -143,3 +143,13 @@ Fica em [`docs/`](docs/):
 | Diogo | Pitch, roteiro e vídeo |
 
 **Orientadores:** Haroldo Soares e Paulo Rafael.
+
+## Uso de inteligência artificial
+
+Declaração do item 6.3 do edital.
+
+- **Ferramentas:** Claude e Claude Code, da Anthropic.
+- **Para quê:** ideação, requisitos, protótipo, programação, testes, documentação e o desenho do mapa das lojas.
+- **Revisão:** a equipe revisou e testou tudo o que foi feito com IA.
+- **No produto:** a Capi, a assistente do app, usa a API do Claude. A chamada sai só do servidor, que entende a pergunta por texto, foto ou link e busca nos produtos das lojas do shopping.
+- **Dados:** os usuários e as buscas do seed são fictícios.
