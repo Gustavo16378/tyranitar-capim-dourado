@@ -26,7 +26,7 @@ export function diasAtras(dias: number, hora = 15) {
 
 /** Reembolsos de outras lojas, para o painel do shopping ter o que mostrar. */
 function deOutrasLojas(): ReembolsoMock[] {
-  const lojas = ['loja-calcados', 'loja-perfumaria', 'loja-moda-masculina', 'loja-otica', 'loja-cafeteria']
+  const lojas = ['loja-calcados', 'loja-perfumaria', 'loja-moda-masculina', 'loja-moda-feminina', 'loja-cafeteria']
   return Array.from({ length: 22 }, (_, i) => {
     const dias = 3 + ((i * 11) % 80)
     const pago = dias > 30
