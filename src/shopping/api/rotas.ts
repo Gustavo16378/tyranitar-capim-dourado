@@ -2,15 +2,18 @@
 // As telas chamam estas funções, nunca fetch direto. Rota nova: escreva a função aqui e,
 // enquanto a API não existir, o mock em src/mocks/shopping/.
 import type {
+  ConfiguracaoDoShopping,
   FiltroLojas,
   LojaDoShopping,
   LojistaCriado,
   LojistaDaLoja,
   Pagina,
   PedidoLogin,
+  PedidoCupom,
   PedidoLoja,
   PedidoLojista,
   RespostaLogin,
+  VoucherDoShopping,
 } from '../../tipos/shopping'
 import { requisitar } from './cliente'
 
@@ -40,4 +43,24 @@ export function listarLojistas(lojaId: string, sinal?: AbortSignal) {
 /** POST /api/shopping/lojistas: cria o acesso de um lojista, com senha provisória (RF27). */
 export function criarLojista(pedido: PedidoLojista) {
   return requisitar<LojistaCriado>('POST', '/api/shopping/lojistas', { corpo: pedido })
+}
+
+/** GET /api/shopping/configuracao: níveis, pontos por real e prazos das reservas (RF28). */
+export function buscarConfiguracao(sinal?: AbortSignal) {
+  return requisitar<ConfiguracaoDoShopping>('GET', '/api/shopping/configuracao', { sinal })
+}
+
+/** PUT /api/shopping/configuracao */
+export function salvarConfiguracao(configuracao: ConfiguracaoDoShopping) {
+  return requisitar<ConfiguracaoDoShopping>('PUT', '/api/shopping/configuracao', { corpo: configuracao })
+}
+
+/** GET /api/shopping/cupons: os vouchers do shopping, com uso e o que foi devolvido às lojas (RF28). */
+export function listarVouchers(sinal?: AbortSignal) {
+  return requisitar<Pagina<VoucherDoShopping>>('GET', '/api/shopping/cupons', { busca: { tamanho: 100 }, sinal })
+}
+
+/** POST /api/shopping/cupons: um voucher que vale em qualquer loja e aparece na vitrine do app. */
+export function criarVoucher(voucher: PedidoCupom) {
+  return requisitar<VoucherDoShopping>('POST', '/api/shopping/cupons', { corpo: voucher })
 }

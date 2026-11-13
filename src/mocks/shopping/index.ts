@@ -9,6 +9,7 @@
 import type { Manipulador } from '../comum/resposta'
 import { criarResponderMock } from '../comum/servidor'
 import { entrar } from './auth'
+import { buscarConfiguracao, criarVoucher, listarVouchers, salvarConfiguracao } from './fidelidade'
 import { criarLojista, editarLoja, listarLojas, listarLojistas } from './lojas'
 
 export { reiniciarMocks } from './dados'
@@ -19,6 +20,10 @@ export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'PUT /api/shopping/lojas/:id': editarLoja,
   'GET /api/shopping/lojas/:id/lojistas': listarLojistas,
   'POST /api/shopping/lojistas': criarLojista,
+  'GET /api/shopping/configuracao': buscarConfiguracao,
+  'PUT /api/shopping/configuracao': salvarConfiguracao,
+  'GET /api/shopping/cupons': listarVouchers,
+  'POST /api/shopping/cupons': criarVoucher,
 }
 
 /** Responde como a API se a rota estiver mockada; senão devolve null e o cliente HTTP chama a API. */
