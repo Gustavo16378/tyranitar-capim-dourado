@@ -199,6 +199,16 @@ describe('Capi com o Claude simulado', () => {
     expect(texto.text).toContain('Mensagem do cliente: Tem esse?')
   })
 
+  it('link de página que não abre: o modelo recebe as palavras do endereço para buscar', async () => {
+    const { modelo, chamadas } = modeloSimulado(gravada(respostaSimples))
+    await conversar(
+      { clienteId: 'c-ana', texto: '', link: 'https://www.loja.example/tenis-corrida-pulse-preto-982961.html' },
+      { db: env.DB, modelo, lerPagina: async () => null },
+    )
+    const [texto] = chamadas[0].messages.at(-1)!.content as { text: string }[]
+    expect(texto.text).toContain('"tenis corrida pulse preto"')
+    expect(texto.text).toContain('buscar_similares')
+  })
 
   describe('respostas salvas da demonstração', () => {
     const ROTEIRO = 'Tem esse tênis aí no shopping? Uso 42.'

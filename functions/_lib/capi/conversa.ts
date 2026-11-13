@@ -15,7 +15,7 @@ import {
 import type { TipoDeImagem } from './entrada'
 import { executarFerramenta, FERRAMENTAS, type Acao, type ContextoDasFerramentas } from './ferramentas'
 import type { ModeloCapi, ParametrosDoModelo } from './modelo'
-import { lerPaginaDeProduto, type DadosDaPagina, type LerPagina } from './pagina'
+import { lerPaginaDeProduto, palavrasDoEndereco, type DadosDaPagina, type LerPagina } from './pagina'
 import {
   MAXIMO_DE_VOLTAS,
   MENSAGENS_NO_CONTEXTO,
@@ -194,7 +194,14 @@ async function comPrazo<T>(ms: number, tarefa: (signal: AbortSignal) => Promise<
 }
 
 function descreverPagina(pagina: DadosDaPagina | null, link: string) {
-  if (!pagina) return `O cliente mandou o link ${link}, mas não consegui abrir a página. Peça a ele o nome do produto.`
+  if (!pagina) {
+    const palavras = palavrasDoEndereco(link)
+    return palavras
+      ? `O cliente mandou o link ${link}, mas a página não abriu (muitas lojas bloqueiam a leitura). ` +
+          `As palavras do endereço dizem o produto: "${palavras}". Procure o mesmo item ou parecidos no shopping ` +
+          'com buscar_similares por elas. Só se não der para saber o que é, peça ao cliente o nome do produto.'
+      : `O cliente mandou o link ${link}, mas não consegui abrir a página. Peça a ele o nome do produto.`
+  }
   const preco = pagina.preco ? `${pagina.moeda && pagina.moeda !== 'BRL' ? `${pagina.moeda} ` : 'R$ '}${pagina.preco}` : null
   return [
     `O cliente mandou o link de um produto de outra loja: ${link}`,

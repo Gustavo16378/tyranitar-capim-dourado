@@ -68,6 +68,27 @@ export function extrairDadosDaPagina(html: string, url: string): DadosDaPagina {
   }
 }
 
+/** Palavras do caminho que não dizem o que é o produto. */
+const VAZIAS = new Set(['produto', 'produtos', 'item', 'html', 'htm', 'php', 'aspx', 'www', 'shop', 'loja', 'dp', 'p'])
+
+/**
+ * Palavras do endereço de um produto: "https://loja.com/tenis-corrida-pulse-preto/p" → "tenis corrida
+ * pulse preto". Muita loja grande bloqueia a leitura da página; o endereço quase sempre diz o produto.
+ */
+export function palavrasDoEndereco(link: string) {
+  let caminho: string
+  try {
+    caminho = decodeURIComponent(new URL(link).pathname)
+  } catch {
+    return ''
+  }
+  return caminho
+    .split(/[^\p{L}]+/u)
+    .map((palavra) => palavra.toLowerCase())
+    .filter((palavra) => palavra.length > 2 && !VAZIAS.has(palavra))
+    .join(' ')
+}
+
 export type LerPagina = (url: string, signal?: AbortSignal) => Promise<DadosDaPagina | null>
 
 const PAGINA_MAXIMA_BYTES = 1_500_000
