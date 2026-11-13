@@ -25,7 +25,7 @@ type NovoItem = SemId<Item>
 /** O que o cliente manda: a mensagem do contrato e, para a prévia, a foto como data URL. */
 interface Envio extends MensagemChat {
   foto?: string
-  /** Descrição do print do roteiro da demonstração (não há foto de verdade). */
+  /** Descrição do print do roteiro, quando o arquivo dele não carrega. */
   anexo?: string
 }
 
@@ -39,6 +39,14 @@ const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, m
  * Se a IA cair (503 IA_INDISPONIVEL), a busca comum continua (RNF10): o texto, ou as palavras do
  * endereço do link, viram uma busca no catálogo. Foto sozinha não dá para buscar sem a Capi.
  */
+/** O print do tênis do roteiro (public/demo), reduzido como as fotos do cliente. */
+async function carregarPrintDaDemo() {
+  const resposta = await fetch(PERGUNTA_DEMO.imagem)
+  if (!resposta.ok) throw new Error('O print da demonstração não carregou.')
+  const blob = await resposta.blob()
+  return reduzirFoto(new File([blob], 'print-tenis.jpg', { type: blob.type || 'image/jpeg' }))
+}
+
 async function responder({ texto, imagem, link }: Envio): Promise<RespostaChat> {
   try {
     return await enviarMensagem({ texto, ...(imagem ? { imagem } : {}), ...(link ? { link } : {}) })
@@ -157,14 +165,25 @@ export default function Capi() {
     [navigate],
   )
 
-  // Roteiro da demonstração: o cliente manda o print do tênis logo que a tela abre.
+  // Roteiro da demonstração: o cliente manda o print do tênis logo que a tela abre. O print vai
+  // como foto, reduzido como qualquer outra: a Capi de verdade precisa ver o tênis. Se ele não
+  // carregar, vai só o texto, com a descrição do print no balão.
   useEffect(() => {
     if (!MODO_DEMO) return
-    const espera = window.setTimeout(
-      () => conversar({ texto: PERGUNTA_DEMO.texto, anexo: PERGUNTA_DEMO.anexo }),
-      ESPERA_CLIENTE_MS,
-    )
-    return () => window.clearTimeout(espera)
+    let cancelado = false
+    const espera = window.setTimeout(async () => {
+      const print = await carregarPrintDaDemo().catch(() => null)
+      if (cancelado) return
+      conversar(
+        print
+          ? { texto: PERGUNTA_DEMO.texto, imagem: print.imagem, foto: print.previa }
+          : { texto: PERGUNTA_DEMO.texto, anexo: PERGUNTA_DEMO.anexo },
+      )
+    }, ESPERA_CLIENTE_MS)
+    return () => {
+      cancelado = true
+      window.clearTimeout(espera)
+    }
   }, [conversar, rodada])
 
   function verDeNovo() {
