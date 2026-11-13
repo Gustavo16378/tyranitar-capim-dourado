@@ -103,7 +103,8 @@ test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => 
 
   const mensagem = page.getByRole('textbox', { name: 'Mensagem para a Capi' })
   await mensagem.fill('perfume')
-  await mensagem.press('Enter')
+  // O botão envia em qualquer tela (no celular, Enter quebra a linha).
+  await page.getByRole('button', { name: 'Enviar', exact: true }).click()
   const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
   await expect(conversa.getByRole('heading', { name: /Perfume Cerrado/ })).toBeVisible()
   await page.getByRole('button', { name: 'Sim, separar' }).click()

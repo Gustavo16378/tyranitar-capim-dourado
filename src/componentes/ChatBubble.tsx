@@ -34,7 +34,8 @@ export function ChatBubble({ de = 'capi', anexo, digitando, children }: ChatBubb
       ) : (
         <div
           className={cx(
-            'max-w-[280px] rounded-md px-3.5 py-2.5 text-body',
+            // pre-line: as quebras de linha da mensagem aparecem; links longos quebram em vez de vazar.
+            'max-w-[280px] whitespace-pre-line rounded-md px-3.5 py-2.5 text-body [overflow-wrap:anywhere]',
             capi ? 'rounded-bl border border-line bg-surface-raised' : 'rounded-br bg-ouro-soft text-ink',
           )}
         >
