@@ -1,7 +1,7 @@
 // Tipos das rotas que o painel da loja usa, no formato de docs/api.md.
 // O front (src/loja/api) e os mocks (src/mocks/loja) leem daqui; quando as Functions
 // existirem, elas podem importar os mesmos tipos. Os comuns aos dois painéis ficam em
-// comum.ts e são repetidos aqui, para as telas da loja importarem tudo de um lugar.
+// painel.ts e são repetidos aqui, para as telas da loja importarem tudo de um lugar.
 import type { CupomComUso, NivelApi, Pagina, Periodo } from './painel'
 
 export type * from './painel'
@@ -140,7 +140,7 @@ export interface ResultadoImportacao {
 
 // ---------- /api/loja/cupons (RF23) ----------
 
-/** Cupom da loja com o uso dele; o corpo do POST é o PedidoCupom de comum.ts. */
+/** Cupom da loja com o uso dele; o corpo do POST é o PedidoCupom de painel.ts. */
 export type CupomDaLoja = CupomComUso
 
 // ---------- GET /api/loja/relatorios (RF24) ----------
