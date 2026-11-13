@@ -219,7 +219,7 @@ export default function Capi() {
                 >
                   Sim, separar
                 </Button>
-              ) : (
+              ) : acao.tipo === 'ROTA' ? (
                 <Button
                   key={`rota-${acao.mapaId}`}
                   size="sm"
@@ -228,7 +228,7 @@ export default function Capi() {
                 >
                   Ver no mapa
                 </Button>
-              ),
+              ) : null,
             )}
             <Button variant="ghost" size="sm" onClick={verDeNovo}>
               Ver de novo

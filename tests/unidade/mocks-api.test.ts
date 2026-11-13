@@ -148,12 +148,44 @@ describe('mock da Capi', () => {
     expect(resposta.produtos.map((p) => p.id)).toEqual(['p-pulse', 'p-run'])
     expect(resposta.acoes).toEqual([
       { tipo: 'RESERVAR', produtoId: 'p-pulse' },
-      { tipo: 'ROTA', mapaId: 'loja-esportes', piso: 1 },
+      { tipo: 'ROTA', lojaId: 'l-esportes', mapaId: 'loja-esportes', piso: 1 },
     ])
   })
 
   it('outra mensagem vira busca, e sem resultado não inventa produto (RN14)', async () => {
     expect((await m.chat.enviarMensagem({ texto: 'perfume' })).produtos[0].id).toBe('p-perfume')
     expect((await m.chat.enviarMensagem({ texto: 'geladeira' })).produtos).toEqual([])
+  })
+
+  it('foto sem texto: até 3 produtos parecidos, RESERVAR no primeiro com estoque', async () => {
+    const resposta = await m.chat.enviarMensagem({ texto: '', imagem: { tipo: 'image/jpeg', base64: 'AAAA' } })
+    expect(resposta.produtos.length).toBeGreaterThan(0)
+    expect(resposta.produtos.length).toBeLessThanOrEqual(3)
+    expect(resposta.acoes[0]).toEqual({ tipo: 'RESERVAR', produtoId: resposta.produtos.find((p) => p.estoque > 0)?.id })
+  })
+
+  it('link: busca pelas palavras do endereço do produto', async () => {
+    const achou = await m.chat.enviarMensagem({
+      texto: '',
+      link: 'https://outra-loja.com.br/perfume-amadeirado-100ml/p',
+    })
+    expect(achou.produtos.map((p) => p.id)).toEqual(['p-perfume'])
+    const nada = await m.chat.enviarMensagem({ texto: '', link: 'https://outra-loja.com.br/geladeira-frost-free/p' })
+    expect(nada).toEqual({ resposta: expect.any(String), produtos: [], acoes: [] })
+  })
+
+  it('confere a mensagem como o servidor: 400 DADOS_INVALIDOS', async () => {
+    const foto = { tipo: 'image/jpeg' as const, base64: 'AAAA' }
+    const invalidas = [
+      { texto: '   ' },
+      { texto: 'x'.repeat(1001) },
+      { texto: '', imagem: foto, link: 'https://loja.com/a' },
+      { texto: '', link: 'ftp://loja.com/a' },
+      { texto: '', imagem: { tipo: 'image/heic' as 'image/jpeg', base64: 'AAAA' } },
+      { texto: '', imagem: { ...foto, base64: 'A'.repeat(6 * 1024 * 1024) } },
+    ]
+    for (const mensagem of invalidas) {
+      await expect(m.chat.enviarMensagem(mensagem)).rejects.toMatchObject({ status: 400, erro: 'DADOS_INVALIDOS' })
+    }
   })
 })

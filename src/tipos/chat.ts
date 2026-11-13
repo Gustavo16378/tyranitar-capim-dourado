@@ -1,19 +1,44 @@
 // POST /api/chat (docs/api.md › Capi).
 import type { Piso } from './comum'
 import type { ProdutoResumo } from './produto'
+import type { FormaPagamento } from './reserva'
 
-/** Campos imagem e link são opcionais e excludentes. */
+export type TipoDeImagem = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'
+
+/** imagem e link são opcionais e excludentes; sem eles, o texto é obrigatório. */
 export interface MensagemChat {
+  /** Até 1.000 caracteres. Pode ficar vazio quando vem foto ou link. */
   texto: string
-  imagem?: { tipo: string; base64: string }
+  /** Foto de até 4 MB, já reduzida pelo app. */
+  imagem?: { tipo: TipoDeImagem; base64: string }
+  /** Endereço http ou https de um produto de outra loja. */
   link?: string
 }
 
-export type AcaoChat = { tipo: 'RESERVAR'; produtoId: string } | { tipo: 'ROTA'; mapaId: string; piso: Piso }
+/** A reserva que a Capi criou quando o cliente confirmou na conversa. */
+export interface ReservaCriada {
+  id: string
+  produtoId: string
+  lojaId: string
+  quantidade: number
+  precoCentavos: number
+  status: 'PENDENTE'
+  formaPagamento: FormaPagamento
+  pago: false
+  expiraEm: string
+}
+
+export type AcaoChat =
+  /** O primeiro cartão com estoque, para o botão de reservar. */
+  | { tipo: 'RESERVAR'; produtoId: string }
+  /** A Capi mostrou o caminho: o app desenha no mapa. */
+  | { tipo: 'ROTA'; lojaId: string; mapaId: string; piso: Piso }
+  /** Com PIX, o app abre o pagamento. */
+  | { tipo: 'RESERVA_CRIADA'; reserva: ReservaCriada }
 
 /**
- * Os produtos vêm no mesmo formato da busca (ProdutoResumo), para o card do chat mostrar piso e
- * estoque. A resposta pode ter parágrafos separados por linha em branco: um balão para cada.
+ * Os produtos (no máximo 3) vêm no mesmo formato da busca, e só os que vieram das ferramentas
+ * da Capi (RN14). A resposta pode ter parágrafos separados por linha em branco: um balão cada.
  */
 export interface RespostaChat {
   resposta: string
