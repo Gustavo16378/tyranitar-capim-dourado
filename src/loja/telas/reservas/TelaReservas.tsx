@@ -1,30 +1,47 @@
-// Reservas (RF20): as reservas da loja por status, com confirmar, separar, retirar e cancelar.
+// Reservas (RF20): as reservas da loja por status, com confirmar, separar e cancelar.
+// A retirada vai pelo Atendimento, lendo o QR do cliente, para somar os pontos dele.
 //
-// Passo a passo: docs/como-fazer-uma-tela.md. Copie a estrutura de telas/atendimento/.
-//
-// Componentes (src/componentes): ReservaStatus (uma por reserva), Badge (status em
-//   palavra: ROTULO_DO_STATUS), Button (as ações da reserva; primary no máximo uma vez).
-// Rotas: já prontas em src/loja/api/rotas.ts, com mock em src/mocks/loja/reservas.ts.
-//   GET   /api/loja/reservas        listarReservas({ status, pagina, tamanho }, sinal)
-//   PATCH /api/loja/reservas/{id}   mudarStatusReserva(id, 'CONFIRMADA' | 'SEPARADA' | 'RETIRADA' | 'CANCELADA')
-// Regras: TRANSICOES_DA_LOJA em src/loja/comum/reserva.ts diz quais botões mostrar em cada
-//   status. Prazo correndo (expiraEm) vai num Badge tone="aviso" com o ícone relogio.
-//   Cancelar usa Button variant="danger".
-// Estados: carregando (esqueleto da lista), vazio ("Nenhuma reserva ativa agora."),
-//   erro (Erro com Tentar de novo) e com dados.
+//   TelaReservas         cabeçalho, filtro por status e a lista
+//   └─ ListaDeReservas   GET /api/loja/reservas, os quatro estados e a paginação
+//      └─ CartaoReserva  ReservaStatus + AcoesDaReserva (PATCH /api/loja/reservas/{id})
+import { useState } from 'react'
 import { useEntrada } from '../../../movimento'
 import { CabecalhoTela } from '../../comum/CabecalhoTela'
-import { EmMontagem } from '../../comum/EmMontagem'
+import { Segmentos } from '../../comum/Segmentos'
+import { FILTROS, type IdFiltro } from './filtros'
+import { ListaDeReservas } from './ListaDeReservas'
 
 export function TelaReservas() {
   const ref = useEntrada<HTMLDivElement>()
+  const [filtro, setFiltro] = useState<IdFiltro>('ativas')
+  const [pagina, setPagina] = useState(1)
+
+  function filtrar(novo: IdFiltro) {
+    setFiltro(novo)
+    setPagina(1)
+  }
+
   return (
     <div ref={ref} className="flex flex-col gap-6">
       <CabecalhoTela
         titulo="Reservas"
-        descricao="As reservas da loja por status. Confirme, separe e marque a retirada."
+        descricao="As reservas da loja por status. Confirme, separe e acompanhe o prazo de cada uma."
       />
-      <EmMontagem />
+      <div data-anim>
+        <Segmentos
+          rotulo="Filtrar reservas por status"
+          opcoes={FILTROS.map(({ id, rotulo }) => ({ valor: id, rotulo }))}
+          valor={filtro}
+          aoMudar={filtrar}
+        />
+      </div>
+      <div data-anim>
+        <ListaDeReservas
+          filtro={FILTROS.find((f) => f.id === filtro) ?? FILTROS[0]}
+          pagina={pagina}
+          aoMudarPagina={setPagina}
+        />
+      </div>
     </div>
   )
 }
