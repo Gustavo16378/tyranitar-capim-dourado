@@ -191,6 +191,7 @@ Com o Claude simulado:
 | TE11 | Capi vazia | RF02, RF03 | Sem roteiro automático: sugestões que só preenchem o campo (a do tênis anexa a foto); somem depois da primeira mensagem e voltam com "Nova conversa" |
 | TE12 | Sair da Capi e voltar | RF02 | A conversa salva volta (com o selo da foto e os cartões), também recarregando; só "Nova conversa" apaga |
 | TE13 | Capi demorando | RNF10 | "A Capi está procurando nas lojas…" depois de 2 s; em 25 s, mensagem amigável e "Tentar de novo", que manda a mesma mensagem |
+| TE14 | Mapa até uma loja | RF10 | Pergunta por qual entrada o cliente chegou (sem "Você está aqui" inventado), lembra a escolha, aceita `?origem=` do QR da entrada e escreve o nome da loja de destino uma vez só |
 
 ### Acessibilidade (TX)
 

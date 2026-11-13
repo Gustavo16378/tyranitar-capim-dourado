@@ -38,7 +38,7 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
 | Pix simulado | QR do Pix e confirmação do pagamento | Button | RF09 |
 | Reserva confirmada | Status da reserva e próximos passos | ReservaStatus, Button | RF08, RF09 |
-| Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota da entrada mais próxima | Badge | RF10 |
+| Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota até ela. Na primeira rota, pergunta "Por qual entrada você chegou?" e lembra a resposta por 6 h; `?origem=<entrada>` (o QR de cada entrada, ids em `src/mapa/entradas.ts`) já responde. Sem resposta, a rota sai da entrada mais próxima e nenhuma vira "Você está aqui" | Badge, Button | RF10 |
 | Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo e "Como chegar") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
 
 ## Painel da loja

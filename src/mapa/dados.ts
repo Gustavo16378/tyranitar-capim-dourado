@@ -18,8 +18,8 @@ export function acharNaPlanta(mapaId: string) {
   return PISO_DA_LOJA.get(mapaId)
 }
 
-/** A rota da entrada mais próxima até a loja, no piso dela. */
-export function rotaAte(mapaId: string) {
+/** A rota até a loja, no piso dela: da entrada escolhida (origem) ou da mais próxima. */
+export function rotaAte(mapaId: string, origem?: string) {
   const achada = acharNaPlanta(mapaId)
-  return achada ? rotaAteALoja(GRAFO, mapaId, achada.piso, achada.loja) : null
+  return achada ? rotaAteALoja(GRAFO, mapaId, achada.piso, achada.loja, origem) : null
 }

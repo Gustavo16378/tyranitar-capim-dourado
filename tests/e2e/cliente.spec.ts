@@ -69,7 +69,7 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
     await page.getByRole('button', { name: 'Como chegar' }).click()
     await expect(page).toHaveURL(new RegExp(`/mapa\\?loja=${dados.mapaDaLojaA}$`))
     await expect(page.getByRole('heading', { name: 'Loja A' })).toBeVisible()
-    await expect(page.getByRole('img', { name: /com a rota da entrada até Loja A/ })).toBeVisible()
+    await expect(page.getByRole('img', { name: /com a rota da entrada mais próxima até Loja A/ })).toBeVisible()
   })
 
   let pontosGerados = 0

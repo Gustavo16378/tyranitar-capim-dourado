@@ -3,7 +3,7 @@
 // as vagas ficam sem. O texto é desenhado num canvas com a fonte e a cor dos tokens.
 import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
-import { LOJAS_DA_PLANTA } from './dados'
+import { lojasComNomeDeitado } from './etiquetas'
 import type { Piso } from './grafo'
 
 /** Tamanho da letra no canvas: grande, para o texto continuar nítido quando a câmera chega perto. */
@@ -86,25 +86,28 @@ function Rotulo({ nome, x, z, y, largura, profundidade, cor, fonte }: {
   )
 }
 
-/** Os nomes das lojas do piso, em cima dos blocos. `topo` diz a altura do topo de cada loja. */
+/**
+ * Os nomes das lojas do piso, em cima dos blocos. `topo` diz a altura do topo de cada loja. A de
+ * destino fica de fora: ela já tem a etiqueta em destaque (o nome não aparece duas vezes).
+ */
 export function RotulosDasLojas({
   piso,
   nomes,
+  destino,
   cor,
   topo,
 }: {
   piso: Piso
   nomes: Record<string, string>
+  destino?: string
   cor: string
   topo: (mapaId: string) => number
 }) {
   const { fonte, pronta } = useFonteDoApp()
   const lojas = useMemo(
     () =>
-      LOJAS_DA_PLANTA[piso]
-        .filter((l) => nomes[l.mapaId])
-        .map((l) => ({ ...l, caixa: caixaDe(l.pontos), nome: nomes[l.mapaId] })),
-    [piso, nomes],
+      lojasComNomeDeitado(piso, nomes, destino).map((l) => ({ ...l, caixa: caixaDe(l.pontos), nome: nomes[l.mapaId] })),
+    [piso, nomes, destino],
   )
   return (
     // A key troca quando a fonte do app carrega: os rótulos são redesenhados com ela.

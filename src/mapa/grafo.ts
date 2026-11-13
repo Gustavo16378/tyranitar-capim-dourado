@@ -110,7 +110,8 @@ export function pontoNoContorno(contorno: { x: number; y: number }[], p: { x: nu
 }
 
 /**
- * A rota até a loja, saindo da entrada do piso que deixa o caminho mais curto. Nas lojas sem
+ * A rota até a loja, saindo da entrada escolhida (origem, se for uma entrada do piso da loja) ou,
+ * sem ela, da entrada do piso que deixa o caminho mais curto. Nas lojas sem
  * porta no grafo (as âncoras, fora dos corredores), a rota vai até o ponto mais perto e
  * termina num trecho reto até a fachada da loja, que entra na distância.
  */
@@ -119,12 +120,16 @@ export function rotaAteALoja(
   mapaId: string,
   piso: Piso,
   loja?: { centro: { x: number; y: number }; pontos: { x: number; y: number }[] },
+  origem?: string,
 ): Rota | null {
   const chegada = chegadaDaLoja(grafo, mapaId, piso, loja?.centro)
   if (!chegada) return null
+  const daOrigem = origem ? grafo.pontos.get(origem) : undefined
+  const saiDaOrigem = daOrigem?.tipo === 'entrada' && daOrigem.piso === chegada.piso
   let melhor: Rota | null = null
   for (const p of grafo.pontos.values()) {
     if (p.tipo !== 'entrada' || p.piso !== chegada.piso) continue
+    if (saiDaOrigem && p.id !== origem) continue
     const rota = menorCaminho(grafo, p.id, chegada.id)
     if (rota && (!melhor || rota.metros < melhor.metros)) melhor = rota
   }

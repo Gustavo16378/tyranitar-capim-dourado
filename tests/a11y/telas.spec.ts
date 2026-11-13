@@ -101,7 +101,7 @@ for (const tema of ['light', 'dark'] as const) {
     test('mapa com a rota até a loja', async ({ page }) => {
       await comSessaoDaAna(page)
       await page.goto('/mapa?loja=loja-07')
-      await expect(page.getByRole('img', { name: /com a rota da entrada até/ })).toBeVisible()
+      await expect(page.getByRole('img', { name: /com a rota da entrada mais próxima até/ })).toBeVisible()
       await semViolacoesGraves(page)
     })
 

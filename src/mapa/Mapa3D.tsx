@@ -13,9 +13,11 @@ import { cx } from '../componentes/cx'
 import { comMovimento, DURACAO, EASE } from '../movimento'
 import { useCoresDoMapa, type CoresDoMapa } from './cores'
 import { acharNaPlanta, CAIXAS, GRAFO, LOJAS_DA_PLANTA, PLANTAS, rotaAte } from './dados'
+import { acharEntrada } from './entradas'
+import { alturaDoPiso, ESPESSURA_DO_PISO, etiquetasDoPiso, type Etiqueta } from './etiquetas'
 import { RotulosDasLojas } from './Rotulos'
 import { trechoDaRota, type Piso, type Rota } from './grafo'
-import { lojasGrandes, rotuloDaLoja } from './nomesNaPlanta'
+import { lojasGrandes } from './nomesNaPlanta'
 import type { Caixa } from './svg'
 
 /** O que os botões da tela (fora do canvas) pedem ao mapa. */
@@ -38,17 +40,10 @@ interface Orbita {
 const PASSO_DO_ZOOM = 0.7
 
 /**
- * Etiqueta sobre o mapa (nome da loja, entrada, "Você está aqui"): HTML do próprio app, numa
- * camada por cima do canvas, nítido em qualquer zoom e sem pegar o toque. O Projetor, dentro da
- * cena, leva cada uma até o ponto 3D dela a cada quadro desenhado.
+ * As etiquetas (nome da loja, entrada, "Você está aqui", de etiquetas.ts) são HTML do próprio app,
+ * numa camada por cima do canvas, nítidas em qualquer zoom e sem pegar o toque. O Projetor, dentro
+ * da cena, leva cada uma até o ponto 3D dela a cada quadro desenhado.
  */
-interface Etiqueta {
-  id: string
-  texto: string
-  posicao: [x: number, y: number, z: number]
-  estilo: keyof typeof ESTILO_DA_ETIQUETA
-}
-
 const ETIQUETA =
   'pointer-events-none absolute left-0 top-0 select-none whitespace-nowrap rounded-pill border px-2 py-0.5 text-caption shadow-card invisible'
 
@@ -58,46 +53,6 @@ const ESTILO_DA_ETIQUETA = {
   entrada: 'border-line-strong bg-surface-raised text-ink',
   voce: 'border-cerrado bg-cerrado font-semibold text-on-cerrado',
 } as const
-
-/** As etiquetas de um piso: entradas (a da rota vira "Você está aqui") e lojas com rótulo. */
-function etiquetasDoPiso(
-  piso: Piso,
-  {
-    destinoAqui,
-    saida,
-    sobre,
-    nomes,
-    grandes,
-  }: {
-    destinoAqui?: string
-    saida?: string
-    sobre: string | null
-    nomes?: Record<string, string>
-    grandes: Set<string>
-  },
-): Etiqueta[] {
-  const altura = alturaDoPiso(CAIXAS[piso])
-  const entradas: Etiqueta[] = [...GRAFO.pontos.values()]
-    .filter((p) => p.tipo === 'entrada' && p.piso === piso)
-    .map((p) => ({
-      id: `entrada-${p.id}`,
-      texto: p.id === saida ? 'Você está aqui' : 'Entrada',
-      posicao: [p.x, ESPESSURA_DO_PISO + altura * 1.6, p.y],
-      estilo: p.id === saida ? 'voce' : 'entrada',
-    }))
-  // As grandes com nome já têm o nome deitado sobre o bloco (RotulosDasLojas): etiqueta só nas vagas.
-  const grandesSemNome = [...grandes].filter((id) => !nomes?.[id])
-  const comRotulo = new Set([...grandesSemNome, destinoAqui, sobre])
-  const lojas: Etiqueta[] = LOJAS_DA_PLANTA[piso]
-    .filter((l) => comRotulo.has(l.mapaId))
-    .map((l) => ({
-      id: `loja-${l.mapaId}`,
-      texto: rotuloDaLoja(l.mapaId, nomes),
-      posicao: [l.centro.x, ESPESSURA_DO_PISO + altura * (l.mapaId === destinoAqui ? 2.6 : 1.4), l.centro.y],
-      estilo: l.mapaId === destinoAqui ? 'escolhida' : 'loja',
-    }))
-  return [...entradas, ...lojas]
-}
 
 /** Dentro da cena: põe cada etiqueta sobre o seu ponto 3D, ou a esconde se ele saiu da tela. */
 function Projetor({ etiquetas, elementos }: { etiquetas: Etiqueta[]; elementos: RefObject<Map<string, HTMLElement>> }) {
@@ -128,6 +83,11 @@ export interface Mapa3DProps {
   destino?: string
   /** Nomes das lojas ativas (GET /api/lojas). Com a lista, as que não estão nela aparecem como vagas. */
   nomes?: Record<string, string>
+  /**
+   * A entrada por onde o cliente disse que chegou (src/mapa/entradas.ts): a rota sai dela e ela
+   * vira "Você está aqui". Sem ela, a rota sai da entrada mais próxima e nenhuma vira.
+   */
+  origem?: string
   onSelecionarLoja?: (mapaId: string) => void
   /** Para os botões de aproximar, afastar e recentralizar. */
   controle?: Ref<ControleDoMapa>
@@ -137,8 +97,6 @@ interface Bloco {
   id: string
   formas: THREE.Shape[]
 }
-
-const ESPESSURA_DO_PISO = 0.3
 
 /** Polígonos da planta como formas do three.js, separados em chão e lojas. */
 function lerPlanta(svg: string) {
@@ -154,8 +112,6 @@ function lerPlanta(svg: string) {
   return { chao, blocos }
 }
 
-/** Altura das lojas proporcional ao tamanho do piso (o térreo tem 370 m; a praça, 64 m). */
-const alturaDoPiso = (caixa: Caixa) => Math.max(caixa.largura, caixa.altura) * 0.012
 
 /**
  * Prisma de uma forma da planta. A planta usa x e y (y para baixo); no mundo 3D, y é a altura,
@@ -337,6 +293,7 @@ function Cena({
   piso,
   destino,
   nomes,
+  origem,
   onSelecionarLoja,
   controle,
   sobre,
@@ -363,7 +320,8 @@ function Cena({
 
   const achado = destino ? acharNaPlanta(destino) : undefined
   const destinoAqui = achado?.piso === piso ? destino : undefined
-  const rota = useMemo(() => (destinoAqui ? rotaAte(destinoAqui) : null), [destinoAqui])
+  const origemAqui = acharEntrada(origem)?.piso === piso ? origem : undefined
+  const rota = useMemo(() => (destinoAqui ? rotaAte(destinoAqui, origemAqui) : null), [destinoAqui, origemAqui])
   const proporcao = useThree((s) => s.size.width / Math.max(1, s.size.height))
   const { alvo, posicao } = useMemo(
     () => enquadrar(caixa, rota ? [...rota.pontos, ...achado!.loja.pontos] : [], proporcao),
@@ -424,6 +382,7 @@ function Cena({
         <RotulosDasLojas
           piso={piso}
           nomes={nomes}
+          destino={destinoAqui}
           cor={cores.texto}
           topo={(id) => ESPESSURA_DO_PISO + (id === destinoAqui ? altura * 2.2 : altura)}
         />
@@ -431,7 +390,7 @@ function Cena({
 
       {rota && <LinhaDaRota rota={rota} altura={ESPESSURA_DO_PISO + altura * 0.25} cores={cores} />}
 
-      {/* Marco de cada entrada; a de onde sai a rota já tem o ponto do "Você está aqui". */}
+      {/* Marco de cada entrada; a de onde sai a rota já tem o ponto do começo da linha. */}
       {entradas.map(
         (entrada) =>
           rota?.pontos[0]?.id !== entrada.id && (
@@ -449,7 +408,7 @@ function Cena({
 
 /** O mapa 3D de um piso. Ocupa o pai: dê a altura pelo contêiner. */
 export function Mapa3D(props: Mapa3DProps) {
-  const { piso, destino, nomes } = props
+  const { piso, destino, nomes, origem } = props
   const caixa = CAIXAS[piso]
   const inicial = enquadrar(caixa, [], 1)
   const [sobre, setSobre] = useState<string | null>(null)
@@ -457,10 +416,10 @@ export function Mapa3D(props: Mapa3DProps) {
   const grandes = useMemo(() => lojasGrandes(LOJAS_DA_PLANTA[piso]), [piso])
   const achado = destino ? acharNaPlanta(destino) : undefined
   const destinoAqui = achado?.piso === piso ? destino : undefined
-  const saida = useMemo(() => (destinoAqui ? rotaAte(destinoAqui)?.pontos[0]?.id : undefined), [destinoAqui])
+  const origemAqui = acharEntrada(origem)?.piso === piso ? origem : undefined
   const etiquetas = useMemo(
-    () => etiquetasDoPiso(piso, { destinoAqui, saida, sobre, nomes, grandes }),
-    [piso, destinoAqui, saida, sobre, nomes, grandes],
+    () => etiquetasDoPiso(piso, { destinoAqui, origem: origemAqui, sobre, nomes, grandes }),
+    [piso, destinoAqui, origemAqui, sobre, nomes, grandes],
   )
   return (
     <div className="relative size-full">
