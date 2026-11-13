@@ -101,6 +101,17 @@ for (const tema of ['light', 'dark'] as const) {
       await semViolacoesGraves(page)
     })
 
+    test('TX09: minha conta, com a ficha e a folha de trocar a senha', async ({ page }) => {
+      await comSessaoDaAna(page)
+      await page.goto('/conta')
+      await expect(page.getByRole('heading', { name: 'O que a Capi anotou' })).toBeVisible()
+      await expect(page.locator('.animate-pulse')).toHaveCount(0)
+      await semViolacoesGraves(page)
+      await page.getByRole('button', { name: 'Trocar senha' }).click()
+      await expect(page.getByRole('dialog', { name: 'Trocar a senha' })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
+
     test('TX06: atendimento do painel da loja, também só pelo teclado', async ({ page }) => {
       await entrarNoPainelDaLoja(page)
       await expect(page.getByRole('heading', { name: 'Atendimento', level: 1 })).toBeVisible()

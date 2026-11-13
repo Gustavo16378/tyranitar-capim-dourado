@@ -211,6 +211,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX06 | Atendimento do painel da loja, incluindo navegação só pelo teclado |
 | TX07 | Relatórios do painel da loja (gráficos com texto alternativo) |
 | TX08 | Painel no celular com o Menu aberto |
+| TX09 | Minha conta, com a ficha e a folha de trocar a senha |
 
 ### Manual (TM)
 
