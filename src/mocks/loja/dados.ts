@@ -1,6 +1,7 @@
 // Banco de mentira do painel da loja: o lojista da "Loja de esportes", a Ana do seed, as
 // reservas, o catálogo e os cupons da loja. Fica na memória: recarregar a página volta tudo
 // ao início, o que deixa a demonstração repetível. Os testes chamam reiniciarMocks().
+import { hojeEmPalmas } from '../../loja/comum/formatos'
 import { QR_DA_ANA } from '../../loja/telas/atendimento/demo'
 import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom, UsuarioLogado } from '../../tipos/loja'
 
@@ -67,14 +68,9 @@ export function nivelAtende(nivel: NivelApi, minimo: NivelApi) {
 
 const HORA = 60 * 60 * 1000
 
-/** Hoje em Palmas (UTC-3), no formato das validades: "2026-11-13". */
-export function hojeEmPalmas(agora = new Date()) {
-  return new Date(agora.getTime() - 3 * HORA).toISOString().slice(0, 10)
-}
-
 /** A data daqui a tantos dias (negativo: no passado), para as validades não vencerem com o tempo. */
 function emDias(dias: number) {
-  return hojeEmPalmas(new Date(Date.now() + dias * 24 * HORA))
+  return hojeEmPalmas(Date.now() + dias * 24 * HORA)
 }
 
 function emHoras(horas: number) {

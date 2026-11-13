@@ -5,7 +5,8 @@
 import type { Atendimento, Compra, PedidoCompra, PreviaCompra } from '../../tipos/loja'
 import { podeRetirar, STATUS_ATIVOS } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
-import { banco, hojeEmPalmas, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
+import { hojeEmPalmas } from '../../loja/comum/formatos'
+import { banco, nivelAtende, novoId, type ClienteMock, type CupomMock, type ReservaMock } from './dados'
 import {
   dadosInvalidos,
   erro,

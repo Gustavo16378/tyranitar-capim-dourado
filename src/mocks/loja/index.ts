@@ -9,6 +9,7 @@
 // perfil), mas a API real recusa o token do mock.
 import { entrar } from './auth'
 import { buscarAtendimento, calcularPrevia, registrarCompra } from './atendimento'
+import { criarCupom, listarCupons } from './cupons'
 import { criarProduto, editarProduto, importarProdutos, listarProdutos } from './produtos'
 import { listarReservas, mudarStatusReserva } from './reservas'
 import type { Manipulador } from './resposta'
@@ -26,6 +27,8 @@ export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'POST /api/loja/produtos': criarProduto,
   'PUT /api/loja/produtos/:id': editarProduto,
   'POST /api/loja/produtos/importar': importarProdutos,
+  'GET /api/loja/cupons': listarCupons,
+  'POST /api/loja/cupons': criarCupom,
 }
 
 /** Demora de uma rede de verdade, para os estados de carregando aparecerem. */

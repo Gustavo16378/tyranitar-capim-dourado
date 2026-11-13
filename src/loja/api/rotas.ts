@@ -4,10 +4,12 @@
 import type {
   Atendimento,
   Compra,
+  CupomDaLoja,
   FiltroProdutos,
   FiltroReservas,
   Pagina,
   PedidoCompra,
+  PedidoCupom,
   PedidoLogin,
   PedidoPrevia,
   PedidoProduto,
@@ -78,4 +80,14 @@ export function importarProdutos(csv: string) {
   return requisitar<ResultadoImportacao>('POST', '/api/loja/produtos/importar', {
     texto: { conteudo: csv, tipo: 'text/csv' },
   })
+}
+
+/** GET /api/loja/cupons: os cupons da loja e o uso de cada um (RF23). */
+export function listarCupons(sinal?: AbortSignal) {
+  return requisitar<Pagina<CupomDaLoja>>('GET', '/api/loja/cupons', { busca: { tamanho: 100 }, sinal })
+}
+
+/** POST /api/loja/cupons */
+export function criarCupom(cupom: PedidoCupom) {
+  return requisitar<CupomDaLoja>('POST', '/api/loja/cupons', { corpo: cupom })
 }

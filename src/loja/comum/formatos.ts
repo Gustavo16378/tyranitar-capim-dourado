@@ -33,6 +33,16 @@ const DATA_E_HORA = new Intl.DateTimeFormat('pt-BR', {
   minute: '2-digit',
 })
 
+/** Hoje em Palmas, no formato das validades: "2026-11-13". */
+export function hojeEmPalmas(agora = Date.now()) {
+  return new Date(agora - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+/** Dias de hoje até um dia "2026-12-31": 0 é hoje, negativo já passou. */
+export function diasAte(dia: string, hoje: string) {
+  return Math.round((Date.parse(`${dia}T00:00:00Z`) - Date.parse(`${hoje}T00:00:00Z`)) / 86_400_000)
+}
+
 /** "2026-11-14T18:00:00Z" → "14/11, 15:00" (hora de Palmas). */
 export function formatarDataHora(iso: string) {
   return DATA_E_HORA.format(new Date(iso))

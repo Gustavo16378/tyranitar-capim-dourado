@@ -20,10 +20,10 @@ describe('requisitar', () => {
     vi.stubGlobal('fetch', fetch)
     gravarSessao({ token: tokenCom(Date.now() / 1000 + 60), usuario: LOJISTA })
 
-    const resposta = await requisitar('GET', '/api/loja/cupons', { busca: { pagina: 1, tamanho: undefined } })
+    const resposta = await requisitar('GET', '/api/teste/fora-dos-mocks', { busca: { pagina: 1, tamanho: undefined } })
 
     expect(resposta).toEqual({ itens: [], total: 0 })
-    expect(fetch).toHaveBeenCalledWith('/api/loja/cupons?pagina=1', expect.objectContaining({ method: 'GET' }))
+    expect(fetch).toHaveBeenCalledWith('/api/teste/fora-dos-mocks?pagina=1', expect.objectContaining({ method: 'GET' }))
     const { headers } = (fetch.mock.calls[0] as unknown as [string, RequestInit])[1]
     expect((headers as Record<string, string>).Authorization).toMatch(/^Bearer /)
   })
@@ -32,7 +32,7 @@ describe('requisitar', () => {
     vi.stubGlobal('fetch', async () =>
       Response.json({ status: 422, erro: 'CUPOM_INVALIDO', mensagem: 'Cupom vencido.' }, { status: 422 }),
     )
-    const erro = await requisitar('POST', '/api/loja/cupons', { corpo: {} }).catch((e: unknown) => e)
+    const erro = await requisitar('POST', '/api/teste/fora-dos-mocks', { corpo: {} }).catch((e: unknown) => e)
     expect(erro).toBeInstanceOf(ErroApi)
     expect(erro).toMatchObject({ status: 422, erro: 'CUPOM_INVALIDO', mensagem: 'Cupom vencido.', passageiro: false })
   })
@@ -42,13 +42,13 @@ describe('requisitar', () => {
     vi.stubGlobal('fetch', async () =>
       Response.json({ status: 401, erro: 'NAO_AUTENTICADO', mensagem: 'Entre de novo.' }, { status: 401 }),
     )
-    await requisitar('GET', '/api/loja/cupons').catch(() => {})
+    await requisitar('GET', '/api/teste/fora-dos-mocks').catch(() => {})
     expect(lerSessao()).toBeNull()
   })
 
   it('explica resposta fora do contrato e falta de conexão', async () => {
     vi.stubGlobal('fetch', async () => new Response('<html>502</html>', { status: 502 }))
-    await expect(requisitar('GET', '/api/loja/cupons')).rejects.toMatchObject({
+    await expect(requisitar('GET', '/api/teste/fora-dos-mocks')).rejects.toMatchObject({
       erro: 'RESPOSTA_INVALIDA',
       passageiro: true,
     })
@@ -56,7 +56,7 @@ describe('requisitar', () => {
     vi.stubGlobal('fetch', async () => {
       throw new TypeError('Failed to fetch')
     })
-    await expect(requisitar('GET', '/api/loja/cupons')).rejects.toMatchObject({ status: 0, erro: 'SEM_CONEXAO' })
+    await expect(requisitar('GET', '/api/teste/fora-dos-mocks')).rejects.toMatchObject({ status: 0, erro: 'SEM_CONEXAO' })
   })
 
   it('usa o mock quando a rota está na tabela, sem chamar a rede', async () => {
