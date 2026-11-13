@@ -4,8 +4,8 @@ import { Button } from '../../../componentes'
 import { APP_NOME } from '../../../config'
 import { useEntrada } from '../../../movimento'
 import { entrar, ErroApi, MOCKS_LIGADOS, sessao, useAcao } from '../../api'
-import { Campo } from '../../comum/Campo'
-import { Erro } from '../../comum/Estados'
+import { Campo } from '../../../painel/comum/Campo'
+import { Erro } from '../../../painel/comum/Estados'
 import { URL_INICIAL } from '../../enderecos'
 
 const SO_LOJISTA = new ErroApi({

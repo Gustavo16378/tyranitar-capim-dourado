@@ -3,7 +3,7 @@ import { Button, formatarNumero, formatarPreco, Icon } from '../../../componente
 import { cx } from '../../../componentes/cx'
 import type { PedidoCompra } from '../../../tipos/loja'
 import { calcularPrevia, useConsulta } from '../../api'
-import { useAdiado } from '../../comum/useAdiado'
+import { useAdiado } from '../../../painel/comum/useAdiado'
 
 interface TotalDaCompraProps {
   /** null enquanto o valor digitado não é válido. */

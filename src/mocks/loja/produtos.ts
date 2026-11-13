@@ -1,6 +1,6 @@
 // GET, POST e PUT /api/loja/produtos e POST /api/loja/produtos/importar (RF21, RF22).
 import type { Pagina, PedidoProduto, ProdutoDaLoja, ResultadoImportacao } from '../../tipos/loja'
-import { lerValorEmCentavos } from '../../loja/comum/formatos'
+import { lerValorEmCentavos } from '../../painel/comum/formatos'
 import { categoria, CATEGORIAS } from '../../loja/telas/produtos/categorias'
 import { exigirLojista } from './auth'
 import { banco, novoId } from './dados'

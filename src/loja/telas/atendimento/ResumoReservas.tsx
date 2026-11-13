@@ -1,6 +1,6 @@
 import { Button, formatarNumero, StatTile } from '../../../componentes'
 import { listarReservas, useConsulta } from '../../api'
-import { Carregando, Esqueleto } from '../../comum/Estados'
+import { Carregando, Esqueleto } from '../../../painel/comum/Estados'
 import { STATUS_ATIVOS } from '../../comum/reserva'
 
 // Fora do componente, a função não muda a cada render e o useConsulta busca uma vez só.

@@ -3,7 +3,7 @@
 // de unidade, que rodam sem JSX, poderem usar este arquivo.
 import { formatarPreco } from '../../componentes/formatar'
 import type { Nivel } from '../../componentes/nivel'
-import type { NivelApi } from '../../tipos/loja'
+import type { NivelApi } from '../../tipos/comum'
 
 /** A API escreve CAPIM; os componentes recebem capim. */
 export function paraNivel(nivel: NivelApi): Nivel {

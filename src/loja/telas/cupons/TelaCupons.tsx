@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { Button } from '../../../componentes'
 import { useEntrada } from '../../../movimento'
-import { CabecalhoTela } from '../../comum/CabecalhoTela'
+import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
 import { FormularioCupom } from './FormularioCupom'
 import { ListaDeCupons } from './ListaDeCupons'
 

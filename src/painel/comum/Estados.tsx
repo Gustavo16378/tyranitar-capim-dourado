@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { Button, Icon } from '../../componentes'
 import { cx } from '../../componentes/cx'
-import type { ErroApi } from '../api'
+import type { ErroApi } from '../api/http'
 
 /**
  * Carregando: blocos no formato do conteúdo, parados (nada se mexe sozinho).

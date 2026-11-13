@@ -1,7 +1,7 @@
 // Banco de mentira do painel da loja: o lojista da "Loja de esportes", a Ana do seed, as
 // reservas, o catálogo e os cupons da loja. Fica na memória: recarregar a página volta tudo
 // ao início, o que deixa a demonstração repetível. Os testes chamam reiniciarMocks().
-import { hojeEmPalmas } from '../../loja/comum/formatos'
+import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { QR_DA_ANA } from '../../loja/telas/atendimento/demo'
 import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom, UsuarioLogado } from '../../tipos/loja'
 

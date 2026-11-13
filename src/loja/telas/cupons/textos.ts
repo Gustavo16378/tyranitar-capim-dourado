@@ -1,6 +1,6 @@
 import { formatarPreco } from '../../../componentes/formatar'
 import type { CupomDaLoja, TipoCupom } from '../../../tipos/loja'
-import { diasAte } from '../../comum/formatos'
+import { diasAte } from '../../../painel/comum/formatos'
 
 /** O que vai no canhoto do CupomTicket: "10%", "R$ 15", "R$ 12,50" ou "Brinde". */
 export function textoDoDesconto({ tipo, valor }: { tipo: TipoCupom; valor: number }) {

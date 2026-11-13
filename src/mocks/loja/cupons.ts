@@ -1,7 +1,7 @@
 // GET e POST /api/loja/cupons (RF23): os cupons da loja, com uso, e a criação de um cupom
 // com as regras da tabela cupom (docs/banco.md) e o limite e a validade de RN06.
 import type { CupomDaLoja, NivelApi, Pagina, PedidoCupom, TipoCupom } from '../../tipos/loja'
-import { hojeEmPalmas } from '../../loja/comum/formatos'
+import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { categoria } from '../../loja/telas/produtos/categorias'
 import { usosDoCupom } from './atendimento'
 import { exigirLojista } from './auth'

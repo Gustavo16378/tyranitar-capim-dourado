@@ -9,7 +9,7 @@
 //      └─ RegistrarCompra → POST /api/loja/compras → Recibo (pontos somando)
 import { useState } from 'react'
 import { useEntrada } from '../../../movimento'
-import { CabecalhoTela } from '../../comum/CabecalhoTela'
+import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
 import { ClienteLido } from './ClienteLido'
 import { LeitorQR, type Leitura } from './LeitorQR'
 import { ResumoReservas } from './ResumoReservas'

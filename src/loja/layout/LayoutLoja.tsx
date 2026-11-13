@@ -3,7 +3,7 @@ import { NavLink, Outlet } from 'react-router'
 import { Badge } from '../../componentes'
 import { cx } from '../../componentes/cx'
 import { MOCKS_LIGADOS, sessao } from '../api'
-import { Carregando, Esqueleto } from '../comum/Estados'
+import { Carregando, Esqueleto } from '../../painel/comum/Estados'
 import { urlDaTela } from '../enderecos'
 import { TELAS_DA_LOJA } from '../navegacao'
 

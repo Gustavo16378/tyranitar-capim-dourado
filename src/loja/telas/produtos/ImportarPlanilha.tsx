@@ -2,7 +2,7 @@ import { useId, useState, type FormEvent } from 'react'
 import { Button, formatarNumero, Icon } from '../../../componentes'
 import { useEntrada } from '../../../movimento'
 import { importarProdutos, useAcao } from '../../api'
-import { Erro } from '../../comum/Estados'
+import { Erro } from '../../../painel/comum/Estados'
 
 const COLUNAS = 'nome,descricao,categoria,preco,estoque,fotos,atributos'
 const MODELO = [

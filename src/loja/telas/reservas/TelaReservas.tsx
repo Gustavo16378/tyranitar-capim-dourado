@@ -6,8 +6,8 @@
 //      └─ CartaoReserva  ReservaStatus + AcoesDaReserva (PATCH /api/loja/reservas/{id})
 import { useState } from 'react'
 import { useEntrada } from '../../../movimento'
-import { CabecalhoTela } from '../../comum/CabecalhoTela'
-import { Segmentos } from '../../comum/Segmentos'
+import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
+import { Segmentos } from '../../../painel/comum/Segmentos'
 import { FILTROS, type IdFiltro } from './filtros'
 import { ListaDeReservas } from './ListaDeReservas'
 

@@ -6,7 +6,7 @@ import {
   paraNivel,
   prazoRestante,
   valorParaCampo,
-} from '../../src/loja/comum/formatos'
+} from '../../src/painel/comum/formatos'
 import { podeMudar, podeRetirar } from '../../src/loja/comum/reserva'
 
 describe('lerValorEmCentavos', () => {
