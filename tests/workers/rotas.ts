@@ -10,6 +10,7 @@ export const ANA: UsuarioSessao = { id: 'c-ana', nome: 'Ana Souza', perfil: 'CLI
 export const BRUNO: UsuarioSessao = { id: 'c-bruno', nome: 'Bruno Lima', perfil: 'CLIENTE', lojaId: null }
 export const LOJISTA_A: UsuarioSessao = { id: 'l-a', nome: 'Equipe da Loja A', perfil: 'LOJISTA', lojaId: 'loja-a' }
 export const LOJISTA_B: UsuarioSessao = { id: 'l-b', nome: 'Equipe da Loja B', perfil: 'LOJISTA', lojaId: 'loja-b' }
+export const ADMIN: UsuarioSessao = { id: 'admin', nome: 'Administração', perfil: 'ADMIN_SHOPPING', lojaId: null }
 
 export async function chamar(
   rota: Rota<string>,

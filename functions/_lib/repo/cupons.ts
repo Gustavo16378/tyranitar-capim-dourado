@@ -91,3 +91,84 @@ export async function usosDoCliente(db: D1Database, clienteId: string): Promise<
     .all<{ cupom_id: string; usos: number }>()
   return Object.fromEntries(results.map((r) => [r.cupom_id, r.usos]))
 }
+
+// ---------- painéis: os cupons de uma loja ou os vouchers do shopping, com o uso ----------
+
+export interface CupomComUsoLinha {
+  id: string
+  titulo: string
+  tipo: 'PERCENTUAL' | 'VALOR' | 'BRINDE'
+  valor: number
+  categoria_alvo: string | null
+  nivel_minimo: NivelFidelidade
+  limite_por_cliente: number
+  validade: string
+  ativo: 0 | 1
+  usos: number
+  desconto_centavos: number
+}
+
+const SELECAO_COM_USO = `
+  SELECT c.id, c.titulo, c.tipo, c.valor, c.categoria_alvo, c.nivel_minimo, c.limite_por_cliente, c.validade, c.ativo,
+         (SELECT count(*) FROM uso_cupom u WHERE u.cupom_id = c.id) AS usos,
+         (SELECT COALESCE(sum(u.desconto_centavos), 0) FROM uso_cupom u WHERE u.cupom_id = c.id) AS desconto_centavos
+  FROM cupom c`
+
+/** Cupom no formato dos painéis (GET /api/loja/cupons e GET /api/shopping/cupons). */
+export function cupomComUsoParaApi(c: CupomComUsoLinha) {
+  return {
+    id: c.id,
+    titulo: c.titulo,
+    tipo: c.tipo,
+    valor: c.valor,
+    categoriaAlvo: c.categoria_alvo,
+    nivelMinimo: c.nivel_minimo,
+    limitePorCliente: c.limite_por_cliente,
+    validade: c.validade,
+    ativo: c.ativo === 1,
+    usos: c.usos,
+    descontoCentavos: c.desconto_centavos,
+  }
+}
+
+/**
+ * Os cupons de uma loja (lojaId) ou os vouchers do shopping (null), com quantas compras usaram
+ * cada um e o desconto que deram. Os que valem hoje primeiro; os que vencem antes no topo.
+ */
+export async function cuponsComUso(db: D1Database, lojaId: string | null, hoje: string) {
+  const { results } = await db
+    .prepare(
+      `${SELECAO_COM_USO} WHERE c.loja_id IS ?1
+       ORDER BY (c.ativo = 1 AND c.validade >= ?2) DESC, c.validade, c.titulo`,
+    )
+    .bind(lojaId, hoje)
+    .all<CupomComUsoLinha>()
+  return results
+}
+
+export function buscarCupomComUso(db: D1Database, id: string) {
+  return db.prepare(`${SELECAO_COM_USO} WHERE c.id = ?1`).bind(id).first<CupomComUsoLinha>()
+}
+
+export interface NovoCupom {
+  titulo: string
+  tipo: 'PERCENTUAL' | 'VALOR' | 'BRINDE'
+  valor: number
+  categoriaAlvo: string | null
+  nivelMinimo: NivelFidelidade
+  limitePorCliente: number
+  validade: string
+}
+
+/** Grava um cupom da loja (lojaId) ou um voucher do shopping (null). Devolve o id. */
+export async function criarCupom(db: D1Database, lojaId: string | null, c: NovoCupom) {
+  const id = crypto.randomUUID()
+  await db
+    .prepare(
+      `INSERT INTO cupom (id, loja_id, titulo, tipo, valor, categoria_alvo, nivel_minimo, limite_por_cliente, validade)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
+    )
+    .bind(id, lojaId, c.titulo, c.tipo, c.valor, c.categoriaAlvo, c.nivelMinimo, c.limitePorCliente, c.validade)
+    .run()
+  return id
+}
