@@ -24,39 +24,39 @@ export function CartaoReserva({ reserva, agora, aoMudar }: CartaoReservaProps) {
   const resumo = `${cliente} · ${formatarPreco(reserva.precoCentavos * reserva.quantidade)}`
   const ativa = status === 'PENDENTE' || status === 'CONFIRMADA' || status === 'SEPARADA'
 
-  if (status === 'CANCELADA' || status === 'EXPIRADA') {
-    return <ReservaEncerrada reserva={reserva} resumo={resumo} />
-  }
+  if (!ativa) return <ReservaEncerrada reserva={reserva} resumo={resumo} />
 
-  const apertado = ativa && new Date(expiraEm).getTime() - agora <= PRAZO_CURTO
+  const apertado = new Date(expiraEm).getTime() - agora <= PRAZO_CURTO
   return (
     <div className="flex flex-col gap-2">
       <ReservaStatus
         produto={produto}
-        loja={ativa ? `${resumo} · até ${formatarDataHora(expiraEm)}` : resumo}
+        loja={`${resumo} · até ${formatarDataHora(expiraEm)}`}
         status={status}
         pago={pago}
         prazo={apertado ? prazoRestante(expiraEm, agora) : undefined}
       />
-      {ativa && <AcoesDaReserva reserva={reserva} aoMudar={aoMudar} />}
+      <AcoesDaReserva reserva={reserva} aoMudar={aoMudar} />
     </div>
   )
 }
 
-const TOM_ENCERRADA: Record<'CANCELADA' | 'EXPIRADA', BadgeProps['tone']> = {
-  CANCELADA: 'neutral',
-  EXPIRADA: 'aviso',
+// Encerrada: só o selo com o que aconteceu. Retirada em cerrado (deu certo), expirada em aviso.
+const SELO_ENCERRADA: Record<'RETIRADA' | 'CANCELADA' | 'EXPIRADA', Pick<BadgeProps, 'tone' | 'icon'>> = {
+  RETIRADA: { tone: 'cerrado', icon: 'check' },
+  CANCELADA: { tone: 'neutral' },
+  EXPIRADA: { tone: 'aviso', icon: 'relogio' },
 }
 
 function ReservaEncerrada({ reserva, resumo }: { reserva: ReservaDaLoja; resumo: string }) {
-  const status = reserva.status as 'CANCELADA' | 'EXPIRADA'
+  const status = reserva.status as keyof typeof SELO_ENCERRADA
   return (
     <article className="flex items-center justify-between gap-3 rounded-md border border-line bg-surface-raised px-5 py-4">
       <div>
         <div className="text-label">{reserva.produto}</div>
         <div className="text-body-sm text-ink-muted">{resumo}</div>
       </div>
-      <Badge tone={TOM_ENCERRADA[status]} icon={status === 'EXPIRADA' ? 'relogio' : undefined}>
+      <Badge {...SELO_ENCERRADA[status]}>
         {ROTULO_DO_STATUS[status]}
       </Badge>
     </article>
