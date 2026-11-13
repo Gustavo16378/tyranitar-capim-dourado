@@ -1,0 +1,15 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "thinking", "thinking": "", "signature": "assinatura-simulada" },
+      { "type": "tool_use", "id": "toolu_busca", "name": "buscar_produtos", "input": { "texto": "tênis preto", "categoria": "calcados" } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Achei dois aqui no térreo, na Loja A: o Pulse [produto:p-pulse] e o Run 2 [produto:p-run]. Quer que eu separe um para você?" }
+    ]
+  }
+]

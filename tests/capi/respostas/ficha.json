@@ -1,0 +1,12 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "tool_use", "id": "toolu_ficha", "name": "gerar_ficha", "input": { "interesses": [ { "categoria": "calcados", "detalhe": "Calça 42 e prefere preto" } ] } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [ { "type": "text", "text": "Combinado, vou procurar no 42." } ]
+  }
+]

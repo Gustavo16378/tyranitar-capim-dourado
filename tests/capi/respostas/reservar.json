@@ -1,0 +1,14 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "tool_use", "id": "toolu_reserva", "name": "reservar", "input": { "produto_id": "p-pulse", "forma_pagamento": "NA_LOJA" } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      { "type": "text", "text": "Pronto. A Loja A já foi avisada; mostre o QR da carteira no balcão." }
+    ]
+  }
+]

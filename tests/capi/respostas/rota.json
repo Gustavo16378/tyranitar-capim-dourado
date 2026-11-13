@@ -1,0 +1,13 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "tool_use", "id": "toolu_rota", "name": "rota_na_loja", "input": { "produto_id": "p-perfume" } },
+      { "type": "tool_use", "id": "toolu_errada", "name": "abrir_porta", "input": {} }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [ { "type": "text", "text": "A Loja B fica no térreo; o caminho está no mapa." } ]
+  }
+]
