@@ -13,8 +13,10 @@ import type {
   PedidoLogin,
   PedidoPrevia,
   PedidoProduto,
+  Periodo,
   PreviaCompra,
   ProdutoDaLoja,
+  Relatorio,
   ReservaDaLoja,
   RespostaLogin,
   ResultadoImportacao,
@@ -90,4 +92,9 @@ export function listarCupons(sinal?: AbortSignal) {
 /** POST /api/loja/cupons */
 export function criarCupom(cupom: PedidoCupom) {
   return requisitar<CupomDaLoja>('POST', '/api/loja/cupons', { corpo: cupom })
+}
+
+/** GET /api/loja/relatorios: o desempenho da loja no período (RF24). */
+export function buscarRelatorio(periodo: Periodo, sinal?: AbortSignal) {
+  return requisitar<Relatorio>('GET', '/api/loja/relatorios', { busca: { periodo }, sinal })
 }

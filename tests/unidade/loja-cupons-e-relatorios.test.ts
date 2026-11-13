@@ -3,7 +3,7 @@ import { reiniciarMocks, responderMock } from '../../src/mocks/loja'
 import { hojeEmPalmas } from '../../src/loja/comum/formatos'
 import { QR_DA_ANA } from '../../src/loja/telas/atendimento/demo'
 import { situacaoDoCupom, textoDoDesconto } from '../../src/loja/telas/cupons/textos'
-import type { Atendimento, CupomDaLoja, Pagina, PedidoCupom, RespostaLogin } from '../../src/tipos/loja'
+import type { Atendimento, CupomDaLoja, Pagina, PedidoCupom, Relatorio, RespostaLogin } from '../../src/tipos/loja'
 
 let token: string | null = null
 
@@ -85,5 +85,27 @@ describe('textos do cupom', () => {
     expect(situacaoDoCupom({ ativo: true, validade: '2026-11-14' }, hoje)?.texto).toBe('Vence amanhã')
     expect(situacaoDoCupom({ ativo: true, validade: '2026-11-20' }, hoje)).toMatchObject({ tom: 'aviso', texto: 'Vence em 7 dias' })
     expect(situacaoDoCupom({ ativo: true, validade: '2026-11-21' }, hoje)).toBeNull()
+  })
+})
+
+describe('mocks: GET /api/loja/relatorios', () => {
+  it('traz os campos do contrato e muda com o período', async () => {
+    const trinta = await chamar<Relatorio>('GET', '/api/loja/relatorios?periodo=30d')
+    expect(trinta.status).toBe(200)
+    expect(Object.keys(trinta.corpo).sort()).toEqual(
+      ['comparativoCategoria', 'cupons', 'maisBuscados', 'maisVendidos', 'naoEncontrados', 'parados', 'periodo', 'picos', 'reservas', 'ticketMedio'],
+    )
+    expect(trinta.corpo.naoEncontrados[0]).toEqual({ termo: 'tênis de trilha', buscas: 120 })
+    const { feitas, retiradas, emAberto, canceladas, expiradas } = trinta.corpo.reservas
+    expect(feitas).toBe(retiradas + emAberto + canceladas + expiradas)
+    expect(emAberto).toBe(7)
+
+    const sete = await chamar<Relatorio>('GET', '/api/loja/relatorios?periodo=7d')
+    expect(sete.corpo.maisVendidos[0].quantidade).toBeLessThan(trinta.corpo.maisVendidos[0].quantidade)
+  })
+
+  it('recusa período fora da lista', async () => {
+    const { status } = await chamar('GET', '/api/loja/relatorios?periodo=1a')
+    expect(status).toBe(400)
   })
 })

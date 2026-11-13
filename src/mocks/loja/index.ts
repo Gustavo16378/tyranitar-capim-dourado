@@ -11,6 +11,7 @@ import { entrar } from './auth'
 import { buscarAtendimento, calcularPrevia, registrarCompra } from './atendimento'
 import { criarCupom, listarCupons } from './cupons'
 import { criarProduto, editarProduto, importarProdutos, listarProdutos } from './produtos'
+import { buscarRelatorio } from './relatorios'
 import { listarReservas, mudarStatusReserva } from './reservas'
 import type { Manipulador } from './resposta'
 
@@ -29,6 +30,7 @@ export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'POST /api/loja/produtos/importar': importarProdutos,
   'GET /api/loja/cupons': listarCupons,
   'POST /api/loja/cupons': criarCupom,
+  'GET /api/loja/relatorios': buscarRelatorio,
 }
 
 /** Demora de uma rede de verdade, para os estados de carregando aparecerem. */
