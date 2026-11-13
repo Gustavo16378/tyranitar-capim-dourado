@@ -4,6 +4,7 @@ import Abertura from './Abertura'
 import Capi from './Capi'
 import Inicio from './Inicio'
 import LayoutApp from './LayoutApp'
+import Produto from './Produto'
 
 export const rotasDoApp = (
   <>
@@ -11,6 +12,7 @@ export const rotasDoApp = (
     <Route element={<LayoutApp />}>
       <Route path="/inicio" element={<Inicio />} />
       <Route path="/capi" element={<Capi />} />
+      <Route path="/produto/:id" element={<Produto />} />
     </Route>
   </>
 )
