@@ -49,6 +49,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/me`, `PATCH /api/me`, `DELETE /api/me` | CLIENTE | RF13 |
 | `PUT /api/me/senha` | CLIENTE | RF01 |
 | `GET /api/me/ficha`, `DELETE /api/me/ficha/{id}` | CLIENTE | RF13, RN04 |
+| `GET /api/me/dados` | CLIENTE | RF13 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
 | `GET /api/me/historico` | CLIENTE | RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
@@ -326,6 +327,27 @@ O `id` sai da frase do interesse (a ficha não repete a frase): continua o mesmo
 ### `DELETE /api/me/ficha/{id}`
 
 Apaga um interesse da ficha; a loja deixa de ver na hora. Resposta `200`: a ficha atualizada, no formato de `GET /api/me/ficha`. Erro `404` se o interesse não está na ficha.
+
+### `GET /api/me/dados`
+
+Tudo o que o app guarda sobre o cliente, num JSON para baixar (LGPD, art. 18: acesso e portabilidade). Vem com `Content-Disposition: attachment; filename="meus-dados-AAAA-MM-DD.json"` e `Cache-Control: no-store`.
+
+```json
+{
+  "geradoEm": "2026-11-13T15:10:00.000Z",
+  "conta": { "id": "c1f0...", "nome": "Ana Souza", "email": "ana@email.com", "nivel": "CAPIM", "pontos": 2140, "compartilharFicha": true, "criadaEm": "..." },
+  "ficha": { "interesses": [ { "categoria": "calcados", "detalhe": "..." } ], "atualizadaEm": "..." },
+  "reservas": [ { "id", "produto": { "id", "nome" }, "loja", "quantidade", "precoCentavos", "status", "formaPagamento", "pago", "expiraEm", "criadaEm" } ],
+  "compras": [ { "id", "loja", "valorCentavos", "origem", "chaveNfce", "pontosGerados", "reservaId", "cupons": [ { "titulo", "descontoCentavos" } ], "criadaEm" } ],
+  "favoritos": [ { "produto": { "id", "nome" }, "salvoEm" } ],
+  "conversaComACapi": [ { "papel", "conteudo", "criadaEm" } ],
+  "buscas": [ { "termo", "categoria", "encontrou", "feitaEm" } ],
+  "notificacoes": [ { "tipo", "titulo", "corpo", "lida", "criadaEm" } ],
+  "avaliacoes": [ { "produtoId", "nota", "comentario", "criadaEm" } ]
+}
+```
+
+Ficam de fora os segredos do sistema: o hash da senha, o código do QR da carteira e as consultas técnicas que a Capi guarda junto das respostas. `ficha` é `null` quando não há ficha.
 
 ### `DELETE /api/me`
 

@@ -1,12 +1,14 @@
 // Conta do cliente (tela Minha conta): GET e PATCH /api/me (nome), PUT /api/me/senha, a ficha
-// que a Capi anotou (GET /api/me/ficha e DELETE /api/me/ficha/{id}), PUT /api/me/consentimento
-// (RF13, RNF06, TA21) e DELETE /api/me (exclusão da conta, LGPD).
+// que a Capi anotou (GET /api/me/ficha e DELETE /api/me/ficha/{id}), os dados para baixar
+// (GET /api/me/dados, LGPD), PUT /api/me/consentimento (RF13, RNF06, TA21) e DELETE /api/me
+// (exclusão da conta, LGPD).
 import { env } from 'cloudflare:test'
 import { describe, expect, it } from 'vitest'
 import { gerarHashSenha } from '../../functions/_lib/auth/senha'
 import { onRequestPost as login } from '../../functions/api/auth/login'
 import { onRequestGet as atendimento } from '../../functions/api/loja/atendimento/[qr]'
 import { onRequestPut as consentimento } from '../../functions/api/me/consentimento'
+import { onRequestGet as meusDados } from '../../functions/api/me/dados'
 import { onRequestDelete as apagarInteresse } from '../../functions/api/me/ficha/[id]'
 import { onRequestGet as ficha } from '../../functions/api/me/ficha/index'
 import {
@@ -276,5 +278,67 @@ describe('GET /api/me/ficha e DELETE /api/me/ficha/{id}', () => {
     expect((await chamar(ficha, { url: '/api/me/ficha' })).status).toBe(401)
     expect((await lerFicha(LOJISTA_A)).status).toBe(403)
     expect((await apagar('x', LOJISTA_A)).status).toBe(403)
+  })
+})
+
+describe('GET /api/me/dados', () => {
+  it('TA39: tudo o que o app guarda sobre o cliente, num JSON para baixar', async () => {
+    const reserva = await chamar(reservar, {
+      metodo: 'POST',
+      url: '/api/reservas',
+      corpo: { produtoId: 'p-run', quantidade: 1, formaPagamento: 'NA_LOJA' },
+      usuario: ANA,
+    })
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO mensagem (id, cliente_id, papel, conteudo, troca)
+         VALUES ('m-1', 'c-ana', 'CLIENTE', 'Tem tênis 42?', '["chamada-interna"]')`,
+      ),
+      env.DB.prepare("INSERT INTO favorito (cliente_id, produto_id) VALUES ('c-ana', 'p-pulse')"),
+      env.DB.prepare("INSERT INTO busca (id, cliente_id, termo, encontrou) VALUES ('b-1', 'c-ana', 'tênis', 1)"),
+      env.DB.prepare("INSERT INTO uso_cupom (compra_id, cupom_id, desconto_centavos) VALUES ('co-ana-1', 'cp-a-10', 1500)"),
+    ])
+
+    const r = await chamar(meusDados, { url: '/api/me/dados', usuario: ANA })
+    expect(r.status).toBe(200)
+    expect(r.cabecalhos.get('Content-Disposition')).toMatch(/^attachment; filename="meus-dados-\d{4}-\d\d-\d\d\.json"$/)
+    expect(r.cabecalhos.get('Cache-Control')).toBe('no-store')
+    expect(r.corpo).toMatchObject({
+      geradoEm: expect.any(String),
+      conta: { id: 'c-ana', nome: 'Ana Souza', email: 'ana@teste.test', pontos: 2140, compartilharFicha: true },
+      ficha: { interesses: [{ categoria: 'calcados' }, { categoria: 'roupas' }] },
+      reservas: [
+        { id: reserva.corpo.id, produto: { id: 'p-run', nome: 'Tênis Run 2 preto' }, loja: 'Loja A', status: 'PENDENTE' },
+      ],
+      favoritos: [{ produto: { id: 'p-pulse', nome: 'Tênis de corrida Pulse' } }],
+      conversaComACapi: [{ papel: 'CLIENTE', conteudo: 'Tem tênis 42?' }],
+      buscas: [{ termo: 'tênis', encontrou: true }],
+    })
+    expect(r.corpo.conta.criadaEm).toEqual(expect.any(String))
+    expect(r.corpo.compras).toHaveLength(2)
+    expect(r.corpo.compras).toContainEqual(
+      expect.objectContaining({
+        id: 'co-ana-1',
+        loja: 'Loja A',
+        valorCentavos: 140000,
+        cupons: [{ titulo: '10% em calçados', descontoCentavos: 1500 }],
+      }),
+    )
+    // Segredos do sistema ficam de fora: hash da senha, código do QR e as consultas da Capi.
+    expect(r.texto).not.toMatch(/senha|pbkdf2|q-ana|chamada-interna|troca/i)
+  })
+
+  it('cada cliente baixa só os dados dele', async () => {
+    const r = await chamar(meusDados, { url: '/api/me/dados', usuario: BRUNO })
+    expect(r.status).toBe(200)
+    expect(r.corpo).toMatchObject({ conta: { id: 'c-bruno' }, ficha: null, reservas: [], compras: [], favoritos: [] })
+    expect(r.texto).not.toContain('c-ana')
+  })
+
+  it('sem login 401; lojista 403; conta excluída 401', async () => {
+    expect((await chamar(meusDados, { url: '/api/me/dados' })).status).toBe(401)
+    expect((await chamar(meusDados, { url: '/api/me/dados', usuario: LOJISTA_A })).status).toBe(403)
+    await chamar(excluir, { metodo: 'DELETE', url: '/api/me', usuario: ANA })
+    expect((await chamar(meusDados, { url: '/api/me/dados', usuario: ANA })).status).toBe(401)
   })
 })

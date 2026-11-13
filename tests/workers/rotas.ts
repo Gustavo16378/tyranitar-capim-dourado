@@ -48,5 +48,5 @@ export async function chamar(
     }) as unknown as Parameters<Rota<string>>[0]
   const resposta = await cadeia[0](contexto(0))
   const texto = await resposta.text()
-  return { status: resposta.status, corpo: texto ? JSON.parse(texto) : null }
+  return { status: resposta.status, corpo: texto ? JSON.parse(texto) : null, cabecalhos: resposta.headers, texto }
 }
