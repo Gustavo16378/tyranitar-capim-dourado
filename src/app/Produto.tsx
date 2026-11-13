@@ -78,6 +78,9 @@ export default function Produto() {
         Voltar
       </button>
 
+      {/* Enquanto carrega, ou se der erro, a página tem título para o leitor de tela. */}
+      {produto.tipo !== 'ok' && <h1 className="sr-only">Produto</h1>}
+
       {produto.tipo === 'carregando' && (
         <Carregando className="flex flex-col gap-5">
           <Esqueleto className="aspect-[4/3]" />

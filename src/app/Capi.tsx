@@ -239,6 +239,8 @@ export default function Capi() {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        {/* Para a ordem dos títulos: os cartões de produto têm h3. */}
+        <h2 className="sr-only">Conversa</h2>
         <div ref={lista} role="log" aria-live="polite" aria-label="Conversa com a Capi" className="flex flex-col gap-3">
           {itens.map((item) =>
             'produtos' in item ? (
