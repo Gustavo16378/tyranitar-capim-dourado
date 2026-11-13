@@ -19,6 +19,8 @@ import { hashSenha } from '../../scripts/lib/senha.mjs'
 
 const raiz = fileURLToPath(new URL('../../', import.meta.url))
 const dados = JSON.parse(readFileSync(new URL('./dados.json', import.meta.url), 'utf8'))
+// A mesma porta que o playwright.config.ts usa (tests/e2e/dados.ts).
+if (process.env.E2E_PORTA) dados.porta = Number(process.env.E2E_PORTA)
 const BANCO = '.wrangler/e2e'
 const SITE = 'dist-e2e'
 const requerer = createRequire(import.meta.url)
