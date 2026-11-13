@@ -40,6 +40,11 @@ export function apagarSessao() {
   mudar(null)
 }
 
+/** O cliente trocou o nome (Minha conta): a sessão guardada passa a ter o nome novo. */
+export function mudarNomeNaSessao(nome: string) {
+  if (atual) mudar({ ...atual, usuario: { ...atual.usuario, nome } })
+}
+
 function assinar(avisar: () => void) {
   ouvintes.add(avisar)
   return () => {

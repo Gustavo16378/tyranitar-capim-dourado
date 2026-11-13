@@ -73,3 +73,37 @@ describe('com o auth na API real', () => {
     expect(sessao.lerSessao()).toBeNull()
   })
 })
+
+describe('Minha conta: nome novo e arquivo dos dados', () => {
+  beforeEach(() => vi.resetModules())
+
+  it('mudarNome guarda o nome que a API devolveu na sessão, sem trocar o token', async () => {
+    vi.doMock('../../src/api/fonte', () => ({ usarMock: () => false }))
+    const sessao = await import('../../src/api/sessao')
+    const conta = await import('../../src/api/conta')
+    sessao.salvarSessao({ token: 't-1', usuario: ANA })
+    const pedidos: { metodo: string; corpo: unknown }[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        pedidos.push({ metodo: String(init.method), corpo: JSON.parse(String(init.body)) })
+        return Response.json({ id: 'u-ana', nome: 'Ana Lima', email: 'a@a.test', nivel: 'SEMENTE', pontos: 0, compartilharFicha: false })
+      }),
+    )
+    await conta.mudarNome('  Ana Lima ')
+    expect(pedidos).toEqual([{ metodo: 'PATCH', corpo: { nome: '  Ana Lima ' } }])
+    expect(sessao.lerSessao()).toEqual({ token: 't-1', usuario: { ...ANA, nome: 'Ana Lima' } })
+  })
+
+  it('sem sessão, mudar o nome na sessão não cria uma', async () => {
+    const sessao = await import('../../src/api/sessao')
+    sessao.apagarSessao()
+    sessao.mudarNomeNaSessao('Outra')
+    expect(sessao.lerSessao()).toBeNull()
+  })
+
+  it('o arquivo dos dados leva a data em que foi gerado', async () => {
+    const { nomeDoArquivoDeDados } = await import('../../src/app/arquivo')
+    expect(nomeDoArquivoDeDados('2026-11-13T15:10:00.000Z')).toBe('meus-dados-2026-11-13.json')
+  })
+})

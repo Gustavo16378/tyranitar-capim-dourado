@@ -192,6 +192,8 @@ Com o Claude simulado:
 | TE10 | Celular (390 × 844) nas telas principais | RNF01 | Sem rolagem horizontal e botões alcançáveis |
 | TE11 | Cupons do Início no computador | RF06 | As setas, arrastar com o mouse e a roda andam a faixa; a página não rola junto |
 | TE12 | Cupons do Início no celular | RF06, RNF01 | O dedo desliza a faixa; as setas não aparecem |
+| TE13 | Minha conta: nome, senha e dados | RF01, RF13 | O nome novo aparece no Início; a senha atual errada é recusada sem sair da conta e a nova entra; o arquivo JSON baixa com a conta |
+| TE14 | Minha conta: apagar um interesse da ficha | RF13, RN04 | O interesse some da lista e do atendimento da loja |
 
 ### Acessibilidade (TX)
 
@@ -222,7 +224,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 
 | Requisito | Testes |
 | --- | --- |
-| RF01 Cadastro e login | TA01, TA02, TA03, TA37, TB03, TE01 |
+| RF01 Cadastro e login | TA01, TA02, TA03, TA37, TB03, TE01, TE13 |
 | RF02 Conversar com a Capi | TI01, TI08, TE01 |
 | RF03 Foto ou print | TI06, TI09, TE01 |
 | RF04 Link | TI07 |
@@ -234,7 +236,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF10 Mapa e rota | TE01, TE09, TM01 |
 | RF11 Carteira | TU05, TA17, TE01 |
 | RF12 Nota fiscal | TU22, TA18 |
-| RF13 Consentimento | TA21, TA38, TA39, TE06 |
+| RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
 | RF14 Notificações | TE01 (notificação de pontos) |
 | RF15 Avaliar | TA22, TB11 |
 | RF16 Favoritos e histórico | TE02 |

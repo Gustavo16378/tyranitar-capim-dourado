@@ -40,6 +40,7 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | Reserva confirmada | Status da reserva e próximos passos | ReservaStatus, Button | RF08, RF09 |
 | Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota da entrada mais próxima | Badge | RF10 |
 | Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo e "Como chegar") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
+| Minha conta | Nome (editável), e-mail, nível e pontos; trocar a senha pedindo a atual; a ficha que a Capi anotou, com o consentimento e um botão de apagar em cada interesse; baixar os dados em JSON (LGPD); sair e excluir a conta | NivelBadge, Button | RF01, RF13 |
 
 ## Painel da loja
 
