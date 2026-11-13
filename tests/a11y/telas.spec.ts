@@ -6,13 +6,22 @@ import { comSessaoDaAna, entrarNoPainelDaLoja, esperarRoteiroDaCapi } from '../e
 
 const GRAVES = new Set(['serious', 'critical'])
 
-async function semViolacoesGraves(page: Page) {
+/** O que medir: a tela toda, sem os seletores de `excluir`, ou só os de `incluir`. */
+interface Recorte {
+  incluir?: string
+  excluir?: string
+}
+
+async function semViolacoesGraves(page: Page, { incluir, excluir }: Recorte = {}) {
   // Com movimento reduzido a entrada ainda é um fade curto (src/movimento): as cores só valem
   // quando todo bloco com data-anim chegou à opacidade final.
   await page.waitForFunction(() =>
     [...document.querySelectorAll('[data-anim]')].every((el) => getComputedStyle(el).opacity === '1'),
   )
-  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+  let axe = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+  if (incluir) axe = axe.include(incluir)
+  if (excluir) axe = axe.exclude(excluir)
+  const { violations } = await axe.analyze()
   const graves = violations
     .filter((v) => GRAVES.has(v.impact ?? ''))
     .map((v) => `${v.id} (${v.impact}): ${v.help} em ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)
@@ -33,7 +42,18 @@ for (const tema of ['light', 'dark'] as const) {
       await comSessaoDaAna(page)
       await page.goto('/inicio')
       await expect(page.getByRole('heading', { name: 'Ofertas para você' })).toBeVisible()
-      await semViolacoesGraves(page)
+      // O carrossel de cupons passa da borda da tela: o cupom cortado na borda (qual é depende da
+      // data, pela ordem de validade) tem o texto pela metade, e o axe erra o fundo dele. Por isso
+      // a tela é medida sem o carrossel, e cada cupom depois, rolado até aparecer inteiro.
+      const CARROSSEL = '[aria-label="Cupons em oferta"]'
+      await semViolacoesGraves(page, { excluir: CARROSSEL })
+      const cupons = page.locator(`${CARROSSEL} article`)
+      expect(await cupons.count()).toBeGreaterThan(0)
+      for (let i = 0; i < (await cupons.count()); i++) {
+        await cupons.nth(i).evaluate((el) => el.scrollIntoView({ block: 'nearest', inline: 'center' }))
+        await expect(cupons.nth(i)).toBeInViewport({ ratio: 1 })
+        await semViolacoesGraves(page, { incluir: `${CARROSSEL} > div:nth-child(${i + 1})` })
+      }
     })
 
     test('TX02: conversa com a Capi, também só pelo teclado', async ({ page }) => {
