@@ -349,7 +349,7 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 }
 ```
 
-`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `foto` é a primeira foto do produto (a miniatura no balcão), ou `null` quando ele não tem.
+`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `foto` é a primeira foto do produto (a miniatura no balcão), ou `null` quando ele não tem. `cupons` traz os da loja primeiro e depois os vouchers do shopping; em cada grupo, os que dão desconto antes dos brindes (o caixa já marca o primeiro de cada grupo).
 
 ### `POST /api/loja/compras/previa`
 

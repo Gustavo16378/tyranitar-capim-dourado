@@ -166,7 +166,10 @@ export function RegistrarCompra({ atendimento, leitura, aoRegistrar, aoTerminar 
   )
 }
 
-/** Os cupons já vêm marcados, como no protótipo: o primeiro da loja e o primeiro do shopping (RN05). */
+/**
+ * Os cupons já vêm marcados, como no protótipo: o primeiro da loja e o primeiro do shopping
+ * (RN05). A API manda os que dão desconto antes dos brindes, então o brinde não toma o lugar.
+ */
 function cuponsIniciais(cupons: CupomDoCliente[]) {
   const primeiros = [cupons.find((c) => c.origem === 'LOJA'), cupons.find((c) => c.origem === 'SHOPPING')]
   return primeiros.filter((c) => c !== undefined).map((c) => c.id)

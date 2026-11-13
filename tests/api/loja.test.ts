@@ -43,6 +43,19 @@ describe('GET /api/loja/atendimento/{qr}', () => {
     })
   })
 
+  it('os cupons que dão desconto vêm antes dos brindes, para o caixa marcar o voucher certo', async () => {
+    // O brinde do shopping vence antes do voucher de R$ 20, mas vem depois dele.
+    await env.DB.prepare(
+      `INSERT INTO cupom (id, loja_id, titulo, tipo, valor, nivel_minimo, limite_por_cliente, validade)
+       VALUES ('cp-estacionamento', NULL, 'Estacionamento grátis por 2 h', 'BRINDE', 0, 'SEMENTE', 2, '2098-12-31')`,
+    ).run()
+    const r = await chamar(atendimento, { url: '/api/loja/atendimento/q-ana', params: { qr: 'q-ana' }, usuario: LOJISTA_A })
+    expect(r.corpo.cupons.filter((c: { origem: string }) => c.origem === 'SHOPPING').map((c: { id: string }) => c.id)).toEqual([
+      'cp-shopping-20',
+      'cp-estacionamento',
+    ])
+  })
+
   it('TA23: cliente sem consentimento chega sem ficha; QR desconhecido é 404', async () => {
     const bruno = await chamar(atendimento, { url: '/api/loja/atendimento/q-bruno', params: { qr: 'q-bruno' }, usuario: LOJISTA_A })
     expect(bruno.corpo.ficha).toEqual([])

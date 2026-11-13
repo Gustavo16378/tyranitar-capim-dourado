@@ -57,13 +57,16 @@ export async function listarCuponsVigentes(db: D1Database, hoje: string) {
   return results
 }
 
-/** Cupons vigentes que valem nesta loja: os dela primeiro, depois os vouchers do shopping. */
+/**
+ * Cupons vigentes que valem nesta loja: os dela primeiro, depois os vouchers do shopping. Em
+ * cada grupo, os que dão desconto antes dos brindes: o caixa já marca o primeiro de cada um.
+ */
 export async function cuponsVigentesNaLoja(db: D1Database, lojaId: string, hoje: string) {
   const { results } = await db
     .prepare(
       `${SELECAO}
        WHERE c.ativo = 1 AND c.validade >= ?2 AND (c.loja_id = ?1 OR c.loja_id IS NULL)
-       ORDER BY (c.loja_id IS NULL), c.validade, c.titulo`,
+       ORDER BY (c.loja_id IS NULL), (c.tipo = 'BRINDE'), c.validade, c.titulo`,
     )
     .bind(lojaId, hoje)
     .all<CupomLinha>()
