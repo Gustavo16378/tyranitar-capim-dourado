@@ -104,7 +104,9 @@ Erro `401` com a mesma mensagem para e-mail inexistente e senha errada, para nã
 
 Entra com a conta de demonstração, a cliente Ana do seed, sem senha. É o botão "Entrar com a conta de demonstração" da tela de login, para a banca testar o app sem cadastro. Não tem corpo.
 
-Resposta `200`: o mesmo formato do login, com o token da Ana (perfil `CLIENTE`, vale 12 horas como qualquer outro). Erro `404` (`NAO_ENCONTRADO`) se a conta de demonstração não estiver no banco.
+Só existe com o modo demonstração ligado nas Functions (`DEMO=1`, veja o README). Sempre devolve um token de `CLIENTE`: não abre os painéis.
+
+Resposta `200`: o mesmo formato do login, com o token da Ana (perfil `CLIENTE`, vale 12 horas como qualquer outro). Erro `404` (`NAO_ENCONTRADO`) com `DEMO` desligado ou se a conta de demonstração não estiver no banco.
 
 ## Catálogo
 
