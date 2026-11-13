@@ -12,6 +12,7 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { comMovimento, DURACAO, EASE } from '../movimento'
 import { useCoresDoMapa, type CoresDoMapa } from './cores'
 import { acharNaPlanta, CAIXAS, PLANTAS, rotaAte } from './dados'
+import { RotulosDasLojas } from './Rotulos'
 import { trechoDaRota, type Piso, type Rota } from './grafo'
 import type { Caixa } from './svg'
 
@@ -226,6 +227,15 @@ function Cena({ piso, destino, nomes, onSelecionarLoja }: Mapa3DProps) {
         )
       })}
 
+      {nomes && (
+        <RotulosDasLojas
+          piso={piso}
+          nomes={nomes}
+          cor={cores.texto}
+          topo={(id) => ESPESSURA_DO_PISO + (id === destinoAqui ? altura * 2.2 : altura)}
+        />
+      )}
+
       {rota && <LinhaDaRota rota={rota} altura={ESPESSURA_DO_PISO + altura * 0.25} cores={cores} />}
     </>
   )
@@ -239,7 +249,7 @@ export function Mapa3D(props: Mapa3DProps) {
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
-      camera={{ fov: 40, near: 0.1, far: Math.max(caixa.largura, caixa.altura) * 10, position: inicial.posicao.toArray() }}
+      camera={{ fov: 40, near: 0.5, far: Math.max(caixa.largura, caixa.altura) * 10, position: inicial.posicao.toArray() }}
       className="touch-none"
     >
       <Cena {...props} />
