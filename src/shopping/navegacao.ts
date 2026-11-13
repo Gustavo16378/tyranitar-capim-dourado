@@ -4,6 +4,7 @@ import { lazy } from 'react'
 import type { TelaDoPainel } from '../painel/painel'
 import { TelaFidelidade } from './telas/fidelidade/TelaFidelidade'
 import { TelaLojas } from './telas/lojas/TelaLojas'
+import { TelaReembolsos } from './telas/reembolsos/TelaReembolsos'
 
 // Telas com gráficos (recharts) vêm sob demanda; o Suspense fica no LayoutPainel.
 const TelaDemanda = lazy(() => import('./telas/demanda/TelaDemanda').then((m) => ({ default: m.TelaDemanda })))
@@ -14,4 +15,5 @@ export const TELAS_DO_SHOPPING: readonly TelaDoPainel[] = [
   { caminho: 'fidelidade', rotulo: 'Fidelidade e campanhas', Tela: TelaFidelidade },
   { caminho: 'demanda', rotulo: 'Demanda', Tela: TelaDemanda },
   { caminho: 'vagas', rotulo: 'Lojas vagas e demanda', Tela: TelaVagas },
+  { caminho: 'reembolsos', rotulo: 'Reembolsos', Tela: TelaReembolsos },
 ]

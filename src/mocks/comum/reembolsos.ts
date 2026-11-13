@@ -35,7 +35,7 @@ function deOutrasLojas(): ReembolsoMock[] {
       lojaId: lojas[i % lojas.length],
       compraId: `co-o${i + 1}`,
       cupomId: 'cp2',
-      centavos: i % 4 === 0 ? 1500 : 2000,
+      centavos: 2000,
       status: pago ? 'PAGO' : 'PENDENTE',
       criadoEm: diasAtras(dias),
       pagoEm: pago ? diasAtras(dias - 15, 11) : null,
