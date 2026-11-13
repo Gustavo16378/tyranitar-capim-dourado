@@ -8,9 +8,11 @@ import { APP_NOME } from '../config'
 import { cascata, comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
 import type { AcaoChat, MensagemChat, ProdutoResumo, RespostaChat } from '../tipos'
 import { acoesNaConversa } from './acoesDoChat'
+import { Vazio } from './Estados'
 import { FolhaLink } from './FolhaLink'
 import { nomeDoPiso, partesDoLink } from './formatos'
 import { reduzirFoto } from './foto'
+import { MODO_DEMO } from './modoDemo'
 
 type Item =
   | { id: number; de: 'cliente'; texto: string; anexo?: string; foto?: string; link?: string }
@@ -85,7 +87,7 @@ function PreviaDoLink({ link, comTexto }: { link: string; comTexto: boolean }) {
 
 /**
  * Capi: a conversa com a assistente, por texto, foto (câmera ou galeria) ou link de loja online.
- * Com o chat em mock, a tela abre tocando o roteiro da demonstração (o print do tênis).
+ * No modo demonstração, a tela abre tocando o roteiro (o print do tênis); fora dele, abre vazia.
  */
 export default function Capi() {
   const navigate = useNavigate()
@@ -157,6 +159,7 @@ export default function Capi() {
 
   // Roteiro da demonstração: o cliente manda o print do tênis logo que a tela abre.
   useEffect(() => {
+    if (!MODO_DEMO) return
     const espera = window.setTimeout(
       () => conversar({ texto: PERGUNTA_DEMO.texto, anexo: PERGUNTA_DEMO.anexo }),
       ESPERA_CLIENTE_MS,
@@ -241,6 +244,9 @@ export default function Capi() {
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {/* Para a ordem dos títulos: os cartões de produto têm h3. */}
         <h2 className="sr-only">Conversa</h2>
+        {!MODO_DEMO && itens.length === 0 && (
+          <Vazio>Pergunte por texto, mande uma foto ou cole o link de um produto de outra loja.</Vazio>
+        )}
         <div ref={lista} role="log" aria-live="polite" aria-label="Conversa com a Capi" className="flex flex-col gap-3">
           {itens.map((item) =>
             'produtos' in item ? (
@@ -285,7 +291,7 @@ export default function Capi() {
             <ChatBubble de="capi" digitando />
           </div>
         )}
-        {terminou && (
+        {terminou && (botoes.length > 0 || MODO_DEMO) && (
           <div className="mt-3 flex flex-wrap gap-2 pl-10">
             {botoes.map((botao) => (
               <Button
@@ -298,9 +304,11 @@ export default function Capi() {
                 {botao.rotulo}
               </Button>
             ))}
-            <Button variant="ghost" size="sm" onClick={verDeNovo}>
-              Ver de novo
-            </Button>
+            {MODO_DEMO && (
+              <Button variant="ghost" size="sm" onClick={verDeNovo}>
+                Ver de novo
+              </Button>
+            )}
           </div>
         )}
         <div ref={fim} />
