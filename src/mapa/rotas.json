@@ -1,0 +1,3204 @@
+{
+ "unidade": "metro",
+ "pontos": [
+  {
+   "id": "porta-loja-07",
+   "x": 237.97,
+   "y": 313.72,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-07"
+  },
+  {
+   "id": "porta-loja-03",
+   "x": 233.1,
+   "y": 271.78,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-03"
+  },
+  {
+   "id": "porta-loja-05",
+   "x": 233.1,
+   "y": 301.69,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-05"
+  },
+  {
+   "id": "porta-loja-01",
+   "x": 233.1,
+   "y": 255.53,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-01"
+  },
+  {
+   "id": "porta-loja-pc-07",
+   "x": 488.3,
+   "y": 251.95,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-pc-07"
+  },
+  {
+   "id": "porta-loja-02",
+   "x": 233.1,
+   "y": 260.73,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-02"
+  },
+  {
+   "id": "porta-loja-132",
+   "x": 375.82,
+   "y": 208.71,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-132"
+  },
+  {
+   "id": "porta-loja-141a",
+   "x": 381.67,
+   "y": 213.59,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-141a"
+  },
+  {
+   "id": "porta-loja-130",
+   "x": 389.47,
+   "y": 220.09,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-130"
+  },
+  {
+   "id": "porta-loja-127",
+   "x": 406.38,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-127"
+  },
+  {
+   "id": "porta-loja-121",
+   "x": 457.74,
+   "y": 218.14,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-121"
+  },
+  {
+   "id": "porta-loja-114-b",
+   "x": 457.09,
+   "y": 253.25,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-114-b"
+  },
+  {
+   "id": "porta-loja-112",
+   "x": 435.63,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-112"
+  },
+  {
+   "id": "porta-loja-110",
+   "x": 423.93,
+   "y": 250.33,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-110"
+  },
+  {
+   "id": "porta-loja-109",
+   "x": 417.75,
+   "y": 251.3,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-109"
+  },
+  {
+   "id": "porta-loja-104",
+   "x": 391.42,
+   "y": 233.1,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-104"
+  },
+  {
+   "id": "porta-loja-102",
+   "x": 383.29,
+   "y": 226.27,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-102"
+  },
+  {
+   "id": "porta-loja-101",
+   "x": 365.41,
+   "y": 228.87,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-101"
+  },
+  {
+   "id": "porta-loja-101-a",
+   "x": 364.76,
+   "y": 215.22,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-101-a"
+  },
+  {
+   "id": "porta-loja-99",
+   "x": 330.3,
+   "y": 236.02,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-99"
+  },
+  {
+   "id": "porta-loja-98",
+   "x": 327.38,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-98"
+  },
+  {
+   "id": "porta-loja-97",
+   "x": 325.75,
+   "y": 239.92,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-97"
+  },
+  {
+   "id": "porta-loja-95",
+   "x": 310.8,
+   "y": 242.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-95"
+  },
+  {
+   "id": "porta-loja-91",
+   "x": 283.49,
+   "y": 238.95,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-91"
+  },
+  {
+   "id": "porta-loja-90",
+   "x": 272.76,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-90"
+  },
+  {
+   "id": "porta-loja-89",
+   "x": 265.93,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-89"
+  },
+  {
+   "id": "porta-loja-86",
+   "x": 257.48,
+   "y": 238.95,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-86"
+  },
+  {
+   "id": "porta-loja-148-a",
+   "x": 236.35,
+   "y": 237.65,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-148-a"
+  },
+  {
+   "id": "porta-loja-147",
+   "x": 245.13,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-147"
+  },
+  {
+   "id": "porta-loja-145",
+   "x": 260.41,
+   "y": 220.09,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-145"
+  },
+  {
+   "id": "porta-loja-138",
+   "x": 321.85,
+   "y": 212.29,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-138"
+  },
+  {
+   "id": "porta-loja-137",
+   "x": 332.25,
+   "y": 205.79,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-137"
+  },
+  {
+   "id": "porta-loja-135",
+   "x": 333.23,
+   "y": 205.14,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-135"
+  },
+  {
+   "id": "porta-loja-anc-a9",
+   "x": 341.03,
+   "y": 198.96,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-anc-a9"
+  },
+  {
+   "id": "porta-loja-134",
+   "x": 365.74,
+   "y": 200.26,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-134"
+  },
+  {
+   "id": "porta-loja-133",
+   "x": 369.96,
+   "y": 203.84,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-133"
+  },
+  {
+   "id": "porta-loja-131",
+   "x": 379.72,
+   "y": 211.97,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-131"
+  },
+  {
+   "id": "porta-loja-129",
+   "x": 394.02,
+   "y": 223.99,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-129"
+  },
+  {
+   "id": "porta-loja-125",
+   "x": 418.4,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-125"
+  },
+  {
+   "id": "porta-loja-128",
+   "x": 401.5,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-128"
+  },
+  {
+   "id": "porta-loja-123",
+   "x": 435.31,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-123"
+  },
+  {
+   "id": "porta-loja-122",
+   "x": 444.41,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-122"
+  },
+  {
+   "id": "porta-loja-ancora-01",
+   "x": 233.1,
+   "y": 282.19,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-ancora-01"
+  },
+  {
+   "id": "porta-loja-06",
+   "x": 233.1,
+   "y": 312.75,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-06"
+  },
+  {
+   "id": "porta-loja-08",
+   "x": 239.27,
+   "y": 313.4,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-08"
+  },
+  {
+   "id": "porta-loja-09",
+   "x": 251.3,
+   "y": 312.75,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-09"
+  },
+  {
+   "id": "porta-loja-10",
+   "x": 256.83,
+   "y": 311.77,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-10"
+  },
+  {
+   "id": "porta-loja-12",
+   "x": 280.89,
+   "y": 302.99,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-12"
+  },
+  {
+   "id": "porta-loja-13",
+   "x": 283.16,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-13"
+  },
+  {
+   "id": "porta-loja-16",
+   "x": 300.07,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-16"
+  },
+  {
+   "id": "porta-loja-17",
+   "x": 304.94,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-17"
+  },
+  {
+   "id": "porta-loja-18",
+   "x": 309.17,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-18"
+  },
+  {
+   "id": "porta-loja-29",
+   "x": 367.36,
+   "y": 289.01,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-29"
+  },
+  {
+   "id": "porta-loja-33",
+   "x": 390.77,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-33"
+  },
+  {
+   "id": "porta-loja-34",
+   "x": 393.05,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-34"
+  },
+  {
+   "id": "porta-loja-35",
+   "x": 400.2,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-35"
+  },
+  {
+   "id": "porta-loja-36",
+   "x": 406.7,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-36"
+  },
+  {
+   "id": "porta-loja-37",
+   "x": 411.9,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-37"
+  },
+  {
+   "id": "porta-loja-38",
+   "x": 417.1,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-38"
+  },
+  {
+   "id": "porta-loja-40",
+   "x": 435.63,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-40"
+  },
+  {
+   "id": "porta-loja-ancora-03",
+   "x": 439.86,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-ancora-03"
+  },
+  {
+   "id": "porta-loja-41",
+   "x": 457.42,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-41"
+  },
+  {
+   "id": "porta-loja-42",
+   "x": 462.62,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-42"
+  },
+  {
+   "id": "porta-loja-ancora-04",
+   "x": 488.3,
+   "y": 256.18,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-ancora-04"
+  },
+  {
+   "id": "porta-loja-114a",
+   "x": 449.61,
+   "y": 239.6,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-114a"
+  },
+  {
+   "id": "porta-loja-43",
+   "x": 466.84,
+   "y": 282.19,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-43"
+  },
+  {
+   "id": "porta-loja-44",
+   "x": 466.84,
+   "y": 276.99,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-44"
+  },
+  {
+   "id": "porta-loja-45",
+   "x": 466.84,
+   "y": 265.93,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-45"
+  },
+  {
+   "id": "porta-loja-46",
+   "x": 467.17,
+   "y": 256.5,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-46"
+  },
+  {
+   "id": "porta-loja-47",
+   "x": 457.74,
+   "y": 255.2,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-47"
+  },
+  {
+   "id": "porta-loja-48",
+   "x": 457.74,
+   "y": 266.26,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-48"
+  },
+  {
+   "id": "porta-loja-48a",
+   "x": 457.74,
+   "y": 271.46,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-48a"
+  },
+  {
+   "id": "porta-loja-49",
+   "x": 457.74,
+   "y": 276.66,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-49"
+  },
+  {
+   "id": "porta-loja-50",
+   "x": 440.84,
+   "y": 288.36,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-50"
+  },
+  {
+   "id": "porta-loja-52",
+   "x": 435.31,
+   "y": 288.36,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-52"
+  },
+  {
+   "id": "porta-loja-53",
+   "x": 434.33,
+   "y": 288.36,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-53"
+  },
+  {
+   "id": "porta-loja-54",
+   "x": 420.35,
+   "y": 289.34,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-54"
+  },
+  {
+   "id": "porta-loja-55",
+   "x": 414.5,
+   "y": 289.99,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-55"
+  },
+  {
+   "id": "porta-loja-56",
+   "x": 408.33,
+   "y": 290.96,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-56"
+  },
+  {
+   "id": "porta-loja-57",
+   "x": 399.55,
+   "y": 292.59,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-57"
+  },
+  {
+   "id": "porta-loja-58",
+   "x": 388.17,
+   "y": 289.66,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-58"
+  },
+  {
+   "id": "porta-loja-59-60",
+   "x": 384.27,
+   "y": 286.41,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-59-60"
+  },
+  {
+   "id": "porta-loja-62",
+   "x": 370.29,
+   "y": 274.71,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-62"
+  },
+  {
+   "id": "porta-loja-63",
+   "x": 366.06,
+   "y": 271.13,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-63"
+  },
+  {
+   "id": "porta-loja-64",
+   "x": 362.16,
+   "y": 267.88,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-64"
+  },
+  {
+   "id": "porta-loja-65",
+   "x": 342.01,
+   "y": 261.71,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-65"
+  },
+  {
+   "id": "porta-loja-68",
+   "x": 331.93,
+   "y": 276.99,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-68"
+  },
+  {
+   "id": "porta-loja-69",
+   "x": 327.7,
+   "y": 280.56,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-69"
+  },
+  {
+   "id": "porta-loja-70",
+   "x": 319.25,
+   "y": 287.71,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-70"
+  },
+  {
+   "id": "porta-loja-71",
+   "x": 304.94,
+   "y": 293.57,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-71"
+  },
+  {
+   "id": "porta-loja-72",
+   "x": 298.44,
+   "y": 293.57,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-72"
+  },
+  {
+   "id": "porta-loja-73",
+   "x": 294.22,
+   "y": 293.57,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-73"
+  },
+  {
+   "id": "porta-loja-74",
+   "x": 289.01,
+   "y": 293.57,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-74"
+  },
+  {
+   "id": "porta-loja-75",
+   "x": 283.49,
+   "y": 293.57,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-75"
+  },
+  {
+   "id": "porta-loja-78",
+   "x": 258.13,
+   "y": 284.46,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-78"
+  },
+  {
+   "id": "porta-loja-79",
+   "x": 250.0,
+   "y": 283.16,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-79"
+  },
+  {
+   "id": "porta-loja-80",
+   "x": 243.17,
+   "y": 282.84,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-80"
+  },
+  {
+   "id": "porta-loja-ancora-05",
+   "x": 270.81,
+   "y": 307.87,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-ancora-05"
+  },
+  {
+   "id": "porta-loja-04",
+   "x": 233.1,
+   "y": 276.66,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-04"
+  },
+  {
+   "id": "porta-loja-pc-06",
+   "x": 466.84,
+   "y": 226.59,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-pc-06"
+  },
+  {
+   "id": "porta-loja-pc-05",
+   "x": 466.84,
+   "y": 214.24,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-pc-05"
+  },
+  {
+   "id": "porta-loja-pc-04",
+   "x": 466.52,
+   "y": 213.92,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-pc-04"
+  },
+  {
+   "id": "porta-loja-61",
+   "x": 376.14,
+   "y": 279.59,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-61"
+  },
+  {
+   "id": "porta-loja-103",
+   "x": 379.07,
+   "y": 239.6,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-103"
+  },
+  {
+   "id": "porta-loja-20",
+   "x": 347.86,
+   "y": 295.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-20"
+  },
+  {
+   "id": "porta-loja-77",
+   "x": 265.93,
+   "y": 286.74,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-77"
+  },
+  {
+   "id": "porta-loja-19",
+   "x": 327.7,
+   "y": 292.59,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-19"
+  },
+  {
+   "id": "porta-loja-67",
+   "x": 335.83,
+   "y": 273.73,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-67"
+  },
+  {
+   "id": "porta-loja-148",
+   "x": 233.1,
+   "y": 248.38,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-148"
+  },
+  {
+   "id": "porta-loja-84",
+   "x": 241.87,
+   "y": 255.2,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-84"
+  },
+  {
+   "id": "porta-loja-76",
+   "x": 267.56,
+   "y": 287.39,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-76"
+  },
+  {
+   "id": "porta-loja-81",
+   "x": 241.87,
+   "y": 258.13,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-81"
+  },
+  {
+   "id": "porta-loja-05-a",
+   "x": 233.1,
+   "y": 308.19,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-05-a"
+  },
+  {
+   "id": "porta-loja-88",
+   "x": 259.75,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-88"
+  },
+  {
+   "id": "porta-loja-02-a",
+   "x": 232.77,
+   "y": 269.83,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-02-a"
+  },
+  {
+   "id": "porta-loja-39",
+   "x": 422.3,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-39"
+  },
+  {
+   "id": "porta-loja-39-a",
+   "x": 431.08,
+   "y": 302.67,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-39-a"
+  },
+  {
+   "id": "porta-loja-141",
+   "x": 283.49,
+   "y": 229.2,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-141"
+  },
+  {
+   "id": "porta-loja-140",
+   "x": 304.62,
+   "y": 228.87,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-140"
+  },
+  {
+   "id": "porta-loja-139",
+   "x": 312.75,
+   "y": 222.37,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-139"
+  },
+  {
+   "id": "porta-loja-92",
+   "x": 286.09,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-92"
+  },
+  {
+   "id": "porta-loja-93a",
+   "x": 294.22,
+   "y": 238.62,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-93a"
+  },
+  {
+   "id": "porta-loja-93",
+   "x": 305.59,
+   "y": 247.4,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-93"
+  },
+  {
+   "id": "porta-loja-53a",
+   "x": 415.8,
+   "y": 255.2,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-53a"
+  },
+  {
+   "id": "porta-loja-30",
+   "x": 371.26,
+   "y": 289.66,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-30"
+  },
+  {
+   "id": "porta-loja-31",
+   "x": 381.34,
+   "y": 295.19,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-31"
+  },
+  {
+   "id": "porta-loja-28",
+   "x": 382.64,
+   "y": 296.17,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-28"
+  },
+  {
+   "id": "porta-loja-32",
+   "x": 357.94,
+   "y": 301.04,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-32"
+  },
+  {
+   "id": "porta-loja-66",
+   "x": 340.38,
+   "y": 270.16,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-66"
+  },
+  {
+   "id": "porta-loja-96",
+   "x": 317.95,
+   "y": 245.78,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-96"
+  },
+  {
+   "id": "porta-loja-143",
+   "x": 271.46,
+   "y": 227.57,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-143"
+  },
+  {
+   "id": "porta-loja-142",
+   "x": 278.29,
+   "y": 229.2,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-142"
+  },
+  {
+   "id": "porta-loja-124",
+   "x": 428.81,
+   "y": 229.52,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-124"
+  },
+  {
+   "id": "porta-loja-109-b",
+   "x": 434.33,
+   "y": 238.95,
+   "piso": 1,
+   "tipo": "porta",
+   "loja": "loja-109-b"
+  },
+  {
+   "id": "p1-c1",
+   "x": 465.87,
+   "y": 215.22,
+   "piso": 1,
+   "tipo": "entrada"
+  },
+  {
+   "id": "p1-c2",
+   "x": 462.29,
+   "y": 223.34,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c3",
+   "x": 459.37,
+   "y": 231.47,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c4",
+   "x": 458.72,
+   "y": 233.1,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c5",
+   "x": 349.81,
+   "y": 216.52,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c6",
+   "x": 353.71,
+   "y": 208.39,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c7",
+   "x": 361.84,
+   "y": 208.71,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c8",
+   "x": 369.96,
+   "y": 211.31,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c9",
+   "x": 378.09,
+   "y": 216.19,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c10",
+   "x": 386.22,
+   "y": 223.02,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c11",
+   "x": 394.35,
+   "y": 229.85,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c12",
+   "x": 402.47,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c13",
+   "x": 410.6,
+   "y": 234.07,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c14",
+   "x": 418.73,
+   "y": 234.07,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c15",
+   "x": 426.86,
+   "y": 234.07,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c16",
+   "x": 434.98,
+   "y": 234.07,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c17",
+   "x": 443.11,
+   "y": 234.07,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c18",
+   "x": 451.24,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c19",
+   "x": 341.68,
+   "y": 215.54,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c20",
+   "x": 333.55,
+   "y": 215.87,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c21",
+   "x": 325.43,
+   "y": 217.82,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c22",
+   "x": 317.3,
+   "y": 224.32,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c23",
+   "x": 309.5,
+   "y": 230.82,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c24",
+   "x": 301.37,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c25",
+   "x": 293.24,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c26",
+   "x": 285.11,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c27",
+   "x": 276.99,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c28",
+   "x": 268.86,
+   "y": 233.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c29",
+   "x": 265.61,
+   "y": 233.1,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c30",
+   "x": 349.81,
+   "y": 224.64,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c31",
+   "x": 349.81,
+   "y": 232.77,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c32",
+   "x": 349.81,
+   "y": 240.9,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c33",
+   "x": 349.81,
+   "y": 242.85,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c34",
+   "x": 265.93,
+   "y": 224.97,
+   "piso": 1,
+   "tipo": "entrada"
+  },
+  {
+   "id": "p1-c35",
+   "x": 257.48,
+   "y": 234.07,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c36",
+   "x": 249.35,
+   "y": 235.37,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c37",
+   "x": 241.22,
+   "y": 243.5,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c38",
+   "x": 237.32,
+   "y": 250.98,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c39",
+   "x": 237.32,
+   "y": 259.1,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c40",
+   "x": 237.32,
+   "y": 267.23,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c41",
+   "x": 237.32,
+   "y": 275.36,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c42",
+   "x": 237.32,
+   "y": 283.49,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c43",
+   "x": 241.55,
+   "y": 291.61,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c44",
+   "x": 246.1,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c45",
+   "x": 460.34,
+   "y": 241.22,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c46",
+   "x": 461.97,
+   "y": 249.35,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c47",
+   "x": 462.29,
+   "y": 257.48,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c48",
+   "x": 462.29,
+   "y": 265.61,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c49",
+   "x": 462.29,
+   "y": 273.73,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c50",
+   "x": 462.29,
+   "y": 281.86,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c51",
+   "x": 462.29,
+   "y": 289.99,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c52",
+   "x": 456.77,
+   "y": 295.52,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c53",
+   "x": 448.64,
+   "y": 295.52,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c54",
+   "x": 440.51,
+   "y": 295.52,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c55",
+   "x": 432.38,
+   "y": 295.84,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c56",
+   "x": 424.26,
+   "y": 296.17,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c57",
+   "x": 416.13,
+   "y": 296.49,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c58",
+   "x": 408.0,
+   "y": 297.47,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c59",
+   "x": 399.87,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c60",
+   "x": 391.75,
+   "y": 297.14,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c61",
+   "x": 383.62,
+   "y": 291.29,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c62",
+   "x": 375.49,
+   "y": 286.09,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c63",
+   "x": 367.36,
+   "y": 283.16,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c64",
+   "x": 359.24,
+   "y": 280.89,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c65",
+   "x": 352.41,
+   "y": 279.26,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c66",
+   "x": 352.41,
+   "y": 243.5,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c67",
+   "x": 341.68,
+   "y": 246.1,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c68",
+   "x": 333.55,
+   "y": 248.7,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c69",
+   "x": 325.43,
+   "y": 252.6,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c70",
+   "x": 321.52,
+   "y": 253.58,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c71",
+   "x": 360.54,
+   "y": 245.45,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c72",
+   "x": 368.66,
+   "y": 247.73,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c73",
+   "x": 376.79,
+   "y": 250.33,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c74",
+   "x": 383.62,
+   "y": 255.85,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c75",
+   "x": 352.73,
+   "y": 251.63,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c76",
+   "x": 352.41,
+   "y": 259.75,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c77",
+   "x": 352.41,
+   "y": 267.88,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c78",
+   "x": 352.41,
+   "y": 276.01,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c85",
+   "x": 312.75,
+   "y": 250.33,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c86",
+   "x": 320.87,
+   "y": 253.25,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c87",
+   "x": 427.51,
+   "y": 252.28,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c88",
+   "x": 419.38,
+   "y": 252.6,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c89",
+   "x": 412.55,
+   "y": 256.83,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c90",
+   "x": 404.42,
+   "y": 260.08,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c91",
+   "x": 403.12,
+   "y": 261.06,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c92",
+   "x": 320.87,
+   "y": 261.71,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c93",
+   "x": 320.55,
+   "y": 265.28,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c94",
+   "x": 391.75,
+   "y": 256.5,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c95",
+   "x": 399.87,
+   "y": 258.13,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c96",
+   "x": 384.27,
+   "y": 263.98,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c97",
+   "x": 384.59,
+   "y": 266.26,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c98",
+   "x": 352.41,
+   "y": 279.59,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c99",
+   "x": 344.28,
+   "y": 281.21,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c100",
+   "x": 336.15,
+   "y": 283.49,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c101",
+   "x": 328.03,
+   "y": 287.06,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c102",
+   "x": 319.9,
+   "y": 292.92,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c103",
+   "x": 311.77,
+   "y": 297.47,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c104",
+   "x": 303.64,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c105",
+   "x": 295.52,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c106",
+   "x": 287.39,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c107",
+   "x": 279.26,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c108",
+   "x": 271.13,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c109",
+   "x": 263.01,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c110",
+   "x": 254.88,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c111",
+   "x": 246.75,
+   "y": 298.12,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c112",
+   "x": 352.41,
+   "y": 287.71,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c113",
+   "x": 352.41,
+   "y": 295.84,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c114",
+   "x": 352.41,
+   "y": 303.97,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c115",
+   "x": 352.41,
+   "y": 312.1,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c116",
+   "x": 352.41,
+   "y": 313.72,
+   "piso": 1,
+   "tipo": "entrada"
+  },
+  {
+   "id": "p1-c117",
+   "x": 240.25,
+   "y": 305.92,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c118",
+   "x": 234.4,
+   "y": 314.05,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p1-c119",
+   "x": 234.07,
+   "y": 314.7,
+   "piso": 1,
+   "tipo": "corredor"
+  },
+  {
+   "id": "porta-loja-210",
+   "x": 78.35,
+   "y": 29.58,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-210"
+  },
+  {
+   "id": "porta-loja-209",
+   "x": 79.65,
+   "y": 29.58,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-209"
+  },
+  {
+   "id": "porta-loja-211",
+   "x": 73.47,
+   "y": 30.23,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-211"
+  },
+  {
+   "id": "porta-loja-212",
+   "x": 69.57,
+   "y": 30.88,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-212"
+  },
+  {
+   "id": "porta-loja-213",
+   "x": 66.32,
+   "y": 31.53,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-213"
+  },
+  {
+   "id": "porta-loja-214",
+   "x": 61.77,
+   "y": 32.84,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-214"
+  },
+  {
+   "id": "porta-loja-201",
+   "x": 50.72,
+   "y": 49.09,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-201"
+  },
+  {
+   "id": "porta-loja-202",
+   "x": 57.22,
+   "y": 53.32,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-202"
+  },
+  {
+   "id": "porta-loja-203",
+   "x": 61.44,
+   "y": 55.27,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-203"
+  },
+  {
+   "id": "porta-loja-204",
+   "x": 68.92,
+   "y": 57.22,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-204"
+  },
+  {
+   "id": "porta-loja-205",
+   "x": 73.15,
+   "y": 57.87,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-205"
+  },
+  {
+   "id": "porta-loja-206",
+   "x": 77.7,
+   "y": 58.52,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-206"
+  },
+  {
+   "id": "porta-loja-207",
+   "x": 81.6,
+   "y": 58.84,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-207"
+  },
+  {
+   "id": "porta-loja-200",
+   "x": 39.66,
+   "y": 62.74,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-200"
+  },
+  {
+   "id": "porta-loja-215",
+   "x": 40.96,
+   "y": 33.81,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-215"
+  },
+  {
+   "id": "porta-loja-216",
+   "x": 49.74,
+   "y": 39.66,
+   "piso": 2,
+   "tipo": "porta",
+   "loja": "loja-216"
+  },
+  {
+   "id": "p2-c1",
+   "x": 83.55,
+   "y": 30.56,
+   "piso": 2,
+   "tipo": "entrada"
+  },
+  {
+   "id": "p2-c2",
+   "x": 75.75,
+   "y": 36.74,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c3",
+   "x": 71.2,
+   "y": 43.89,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c4",
+   "x": 40.64,
+   "y": 34.79,
+   "piso": 2,
+   "tipo": "entrada"
+  },
+  {
+   "id": "p2-c5",
+   "x": 44.54,
+   "y": 42.59,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c6",
+   "x": 45.84,
+   "y": 44.21,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c7",
+   "x": 63.07,
+   "y": 44.21,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c8",
+   "x": 54.94,
+   "y": 43.89,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c9",
+   "x": 46.81,
+   "y": 44.21,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c10",
+   "x": 76.07,
+   "y": 52.02,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c11",
+   "x": 83.88,
+   "y": 57.54,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c12",
+   "x": 84.53,
+   "y": 57.87,
+   "piso": 2,
+   "tipo": "entrada"
+  },
+  {
+   "id": "p2-c13",
+   "x": 44.86,
+   "y": 52.34,
+   "piso": 2,
+   "tipo": "corredor"
+  },
+  {
+   "id": "p2-c14",
+   "x": 41.94,
+   "y": 59.82,
+   "piso": 2,
+   "tipo": "entrada"
+  }
+ ],
+ "caminhos": [
+  [
+   "porta-loja-07",
+   "p1-c118"
+  ],
+  [
+   "porta-loja-03",
+   "p1-c41"
+  ],
+  [
+   "porta-loja-05",
+   "p1-c117"
+  ],
+  [
+   "porta-loja-01",
+   "p1-c39"
+  ],
+  [
+   "porta-loja-pc-07",
+   "p1-c46"
+  ],
+  [
+   "porta-loja-02",
+   "p1-c39"
+  ],
+  [
+   "porta-loja-132",
+   "p1-c8"
+  ],
+  [
+   "porta-loja-141a",
+   "p1-c9"
+  ],
+  [
+   "porta-loja-130",
+   "p1-c10"
+  ],
+  [
+   "porta-loja-127",
+   "p1-c12"
+  ],
+  [
+   "porta-loja-121",
+   "p1-c2"
+  ],
+  [
+   "porta-loja-114-b",
+   "p1-c46"
+  ],
+  [
+   "porta-loja-112",
+   "p1-c16"
+  ],
+  [
+   "porta-loja-110",
+   "p1-c87"
+  ],
+  [
+   "porta-loja-109",
+   "p1-c88"
+  ],
+  [
+   "porta-loja-104",
+   "p1-c11"
+  ],
+  [
+   "porta-loja-102",
+   "p1-c10"
+  ],
+  [
+   "porta-loja-101",
+   "p1-c31"
+  ],
+  [
+   "porta-loja-101-a",
+   "p1-c8"
+  ],
+  [
+   "porta-loja-99",
+   "p1-c68"
+  ],
+  [
+   "porta-loja-98",
+   "p1-c68"
+  ],
+  [
+   "porta-loja-97",
+   "p1-c68"
+  ],
+  [
+   "porta-loja-95",
+   "p1-c85"
+  ],
+  [
+   "porta-loja-91",
+   "p1-c26"
+  ],
+  [
+   "porta-loja-90",
+   "p1-c28"
+  ],
+  [
+   "porta-loja-89",
+   "p1-c29"
+  ],
+  [
+   "porta-loja-86",
+   "p1-c35"
+  ],
+  [
+   "porta-loja-148-a",
+   "p1-c37"
+  ],
+  [
+   "porta-loja-147",
+   "p1-c36"
+  ],
+  [
+   "porta-loja-145",
+   "p1-c34"
+  ],
+  [
+   "porta-loja-138",
+   "p1-c21"
+  ],
+  [
+   "porta-loja-137",
+   "p1-c20"
+  ],
+  [
+   "porta-loja-135",
+   "p1-c20"
+  ],
+  [
+   "porta-loja-anc-a9",
+   "p1-c6"
+  ],
+  [
+   "porta-loja-134",
+   "p1-c7"
+  ],
+  [
+   "porta-loja-133",
+   "p1-c8"
+  ],
+  [
+   "porta-loja-131",
+   "p1-c9"
+  ],
+  [
+   "porta-loja-129",
+   "p1-c11"
+  ],
+  [
+   "porta-loja-125",
+   "p1-c14"
+  ],
+  [
+   "porta-loja-128",
+   "p1-c12"
+  ],
+  [
+   "porta-loja-123",
+   "p1-c16"
+  ],
+  [
+   "porta-loja-122",
+   "p1-c17"
+  ],
+  [
+   "porta-loja-ancora-01",
+   "p1-c42"
+  ],
+  [
+   "porta-loja-06",
+   "p1-c118"
+  ],
+  [
+   "porta-loja-08",
+   "p1-c118"
+  ],
+  [
+   "porta-loja-09",
+   "p1-c117"
+  ],
+  [
+   "porta-loja-10",
+   "p1-c110"
+  ],
+  [
+   "porta-loja-12",
+   "p1-c107"
+  ],
+  [
+   "porta-loja-13",
+   "p1-c107"
+  ],
+  [
+   "porta-loja-16",
+   "p1-c104"
+  ],
+  [
+   "porta-loja-17",
+   "p1-c104"
+  ],
+  [
+   "porta-loja-18",
+   "p1-c103"
+  ],
+  [
+   "porta-loja-29",
+   "p1-c63"
+  ],
+  [
+   "porta-loja-33",
+   "p1-c60"
+  ],
+  [
+   "porta-loja-34",
+   "p1-c60"
+  ],
+  [
+   "porta-loja-35",
+   "p1-c59"
+  ],
+  [
+   "porta-loja-36",
+   "p1-c58"
+  ],
+  [
+   "porta-loja-37",
+   "p1-c58"
+  ],
+  [
+   "porta-loja-38",
+   "p1-c57"
+  ],
+  [
+   "porta-loja-40",
+   "p1-c55"
+  ],
+  [
+   "porta-loja-ancora-03",
+   "p1-c54"
+  ],
+  [
+   "porta-loja-41",
+   "p1-c52"
+  ],
+  [
+   "porta-loja-42",
+   "p1-c52"
+  ],
+  [
+   "porta-loja-ancora-04",
+   "p1-c47"
+  ],
+  [
+   "porta-loja-114a",
+   "p1-c18"
+  ],
+  [
+   "porta-loja-43",
+   "p1-c50"
+  ],
+  [
+   "porta-loja-44",
+   "p1-c49"
+  ],
+  [
+   "porta-loja-45",
+   "p1-c48"
+  ],
+  [
+   "porta-loja-46",
+   "p1-c47"
+  ],
+  [
+   "porta-loja-47",
+   "p1-c47"
+  ],
+  [
+   "porta-loja-48",
+   "p1-c48"
+  ],
+  [
+   "porta-loja-48a",
+   "p1-c49"
+  ],
+  [
+   "porta-loja-49",
+   "p1-c49"
+  ],
+  [
+   "porta-loja-50",
+   "p1-c54"
+  ],
+  [
+   "porta-loja-52",
+   "p1-c55"
+  ],
+  [
+   "porta-loja-53",
+   "p1-c55"
+  ],
+  [
+   "porta-loja-54",
+   "p1-c56"
+  ],
+  [
+   "porta-loja-55",
+   "p1-c57"
+  ],
+  [
+   "porta-loja-56",
+   "p1-c58"
+  ],
+  [
+   "porta-loja-57",
+   "p1-c59"
+  ],
+  [
+   "porta-loja-58",
+   "p1-c61"
+  ],
+  [
+   "porta-loja-59-60",
+   "p1-c61"
+  ],
+  [
+   "porta-loja-62",
+   "p1-c63"
+  ],
+  [
+   "porta-loja-63",
+   "p1-c64"
+  ],
+  [
+   "porta-loja-64",
+   "p1-c77"
+  ],
+  [
+   "porta-loja-65",
+   "p1-c76"
+  ],
+  [
+   "porta-loja-68",
+   "p1-c100"
+  ],
+  [
+   "porta-loja-69",
+   "p1-c101"
+  ],
+  [
+   "porta-loja-70",
+   "p1-c102"
+  ],
+  [
+   "porta-loja-71",
+   "p1-c104"
+  ],
+  [
+   "porta-loja-72",
+   "p1-c105"
+  ],
+  [
+   "porta-loja-73",
+   "p1-c105"
+  ],
+  [
+   "porta-loja-74",
+   "p1-c106"
+  ],
+  [
+   "porta-loja-75",
+   "p1-c106"
+  ],
+  [
+   "porta-loja-78",
+   "p1-c110"
+  ],
+  [
+   "porta-loja-79",
+   "p1-c43"
+  ],
+  [
+   "porta-loja-80",
+   "p1-c42"
+  ],
+  [
+   "porta-loja-ancora-05",
+   "p1-c108"
+  ],
+  [
+   "porta-loja-04",
+   "p1-c41"
+  ],
+  [
+   "porta-loja-pc-06",
+   "p1-c2"
+  ],
+  [
+   "porta-loja-pc-05",
+   "p1-c1"
+  ],
+  [
+   "porta-loja-pc-04",
+   "p1-c1"
+  ],
+  [
+   "porta-loja-61",
+   "p1-c62"
+  ],
+  [
+   "porta-loja-103",
+   "p1-c73"
+  ],
+  [
+   "porta-loja-20",
+   "p1-c113"
+  ],
+  [
+   "porta-loja-77",
+   "p1-c109"
+  ],
+  [
+   "porta-loja-19",
+   "p1-c101"
+  ],
+  [
+   "porta-loja-67",
+   "p1-c100"
+  ],
+  [
+   "porta-loja-148",
+   "p1-c38"
+  ],
+  [
+   "porta-loja-84",
+   "p1-c39"
+  ],
+  [
+   "porta-loja-76",
+   "p1-c108"
+  ],
+  [
+   "porta-loja-81",
+   "p1-c39"
+  ],
+  [
+   "porta-loja-05-a",
+   "p1-c118"
+  ],
+  [
+   "porta-loja-88",
+   "p1-c35"
+  ],
+  [
+   "porta-loja-02-a",
+   "p1-c40"
+  ],
+  [
+   "porta-loja-39",
+   "p1-c56"
+  ],
+  [
+   "porta-loja-39-a",
+   "p1-c55"
+  ],
+  [
+   "porta-loja-141",
+   "p1-c26"
+  ],
+  [
+   "porta-loja-140",
+   "p1-c23"
+  ],
+  [
+   "porta-loja-139",
+   "p1-c22"
+  ],
+  [
+   "porta-loja-92",
+   "p1-c26"
+  ],
+  [
+   "porta-loja-93a",
+   "p1-c25"
+  ],
+  [
+   "porta-loja-93",
+   "p1-c85"
+  ],
+  [
+   "porta-loja-53a",
+   "p1-c89"
+  ],
+  [
+   "porta-loja-30",
+   "p1-c62"
+  ],
+  [
+   "porta-loja-31",
+   "p1-c61"
+  ],
+  [
+   "porta-loja-28",
+   "p1-c61"
+  ],
+  [
+   "porta-loja-32",
+   "p1-c114"
+  ],
+  [
+   "porta-loja-66",
+   "p1-c99"
+  ],
+  [
+   "porta-loja-96",
+   "p1-c85"
+  ],
+  [
+   "porta-loja-143",
+   "p1-c34"
+  ],
+  [
+   "porta-loja-142",
+   "p1-c27"
+  ],
+  [
+   "porta-loja-124",
+   "p1-c15"
+  ],
+  [
+   "porta-loja-109-b",
+   "p1-c16"
+  ],
+  [
+   "p1-c25",
+   "p1-c26"
+  ],
+  [
+   "p1-c10",
+   "p1-c11"
+  ],
+  [
+   "p1-c45",
+   "p1-c46"
+  ],
+  [
+   "p1-c5",
+   "p1-c6"
+  ],
+  [
+   "p1-c66",
+   "p1-c71"
+  ],
+  [
+   "p1-c70",
+   "p1-c86"
+  ],
+  [
+   "p1-c69",
+   "p1-c70"
+  ],
+  [
+   "p1-c49",
+   "p1-c50"
+  ],
+  [
+   "p1-c117",
+   "p1-c118"
+  ],
+  [
+   "p1-c58",
+   "p1-c59"
+  ],
+  [
+   "p1-c65",
+   "p1-c98"
+  ],
+  [
+   "p1-c112",
+   "p1-c113"
+  ],
+  [
+   "p1-c10",
+   "p1-c9"
+  ],
+  [
+   "p1-c14",
+   "p1-c15"
+  ],
+  [
+   "p1-c98",
+   "p1-c99"
+  ],
+  [
+   "p1-c39",
+   "p1-c40"
+  ],
+  [
+   "p1-c113",
+   "p1-c114"
+  ],
+  [
+   "p1-c2",
+   "p1-c3"
+  ],
+  [
+   "p1-c51",
+   "p1-c52"
+  ],
+  [
+   "p1-c31",
+   "p1-c32"
+  ],
+  [
+   "p1-c6",
+   "p1-c7"
+  ],
+  [
+   "p1-c7",
+   "p1-c8"
+  ],
+  [
+   "p1-c90",
+   "p1-c91"
+  ],
+  [
+   "p1-c41",
+   "p1-c42"
+  ],
+  [
+   "p1-c30",
+   "p1-c5"
+  ],
+  [
+   "p1-c92",
+   "p1-c93"
+  ],
+  [
+   "p1-c96",
+   "p1-c97"
+  ],
+  [
+   "p1-c104",
+   "p1-c105"
+  ],
+  [
+   "p1-c74",
+   "p1-c94"
+  ],
+  [
+   "p1-c108",
+   "p1-c109"
+  ],
+  [
+   "p1-c33",
+   "p1-c67"
+  ],
+  [
+   "p1-c103",
+   "p1-c104"
+  ],
+  [
+   "p1-c117",
+   "p1-c44"
+  ],
+  [
+   "p1-c85",
+   "p1-c86"
+  ],
+  [
+   "p1-c76",
+   "p1-c77"
+  ],
+  [
+   "p1-c106",
+   "p1-c107"
+  ],
+  [
+   "p1-c101",
+   "p1-c102"
+  ],
+  [
+   "p1-c52",
+   "p1-c53"
+  ],
+  [
+   "p1-c29",
+   "p1-c34"
+  ],
+  [
+   "p1-c50",
+   "p1-c51"
+  ],
+  [
+   "p1-c102",
+   "p1-c103"
+  ],
+  [
+   "p1-c21",
+   "p1-c22"
+  ],
+  [
+   "p1-c71",
+   "p1-c72"
+  ],
+  [
+   "p1-c63",
+   "p1-c64"
+  ],
+  [
+   "p1-c88",
+   "p1-c89"
+  ],
+  [
+   "p1-c105",
+   "p1-c106"
+  ],
+  [
+   "p1-c74",
+   "p1-c96"
+  ],
+  [
+   "p1-c23",
+   "p1-c24"
+  ],
+  [
+   "p1-c30",
+   "p1-c31"
+  ],
+  [
+   "p1-c75",
+   "p1-c76"
+  ],
+  [
+   "p1-c67",
+   "p1-c68"
+  ],
+  [
+   "p1-c72",
+   "p1-c73"
+  ],
+  [
+   "p1-c77",
+   "p1-c78"
+  ],
+  [
+   "p1-c109",
+   "p1-c110"
+  ],
+  [
+   "p1-c100",
+   "p1-c99"
+  ],
+  [
+   "p1-c47",
+   "p1-c48"
+  ],
+  [
+   "p1-c68",
+   "p1-c69"
+  ],
+  [
+   "p1-c114",
+   "p1-c115"
+  ],
+  [
+   "p1-c1",
+   "p1-c2"
+  ],
+  [
+   "p1-c48",
+   "p1-c49"
+  ],
+  [
+   "p1-c65",
+   "p1-c78"
+  ],
+  [
+   "p1-c29",
+   "p1-c35"
+  ],
+  [
+   "p1-c89",
+   "p1-c90"
+  ],
+  [
+   "p1-c19",
+   "p1-c20"
+  ],
+  [
+   "p1-c55",
+   "p1-c56"
+  ],
+  [
+   "p1-c54",
+   "p1-c55"
+  ],
+  [
+   "p1-c57",
+   "p1-c58"
+  ],
+  [
+   "p1-c87",
+   "p1-c88"
+  ],
+  [
+   "p1-c28",
+   "p1-c29"
+  ],
+  [
+   "p1-c40",
+   "p1-c41"
+  ],
+  [
+   "p1-c43",
+   "p1-c44"
+  ],
+  [
+   "p1-c46",
+   "p1-c47"
+  ],
+  [
+   "p1-c16",
+   "p1-c17"
+  ],
+  [
+   "p1-c19",
+   "p1-c5"
+  ],
+  [
+   "p1-c33",
+   "p1-c66"
+  ],
+  [
+   "p1-c4",
+   "p1-c45"
+  ],
+  [
+   "p1-c35",
+   "p1-c36"
+  ],
+  [
+   "p1-c22",
+   "p1-c23"
+  ],
+  [
+   "p1-c59",
+   "p1-c60"
+  ],
+  [
+   "p1-c56",
+   "p1-c57"
+  ],
+  [
+   "p1-c107",
+   "p1-c108"
+  ],
+  [
+   "p1-c20",
+   "p1-c21"
+  ],
+  [
+   "p1-c118",
+   "p1-c119"
+  ],
+  [
+   "p1-c111",
+   "p1-c44"
+  ],
+  [
+   "p1-c3",
+   "p1-c4"
+  ],
+  [
+   "p1-c62",
+   "p1-c63"
+  ],
+  [
+   "p1-c91",
+   "p1-c95"
+  ],
+  [
+   "p1-c18",
+   "p1-c4"
+  ],
+  [
+   "p1-c11",
+   "p1-c12"
+  ],
+  [
+   "p1-c115",
+   "p1-c116"
+  ],
+  [
+   "p1-c38",
+   "p1-c39"
+  ],
+  [
+   "p1-c42",
+   "p1-c43"
+  ],
+  [
+   "p1-c17",
+   "p1-c18"
+  ],
+  [
+   "p1-c13",
+   "p1-c14"
+  ],
+  [
+   "p1-c27",
+   "p1-c28"
+  ],
+  [
+   "p1-c37",
+   "p1-c38"
+  ],
+  [
+   "p1-c70",
+   "p1-c92"
+  ],
+  [
+   "p1-c53",
+   "p1-c54"
+  ],
+  [
+   "p1-c61",
+   "p1-c62"
+  ],
+  [
+   "p1-c8",
+   "p1-c9"
+  ],
+  [
+   "p1-c24",
+   "p1-c25"
+  ],
+  [
+   "p1-c12",
+   "p1-c13"
+  ],
+  [
+   "p1-c112",
+   "p1-c98"
+  ],
+  [
+   "p1-c15",
+   "p1-c16"
+  ],
+  [
+   "p1-c32",
+   "p1-c33"
+  ],
+  [
+   "p1-c73",
+   "p1-c74"
+  ],
+  [
+   "p1-c110",
+   "p1-c111"
+  ],
+  [
+   "p1-c60",
+   "p1-c61"
+  ],
+  [
+   "p1-c26",
+   "p1-c27"
+  ],
+  [
+   "p1-c64",
+   "p1-c65"
+  ],
+  [
+   "p1-c66",
+   "p1-c75"
+  ],
+  [
+   "p1-c100",
+   "p1-c101"
+  ],
+  [
+   "p1-c36",
+   "p1-c37"
+  ],
+  [
+   "p1-c94",
+   "p1-c95"
+  ],
+  [
+   "porta-loja-210",
+   "p2-c1"
+  ],
+  [
+   "porta-loja-209",
+   "p2-c1"
+  ],
+  [
+   "porta-loja-211",
+   "p2-c2"
+  ],
+  [
+   "porta-loja-212",
+   "p2-c2"
+  ],
+  [
+   "porta-loja-213",
+   "p2-c2"
+  ],
+  [
+   "porta-loja-214",
+   "p2-c7"
+  ],
+  [
+   "porta-loja-201",
+   "p2-c9"
+  ],
+  [
+   "porta-loja-202",
+   "p2-c8"
+  ],
+  [
+   "porta-loja-203",
+   "p2-c7"
+  ],
+  [
+   "porta-loja-204",
+   "p2-c10"
+  ],
+  [
+   "porta-loja-205",
+   "p2-c10"
+  ],
+  [
+   "porta-loja-206",
+   "p2-c11"
+  ],
+  [
+   "porta-loja-207",
+   "p2-c11"
+  ],
+  [
+   "porta-loja-200",
+   "p2-c14"
+  ],
+  [
+   "porta-loja-215",
+   "p2-c4"
+  ],
+  [
+   "porta-loja-216",
+   "p2-c9"
+  ],
+  [
+   "p2-c3",
+   "p2-c7"
+  ],
+  [
+   "p2-c4",
+   "p2-c5"
+  ],
+  [
+   "p2-c13",
+   "p2-c14"
+  ],
+  [
+   "p2-c10",
+   "p2-c11"
+  ],
+  [
+   "p2-c5",
+   "p2-c6"
+  ],
+  [
+   "p2-c2",
+   "p2-c3"
+  ],
+  [
+   "p2-c8",
+   "p2-c9"
+  ],
+  [
+   "p2-c11",
+   "p2-c12"
+  ],
+  [
+   "p2-c10",
+   "p2-c3"
+  ],
+  [
+   "p2-c7",
+   "p2-c8"
+  ],
+  [
+   "p2-c6",
+   "p2-c9"
+  ],
+  [
+   "p2-c13",
+   "p2-c6"
+  ],
+  [
+   "p2-c1",
+   "p2-c2"
+  ]
+ ]
+}
