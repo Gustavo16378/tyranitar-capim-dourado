@@ -108,6 +108,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TB13 | Consulta da ficha filtrada pelas categorias da loja | RN04 | Só os interesses das categorias da loja |
 | TB14 | Duas baixas de estoque na última unidade | RN03 | Uma altera a linha, a outra não altera nada |
 | TB15 | Percentual de cupom fora de 1 a 100 | RF23 | Rejeitado |
+| TB16 | Estorno pedido numa reserva que não foi paga | RF09 | Rejeitado |
 
 ### API (TA)
 
@@ -152,6 +153,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA37 | Trocar o nome e a senha na Minha conta | RF01 | Nome novo na conta; a senha só troca com a atual certa (errada: 400, sem encerrar a sessão) e a nova entra no login |
 | TA38 | Ver e apagar um interesse da ficha | RF13, RN04 | O interesse apagado some da ficha e do atendimento da loja; os outros mantêm o id |
 | TA39 | Baixar meus dados | RF13 (LGPD) | JSON com conta, ficha, reservas, compras, favoritos, conversa e buscas, só do cliente, sem senha nem QR |
+| TA40 | O cliente cancela a própria reserva (`PATCH /api/reservas/{id}/cancelar`) | RF08, RF09, RN03 | O dono cancela: `CANCELADA` e o estoque volta na hora; paga por Pix, `estornoSolicitado: true`, e a loja vê cancelada; de outro cliente, 404 e nada muda; já retirada, cancelada ou expirada, 409 sem mexer no estoque |
 
 ### Capi (TI)
 
@@ -208,6 +210,7 @@ Com o Claude simulado:
 | TE25 | Computador sem câmera | RF03 | A folha mostra só "Escolher da galeria", com um aviso |
 | TE26 | Permissão da câmera negada | RF03 | A folha volta só com a galeria, com um aviso, e a foto escolhida fica anexada |
 | TE27 | QR da entrada lido sem sessão | RF10 | O mapa abre sem login já na entrada certa (também com a loja no link); reservar, a Capi e a carteira continuam pedindo login; o convite para entrar volta ao mesmo mapa |
+| TE28 | Cancelar a reserva pelo app | RF08, RF09, RF11, RF20 | Na carteira, "Não, manter a reserva" mantém e "Sim, cancelar" tira a reserva da lista, com o aviso do estorno do Pix; na tela da reserva, cancelar mostra "Reserva cancelada"; a loja vê as duas em Reservas › Encerradas, a do Pix com o estorno |
 
 ### Acessibilidade (TX)
 
@@ -248,10 +251,10 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF05 Buscar | TA07, TE02, TE04 |
 | RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
 | RF07 Produto | TA09, TE02 |
-| RF08 Reservar na loja | TA11, TA15, TI03, TE02 |
-| RF09 Reservar com Pix | TA12, TB06, TE01 |
+| RF08 Reservar na loja | TA11, TA15, TA40, TI03, TE02, TE28 |
+| RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
 | RF10 Mapa e rota | TE01, TE09, TM01 |
-| RF11 Carteira | TU05, TA17, TE01 |
+| RF11 Carteira | TU05, TA17, TE01, TE28 |
 | RF12 Nota fiscal | TU22, TA18 |
 | RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
 | RF14 Notificações | TE01 (notificação de pontos) |
@@ -260,7 +263,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF17 Login do lojista | TA03, TE03 |
 | RF18 Atendimento | TA23, TA24, TE01, TE06, TM03 |
 | RF19 Compra no caixa | TU06, TU07, TA25, TA27, TB08 |
-| RF20 Gerir reservas | TU18, TU19, TA28, TB05 |
+| RF20 Gerir reservas | TU18, TU19, TA28, TB05, TE28 |
 | RF21 Produtos | TB12 |
 | RF22 Importar CSV | TU27, TU28, TA29, TE04 |
 | RF23 Cupons da loja | TB15, TE03 |
@@ -272,7 +275,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF30 Jornada | TA30 (conversão com ficha) |
 | RF31 Reembolsos | TA34, TB10 |
 | RN01 e RN02 Prazos | TU15, TU16, TU17, TA11, TA12, TA16 |
-| RN03 Estoque | TB04, TB14, TA13, TA14, TA15 |
+| RN03 Estoque | TB04, TB14, TA13, TA14, TA15, TA40 |
 | RN04 Ficha | TU20, TU21, TB13, TA23, TI04 |
 | RN05 e RN06 Cupons | TU08 a TU14, TB09, TA25, TA26 |
 | RN07 e RN08 Pontos e níveis | TU01 a TU04, TA25, TA32 |

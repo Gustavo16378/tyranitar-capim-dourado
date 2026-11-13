@@ -6,18 +6,18 @@ Este documento reúne a bateria de testes da solução, o resultado do CI, como 
 
 | Camada | Onde | O que verifica | Testes |
 | --- | --- | --- | ---: |
-| Unidade | `tests/unidade` | Regras de negócio (pontos, níveis, cupons, prazos, vagas, ficha), formatos, mapa (rotas, entradas e o link do QR), carrossel de cupons, categorias e mocks | 255 |
-| API | `tests/api` | Rotas das Functions com JWT de verdade e o banco D1 do Miniflare, recriado a cada teste | 104 |
-| Banco | `tests/banco` | Esquema e restrições do D1 (TB01 a TB12 e TB15) | 17 |
+| Unidade | `tests/unidade` | Regras de negócio (pontos, níveis, cupons, prazos, vagas, ficha), formatos, mapa (rotas, entradas e o link do QR), carrossel de cupons, categorias e mocks | 256 |
+| API | `tests/api` | Rotas das Functions com JWT de verdade e o banco D1 do Miniflare, recriado a cada teste | 108 |
+| Banco | `tests/banco` | Esquema e restrições do D1 (TB01 a TB12, TB15 e TB16) | 18 |
 | Capi (integração) | `tests/capi` | A Capi com o Claude simulado: ferramentas, limites, prazos, histórico e fotos (TI01 a TI09 e TI12) | 24 |
-| E2E | `tests/e2e` | Jornadas completas no Chromium, no celular (390 × 844) e no computador: 23 cenários, 35 execuções e 11 puladas de propósito (as que só valem numa das telas, como a câmera traseira no celular e a webcam no computador) | 35 |
+| E2E | `tests/e2e` | Jornadas completas no Chromium, no celular (390 × 844) e no computador: 25 cenários, 39 execuções e 11 puladas de propósito (as que só valem numa das telas, como a câmera traseira no celular e a webcam no computador) | 39 |
 | Acessibilidade | `tests/a11y` | axe-core, WCAG 2.1 A e AA, sem violação séria ou crítica: 11 telas nos temas claro e escuro | 22 |
 
-São 400 testes no Vitest (unidade, API, banco e Capi) e 57 execuções no navegador (Playwright). Os testes nunca chamam o Claude de verdade: a Capi usa respostas gravadas ou o modo demonstração.
+São 406 testes no Vitest (unidade, API, banco e Capi) e 61 execuções no navegador (Playwright). Os testes nunca chamam o Claude de verdade: a Capi usa respostas gravadas ou o modo demonstração.
 
 ## CI
 
-O [workflow do GitHub Actions](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml) roda tudo a cada push na `main`: lint, tipos, os 400 testes do Vitest, o build e, num servidor com banco limpo, o E2E e a acessibilidade. O selo do CI fica no topo do README.
+O [workflow do GitHub Actions](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml) roda tudo a cada push na `main`: lint, tipos, os 406 testes do Vitest, o build e, num servidor com banco limpo, o E2E e a acessibilidade. O selo do CI fica no topo do README.
 
 Cada correção passou no CI. Quando dois pushes saem em seguida, o GitHub cancela a execução do primeiro e roda só a do mais novo, que já contém o anterior:
 
@@ -34,7 +34,7 @@ Cada correção passou no CI. Quando dois pushes saem em seguida, o GitHub cance
 Requisito: Node 22.12 ou mais novo. Na primeira vez, `npm install` e `npx playwright install chromium`.
 
 ```bash
-npm test               # Vitest: unidade, API, banco e Capi (368 testes)
+npm test               # Vitest: unidade, API, banco e Capi (406 testes)
 npm run test:unidade   # só os de unidade
 npm run test:api       # só API, banco e Capi (runtime do Workers)
 npm run test:e2e       # jornadas no navegador, celular e computador
@@ -47,7 +47,7 @@ O `test:e2e` e o `test:a11y` sobem sozinhos o site com o modo demonstração e u
 
 ## Bugs encontrados e corrigidos
 
-Achados no teste do app como usuário real, em 13/11/2026. Cada um tem um teste automatizado que verifica o comportamento corrigido.
+Achados no teste do app como usuário real, em 13/11/2026; o 7 veio como sugestão da equipe nos testes. Cada um tem um teste automatizado que verifica o comportamento corrigido.
 
 | # | Bug | Correção | Teste que cobre | Commit |
 | --- | --- | --- | --- | --- |
@@ -56,8 +56,8 @@ Achados no teste do app como usuário real, em 13/11/2026. Cada um tem um teste 
 | 3 | Depois de uma foto, a Capi não sabia mais o que tinha visto e podia dizer que não viu foto nenhuma | O histórico guarda a descrição que a Capi fez da foto (`[foto: descrição]`, a partir do que ela mandou procurar em `buscar_similares`); nas mensagens seguintes a foto volta para o Claude como uma foto que ele viu, e o prompt proíbe dizer que não viu | TI12 ([`tests/capi/conversa.test.ts`](../tests/capi/conversa.test.ts)) e a verificação com o Claude real abaixo | [`66518ce`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/66518ce), [`23776a8`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/23776a8) |
 | 4 | Esperando a resposta, o app não dizia nada e não tinha tempo limite | Depois de 2 s, "A Capi está procurando nas lojas…"; em 25 s a chamada é cancelada, com uma mensagem amigável e "Tentar de novo", que manda a mesma mensagem | TE19 (relógio simulado do Playwright: a resposta nunca chega) | [`914a430`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/914a430) |
 | 5 | O mapa marcava sozinho a entrada mais próxima como "Você está aqui", e o nome da loja de destino aparecia duas vezes | Na primeira rota, o mapa pergunta "Por qual entrada você chegou?" (as entradas do piso, nomeadas no mapa), lembra a resposta por 6 h e aceita `?origem=<entrada>` no link, para o QR de cada entrada abrir o mapa já no lugar certo. Sem resposta, "Saindo da entrada mais próxima", sem "Você está aqui". O nome da loja de destino aparece uma vez | TE20 ([`tests/e2e/mapa.spec.ts`](../tests/e2e/mapa.spec.ts)) e [`tests/unidade/mapa-entradas.test.ts`](../tests/unidade/mapa-entradas.test.ts) (5 testes) | [`4b283a2`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/4b283a2) |
-
 | 6 | A foto da câmera ia na hora: não dava para escrever junto nem desistir, e não havia como tirar foto no computador | O botão da câmera abre uma folha com "Tirar foto" e "Escolher da galeria". No celular, "Tirar foto" é o seletor com `capture="environment"` (a câmera traseira direto); no computador, abre a webcam com o botão de capturar; sem câmera, ou com a permissão negada, só a galeria. A foto fica anexada no campo, com prévia e um X, e só vai no enviar. Testando, achamos também que a folha não reabria quando a permissão era negada na hora (um evento de fechar atrasado): corrigido no componente `Folha` | TE21 ([`tests/e2e/capi.spec.ts`](../tests/e2e/capi.spec.ts)) e TE23 a TE26 ([`tests/e2e/camera.spec.ts`](../tests/e2e/camera.spec.ts)) | [`ab8cb30`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/ab8cb30), [`6fd393e`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/6fd393e) |
+| 7 | Sugestão da equipe nos testes: o cliente não tinha como desistir de uma reserva, e o produto ficava preso até o prazo vencer (4 h, ou 48 h se pago por Pix) | "Cancelar reserva" na carteira (Minhas reservas) e na tela da reserva, com confirmação: "O produto volta para a loja. Quer cancelar?". Vale para a reserva em aberto (pendente, confirmada ou separada), nunca para a retirada. A rota nova `PATCH /api/reservas/{id}/cancelar` aceita só o dono: a reserva fica `CANCELADA`, o estoque volta na hora e, se estava paga por Pix, o estorno fica pedido (simulado, como o Pix). A loja vê a reserva cancelada na tela Reservas, com "Estorno do Pix solicitado" | TA40 ([`tests/api/cliente.test.ts`](../tests/api/cliente.test.ts): o dono cancela e o estoque volta; outro cliente recebe 404; já retirada, 409), TB16 (estorno só em reserva paga) e TE28 ([`tests/e2e/cancelar-reserva.spec.ts`](../tests/e2e/cancelar-reserva.spec.ts)) | [`cae6000`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/cae6000) (API), [`f0977b7`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/f0977b7) (telas) |
 
 ### Verificação com o Claude real (bug 3)
 
