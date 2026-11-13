@@ -22,9 +22,8 @@ export interface Oferta {
 }
 
 /**
- * Cupom da carteira. O exemplo do api.md traz { id, titulo, loja, validade }; o app precisa
- * também de tipo e valor (para o canhoto: "10%", "R$ 20") e do nível mínimo, que são colunas
- * da tabela cupom. loja null é voucher do shopping.
+ * Cupom da carteira: tipo e valor montam o canhoto ("10%", "R$ 20"); loja null é voucher do
+ * shopping.
  */
 export interface CupomCarteira {
   id: string

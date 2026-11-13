@@ -12,9 +12,8 @@ export interface MensagemChat {
 export type AcaoChat = { tipo: 'RESERVAR'; produtoId: string } | { tipo: 'ROTA'; mapaId: string; piso: Piso }
 
 /**
- * O exemplo do api.md traz o produto com { id, nome, precoCentavos, loja: { nome, mapaId } }.
- * O card do chat mostra também piso e estoque, então o app espera o mesmo formato da busca
- * (ProdutoResumo), que é o que as ferramentas da Capi já leem do banco.
+ * Os produtos vêm no mesmo formato da busca (ProdutoResumo), para o card do chat mostrar piso e
+ * estoque. A resposta pode ter parágrafos separados por linha em branco: um balão para cada.
  */
 export interface RespostaChat {
   resposta: string
