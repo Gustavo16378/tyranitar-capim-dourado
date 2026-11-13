@@ -1,16 +1,31 @@
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useSearchParams } from 'react-router'
 import { listarLojas, useDados } from '../api'
-import { Badge } from '../componentes'
+import { Badge, Icon, type IconName } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
 import { acharNaPlanta, rotaAte } from '../mapa/dados'
 import { minutosAPe } from '../mapa/grafo'
-import { Mapa3D } from '../mapa/Mapa3D'
+import { Mapa3D, type ControleDoMapa } from '../mapa/Mapa3D'
 import type { Piso } from '../tipos'
 import { nomeDoPiso } from './formatos'
 
 const PISOS: Piso[] = [1, 2]
+
+/** Botão redondo sobre o mapa (44 px de toque), com o nome para o leitor de tela. */
+function BotaoDoMapa({ rotulo, icone, onClick }: { rotulo: string; icone: IconName; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={rotulo}
+      title={rotulo}
+      onClick={onClick}
+      className="grid size-11 cursor-pointer place-items-center rounded-full border border-line-strong bg-surface-raised text-ink shadow-card"
+    >
+      <Icon name={icone} />
+    </button>
+  )
+}
 
 /**
  * Mapa 3D do shopping (RF10), um piso por vez: os pisos têm escalas diferentes. Abre na loja de
@@ -47,6 +62,7 @@ function MapaAte({
   const achado = destino ? acharNaPlanta(destino) : undefined
   const [piso, setPiso] = useState<Piso>(achado?.piso ?? 1)
   const abas = useRef<(HTMLButtonElement | null)[]>([])
+  const controle = useRef<ControleDoMapa>(null)
   const rota = destino ? rotaAte(destino) : null
   const nome = destino ? nomes?.[destino] : undefined
   const daLoja = nome ?? 'a loja'
@@ -98,9 +114,23 @@ function MapaAte({
         </div>
       </header>
 
-      <div id="planta" role="tabpanel" aria-labelledby={`aba-piso-${piso}`}>
-        <div role="img" aria-label={descricao} className="h-[58dvh] min-h-[300px] overflow-hidden rounded-lg bg-surface-sunken">
-          <Mapa3D piso={piso} destino={destino} nomes={nomes} onSelecionarLoja={aoEscolher} />
+      <div id="planta" role="tabpanel" aria-labelledby={`aba-piso-${piso}`} className="relative">
+        <div
+          role="img"
+          aria-label={descricao}
+          className="h-[58dvh] min-h-[300px] overflow-hidden rounded-lg bg-surface-sunken"
+        >
+          <Mapa3D piso={piso} destino={destino} nomes={nomes} onSelecionarLoja={aoEscolher} controle={controle} />
+        </div>
+        {/* Fora do role="img", para o leitor de tela achar os botões. */}
+        <div className="absolute right-3 top-3 z-30 flex flex-col gap-2">
+          <BotaoDoMapa rotulo="Aproximar" icone="mais" onClick={() => controle.current?.aproximar()} />
+          <BotaoDoMapa rotulo="Afastar" icone="menos" onClick={() => controle.current?.afastar()} />
+          <BotaoDoMapa
+            rotulo={rota && achado?.piso === piso ? 'Voltar para a rota' : 'Ver o piso inteiro'}
+            icone="alvo"
+            onClick={() => controle.current?.recentralizar()}
+          />
         </div>
       </div>
 
