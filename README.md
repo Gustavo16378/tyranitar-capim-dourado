@@ -1,8 +1,16 @@
-# Jornada de compra integrada · Capim Dourado Shopping
+<p align="center">
+  <img src="docs/img/banner.svg" width="100%" alt="Capi · Capim Dourado Shopping. Equipe Tyranitar · HackaRun 2026">
+</p>
 
-[![CI](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml"><img src="https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.9">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
+  <a href="https://tyranitar-capim-dourado.pages.dev"><img src="https://img.shields.io/badge/Cloudflare-Pages-F38020?logo=cloudflarepages&logoColor=white" alt="Cloudflare Pages"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue" alt="Licença MIT"></a>
+</p>
 
-Solução da equipe Tyranitar para o tema 04 do hackathon: integração da jornada de compra digital e física.
+Solução da equipe Tyranitar para o tema 04 do HackaRun 2026: a jornada de compra integrada, digital e física, do Capim Dourado Shopping.
 
 ## Primeira entrega
 
@@ -10,6 +18,8 @@ Solução da equipe Tyranitar para o tema 04 do hackathon: integração da jorna
 - [Onde está cada item pedido](docs/primeira-entrega.md)
 - [Design system publicado](https://tyranitar-capim-dourado.pages.dev/design-system)
 - [App no ar](https://tyranitar-capim-dourado.pages.dev)
+
+## A solução
 
 O cliente pergunta à **Capi**, a assistente de IA do shopping, por texto, foto ou link. Ela acha o produto nas lojas, o cliente reserva e segue a rota no mapa. No balcão, o vendedor lê o QR da carteira e já sabe o que o cliente procura. A compra vira pontos de fidelidade e dados para lojistas e para o shopping.
 
@@ -24,9 +34,42 @@ Um site só, com três interfaces:
 
 O app ainda não tem nome definitivo: o nome vem da constante `APP_NOME`, em `src/config.ts`.
 
-## Stack
+### A jornada do cliente
 
-React 19, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 (SQLite) no back, no mesmo deploy. A Capi usa a API do Claude, chamada só pelo servidor.
+<p align="center">
+  <img src="docs/img/jornada.gif" width="300" alt="A jornada no celular: a Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a Morofit no mapa 3D e abre a carteira com o QR e os pontos.">
+</p>
+
+A Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a loja no mapa 3D e abre a carteira. Gravado com o Playwright num celular de 390 px (`node scripts/gravar-jornada.mjs`).
+
+### Telas
+
+| Abertura | Início | Capi | Produto | Como reservar |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/img/tela-abertura.png" width="150" alt="Abertura do app com a Capi"> | <img src="docs/img/tela-inicio.png" width="150" alt="Início com ofertas e produtos salvos"> | <img src="docs/img/tela-capi.png" width="150" alt="Conversa com a Capi"> | <img src="docs/img/tela-produto.png" width="150" alt="Página do produto"> | <img src="docs/img/tela-reservar.png" width="150" alt="Escolha entre pagar com Pix ou na loja"> |
+
+| Reserva | Mapa | Carteira | Reservas e cupons | Painel da loja |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/img/tela-reserva.png" width="150" alt="Reserva separada, com o andamento"> | <img src="docs/img/tela-mapa.png" width="150" alt="Mapa 3D com a rota até a loja"> | <img src="docs/img/tela-carteira.png" width="150" alt="Carteira com o QR e os pontos"> | <img src="docs/img/tela-carteira-reservas.png" width="150" alt="Reservas e cupons na carteira"> | <img src="docs/img/painel-atendimento.png" width="150" alt="Painel da loja atendendo pelo QR"> |
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+  pessoas(["Cliente, lojista<br/>e shopping"])
+  subgraph cf["Cloudflare"]
+    front["Front em React (PWA)<br/>no Cloudflare Pages"]
+    fn["API em Pages Functions<br/>JWT, perfis e regras"]
+    d1[("D1 (SQLite)<br/>lojas, produtos,<br/>reservas, pontos")]
+  end
+  claude["API do Claude<br/>(Anthropic)"]
+  pessoas -->|HTTPS| front
+  front -->|"/api"| fn
+  fn --> d1
+  fn -->|"Capi: texto, foto<br/>e tool use"| claude
+```
+
+React 19, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 (SQLite) no back, no mesmo deploy. A Capi usa a API do Claude, chamada só pelo servidor: a chave nunca vai para o navegador. Os detalhes, as tecnologias e as pastas estão em [docs/arquitetura.md](docs/arquitetura.md).
 
 ## Como rodar
 
@@ -89,3 +132,28 @@ Fica em [`docs/`](docs/):
 - [Plano de testes](docs/testes.md)
 - [Créditos das imagens](docs/creditos.md)
 - [Primeira entrega](docs/primeira-entrega.md)
+
+## Equipe
+
+| Integrante | Papel |
+| --- | --- |
+| Gustavo Barbosa Lima | Desenvolvimento back-end, Capi (IA) e integração |
+| Gustavo Ferreira | Design, front-end e mapa do shopping |
+| Kauã | Documentação e modelo de negócio |
+| Diogo | Pitch, roteiro e vídeo |
+
+**Orientadores:** Haroldo Soares e Paulo Rafael.
+
+## Uso de inteligência artificial
+
+Declaração do item 6.3 do edital.
+
+- **Ferramentas:** Claude e Claude Code, da Anthropic.
+- **Para quê:** ideação, requisitos, protótipo, programação, testes, documentação e o desenho do mapa das lojas.
+- **Revisão:** a equipe revisou e testou tudo o que foi feito com IA.
+- **No produto:** a Capi, a assistente do app, usa a API do Claude. A chamada sai só do servidor, que entende a pergunta por texto, foto ou link e busca nos produtos das lojas do shopping.
+- **Dados:** os usuários e as buscas do seed são fictícios.
+
+## Licença
+
+O código é distribuído sob a [licença MIT](LICENSE), © 2026 Equipe Tyranitar. As fotos dos produtos e das capas são do Unsplash, com a licença própria descrita em [docs/creditos.md](docs/creditos.md).
