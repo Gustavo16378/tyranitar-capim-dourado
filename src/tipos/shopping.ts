@@ -1,8 +1,8 @@
 // Tipos das rotas do painel do shopping (/api/shopping/*), no formato de docs/api.md.
 // O front (src/shopping/api) e os mocks (src/mocks/shopping) leem daqui.
-import type { CupomComUso, NivelApi, Periodo } from './comum'
+import type { CupomComUso, NivelApi, Periodo } from './painel'
 
-export type * from './comum'
+export type * from './painel'
 
 // ---------- /api/shopping/lojas e /api/shopping/lojistas (RF27) ----------
 

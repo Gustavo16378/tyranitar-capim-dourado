@@ -51,7 +51,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `POST /api/avaliacoes` | CLIENTE | RF15 |
 | `PUT /api/me/favoritos/{produtoId}`, `DELETE ...` | CLIENTE | RF16 |
 | `GET /api/loja/atendimento/{qr}` | LOJISTA | RF18 |
-| `POST /api/loja/atendimento/previa` | LOJISTA | RF19 |
+| `POST /api/loja/compras/previa` | LOJISTA | RF19 |
 | `POST /api/loja/compras` | LOJISTA | RF19 |
 | `GET /api/loja/reservas` | LOJISTA | RF20 |
 | `PATCH /api/loja/reservas/{id}` | LOJISTA | RF20 |
@@ -241,9 +241,9 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 
 `ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04).
 
-### `POST /api/loja/atendimento/previa`
+### `POST /api/loja/compras/previa`
 
-Calcula a compra sem gravar nada, para o caixa ver quanto cobrar antes de registrar. Recebe o mesmo corpo de `POST /api/loja/compras` e aplica as mesmas regras.
+O mesmo corpo de `POST /api/loja/compras`, mas não grava nada: calcula a compra para o caixa mostrar "Cliente paga" enquanto o vendedor marca os cupons, antes de registrar. Aplica as mesmas regras.
 
 Resposta `200`: a compra como ficaria, sem `id`.
 
@@ -306,7 +306,7 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
 }
 ```
 
-`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o preço no momento da reserva.
+`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o total da reserva, pelo preço do momento da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido (RN01, RN02, RN03).
 
 ### `PATCH /api/loja/reservas/{id}`
 
@@ -314,7 +314,7 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
 { "status": "SEPARADA" }
 ```
 
-Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`). Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
+Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`; cancelar devolve o estoque e separar avisa o cliente. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`); reserva de outra loja, `403`. Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
 
 ### `GET /api/loja/produtos`
 

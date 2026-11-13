@@ -35,9 +35,9 @@ export function buscarAtendimento(qr: string, sinal?: AbortSignal) {
   return requisitar<Atendimento>('GET', `/api/loja/atendimento/${encodeURIComponent(qr)}`, { sinal })
 }
 
-/** POST /api/loja/atendimento/previa: quanto o cliente paga e quantos pontos ganha, sem gravar (RF19). */
+/** POST /api/loja/compras/previa: quanto o cliente paga e quantos pontos ganha, sem gravar (RF19). */
 export function calcularPrevia(pedido: PedidoPrevia, sinal?: AbortSignal) {
-  return requisitar<PreviaCompra>('POST', '/api/loja/atendimento/previa', { corpo: pedido, sinal })
+  return requisitar<PreviaCompra>('POST', '/api/loja/compras/previa', { corpo: pedido, sinal })
 }
 
 /** POST /api/loja/compras: registra a compra no caixa, com cupons, e soma os pontos (RF19). */

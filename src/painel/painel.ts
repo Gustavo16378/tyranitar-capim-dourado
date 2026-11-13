@@ -2,7 +2,7 @@
 // telas, sessão e login. Cada painel monta a sua configuração (src/loja/RotasLoja.tsx) e o
 // RotasDoPainel faz o resto: login, guarda de perfil, barra lateral e rotas das telas.
 import { createContext, useContext, type ComponentType, type ReactNode } from 'react'
-import type { PedidoLogin, Perfil, RespostaLogin } from '../tipos/comum'
+import type { PedidoLogin, Perfil, RespostaLogin } from '../tipos/painel'
 import type { ArmazemDeSessao } from './api/sessao'
 
 export interface TelaDoPainel {

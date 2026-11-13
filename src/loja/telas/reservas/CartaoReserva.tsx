@@ -21,7 +21,7 @@ const PRAZO_CURTO = 4 * 60 * 60 * 1000
 /** Uma reserva: o andamento (ReservaStatus) e o que a loja pode fazer com ela agora. */
 export function CartaoReserva({ reserva, agora, aoMudar }: CartaoReservaProps) {
   const { produto, cliente, status, pago, expiraEm } = reserva
-  const resumo = `${cliente} · ${formatarPreco(reserva.precoCentavos * reserva.quantidade)}`
+  const resumo = `${cliente} · ${formatarPreco(reserva.precoCentavos)}`
   const ativa = status === 'PENDENTE' || status === 'CONFIRMADA' || status === 'SEPARADA'
 
   if (!ativa) return <ReservaEncerrada reserva={reserva} resumo={resumo} />

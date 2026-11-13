@@ -15,7 +15,7 @@ interface TotalDaCompraProps {
 
 /**
  * "Cliente paga", antes de registrar: a API calcula os descontos e os pontos
- * (POST /api/loja/atendimento/previa) assim que o caixa para de digitar ou troca um cupom.
+ * (POST /api/loja/compras/previa) assim que o caixa para de digitar ou troca um cupom.
  * Enquanto recalcula, o total anterior fica mais claro na tela.
  */
 export function TotalDaCompra({ pedido, cliente, reservaPaga }: TotalDaCompraProps) {

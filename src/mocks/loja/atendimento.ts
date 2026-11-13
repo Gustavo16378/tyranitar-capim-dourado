@@ -1,4 +1,4 @@
-// GET /api/loja/atendimento/{qr}, POST /api/loja/atendimento/previa e POST /api/loja/compras,
+// GET /api/loja/atendimento/{qr}, POST /api/loja/compras/previa e POST /api/loja/compras,
 // com as regras da API real (functions/_lib/regras/cupons.ts): ficha filtrada (RN04), um
 // cupom da loja e um voucher do shopping por compra (RN05), validade, nível e limite de uso
 // (RN06), 1 ponto por real pago (RN07) e reembolso do voucher do shopping (RN11).
@@ -120,7 +120,7 @@ function calcular(pedido: PedidoMock): Calculo | RespostaMock {
   if (pagaComPix && lido.cupons.length > 0) {
     return erro(422, 'CUPOM_INVALIDO', 'A reserva já foi paga com Pix. Os cupons ficam para a próxima compra.')
   }
-  const bruto = pagaComPix && reserva ? reserva.precoCentavos * reserva.quantidade : lido.valorCentavos
+  const bruto = pagaComPix && reserva ? reserva.precoCentavos : lido.valorCentavos
   if (bruto <= 0) return dadosInvalidos('O valor da compra precisa ser maior que zero.')
 
   if (new Set(lido.cupons).size !== lido.cupons.length) {

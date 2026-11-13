@@ -21,7 +21,7 @@ export { reiniciarMocks } from './dados'
 export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'POST /api/auth/login': entrar,
   'GET /api/loja/atendimento/:qr': buscarAtendimento,
-  'POST /api/loja/atendimento/previa': calcularPrevia,
+  'POST /api/loja/compras/previa': calcularPrevia,
   'POST /api/loja/compras': registrarCompra,
   'GET /api/loja/reservas': listarReservas,
   'PATCH /api/loja/reservas/:id': mudarStatusReserva,

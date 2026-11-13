@@ -6,7 +6,7 @@
 // Mocks: enquanto uma rota estiver na tabela de mocks do painel (src/mocks/<painel>/index.ts),
 // quem responde é o mock, no mesmo formato da API. Quando a rota real ficar pronta, apague a
 // linha dela lá e nada muda aqui nem nas telas.
-import type { CorpoErro } from '../../tipos/comum'
+import type { CorpoErro } from '../../tipos/painel'
 import type { ArmazemDeSessao } from './sessao'
 
 /** Erro da API (ou da rede), com a frase pronta para mostrar em `mensagem`. */

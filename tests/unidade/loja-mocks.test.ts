@@ -195,10 +195,10 @@ describe('mocks: POST /api/loja/compras', () => {
   })
 })
 
-describe('mocks: POST /api/loja/atendimento/previa', () => {
+describe('mocks: POST /api/loja/compras/previa', () => {
   it('dá o total do protótipo antes de registrar, sem gravar nada', async () => {
     const pedido = { qrToken: QR_DA_ANA, valorCentavos: 45980, cupons: ['cp1', 'cp2'] }
-    const { status, corpo } = await chamar('POST', '/api/loja/atendimento/previa', pedido)
+    const { status, corpo } = await chamar('POST', '/api/loja/compras/previa', pedido)
     expect(status).toBe(200)
     expect(corpo).toEqual({
       valorBrutoCentavos: 45980,
@@ -216,7 +216,7 @@ describe('mocks: POST /api/loja/atendimento/previa', () => {
   })
 
   it('mostra a retirada paga com Pix pelo valor da reserva', async () => {
-    const { corpo } = await chamar('POST', '/api/loja/atendimento/previa', {
+    const { corpo } = await chamar('POST', '/api/loja/compras/previa', {
       qrToken: QR_DA_ANA,
       valorCentavos: 0,
       cupons: [],
@@ -226,7 +226,7 @@ describe('mocks: POST /api/loja/atendimento/previa', () => {
   })
 
   it('responde com os mesmos erros da compra', async () => {
-    const { status, corpo } = await chamar('POST', '/api/loja/atendimento/previa', {
+    const { status, corpo } = await chamar('POST', '/api/loja/compras/previa', {
       qrToken: QR_DA_ANA,
       valorCentavos: 10000,
       cupons: ['cp1', 'cp3'],

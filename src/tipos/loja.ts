@@ -2,9 +2,9 @@
 // O front (src/loja/api) e os mocks (src/mocks/loja) leem daqui; quando as Functions
 // existirem, elas podem importar os mesmos tipos. Os comuns aos dois painéis ficam em
 // comum.ts e são repetidos aqui, para as telas da loja importarem tudo de um lugar.
-import type { CupomComUso, NivelApi, Pagina, Periodo } from './comum'
+import type { CupomComUso, NivelApi, Pagina, Periodo } from './painel'
 
-export type * from './comum'
+export type * from './painel'
 
 export type StatusReserva = 'PENDENTE' | 'CONFIRMADA' | 'SEPARADA' | 'RETIRADA' | 'CANCELADA' | 'EXPIRADA'
 
@@ -61,7 +61,7 @@ export interface Compra {
   reembolsoGerado: { cupom: string; centavos: number } | null
 }
 
-// ---------- POST /api/loja/atendimento/previa ----------
+// ---------- POST /api/loja/compras/previa ----------
 
 /** O mesmo corpo de POST /api/loja/compras; a API calcula e não grava nada. */
 export type PedidoPrevia = PedidoCompra
@@ -81,6 +81,7 @@ export interface ReservaDaLoja {
   status: StatusReserva
   formaPagamento: FormaPagamento
   pago: boolean
+  /** O total da reserva (preço × quantidade no momento da reserva). */
   precoCentavos: number
   /** ISO 8601 (UTC). */
   expiraEm: string

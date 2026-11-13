@@ -1,4 +1,4 @@
-// Tipos que valem para toda a API (docs/api.md), usados pelos dois painéis: erro, lista
+// Tipos que os dois painéis (loja e shopping) usam da API (docs/api.md): erro, lista
 // paginada, login, nível, período e o formato de um cupom com o uso dele.
 
 /** Corpo de todo erro da API: { status, erro, mensagem }. */
