@@ -1,17 +1,36 @@
-// Gera migrations/0002_seed.sql com os dados da demo: as lojas da planta, os produtos,
-// cupons de exemplo e os usuários de teste.
+// Dados da demo no D1: as lojas da planta, os produtos, cupons de exemplo, os usuários de teste
+// e o histórico de compras da Ana. Não é migration: as migrations só têm o esquema.
 //
-//   npm run seed                 lê kit/seed/lojas.csv e kit/seed/produtos.csv
-//   npm run seed -- outra/pasta  lê os CSVs de outra pasta
+//   npm run seed:local               aplica no D1 local (.wrangler/)
+//   npm run seed:remoto              aplica no D1 de produção
+//   ... -- --csv outra/pasta         lê lojas.csv e produtos.csv de outra pasta (padrão kit/seed)
 //
-// A saída é a mesma a cada execução (ids e sais derivados dos dados), para todo mundo ter o
-// mesmo banco. A senha dos usuários de teste vem de SENHA_TESTE no .dev.vars.exemplo.
-import { createHash, webcrypto } from 'node:crypto'
-import { readFileSync, writeFileSync } from 'node:fs'
+// Idempotente: rodar de novo atualiza em vez de duplicar. Lojas por mapa_id, usuários por
+// e-mail, produtos e cupons por id fixo (derivado dos dados). Produtos que saíram do CSV desde
+// o último seed ficam inativos. Pontos, QR e consentimento de quem já existe não mudam.
+//
+// Senhas: SEED_SENHA_CLIENTE, SEED_SENHA_LOJISTA e SEED_SENHA_ADMIN no .dev.vars (fora do Git).
+// Só os hashes vão para o banco; o SQL com eles fica num arquivo temporário apagado no fim.
+import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { hashSenha } from './lib/senha.mjs'
 
 const raiz = new URL('../', import.meta.url)
-const pastaCsv = new URL(`${(process.argv[2] ?? 'kit/seed').replace(/\/?$/, '/')}`, raiz)
-const saida = new URL('migrations/0002_seed.sql', raiz)
+const args = process.argv.slice(2)
+const destino = args.includes('--remoto') ? 'remoto' : args.includes('--local') ? 'local' : null
+const iCsv = args.indexOf('--csv')
+const pastaCsv = pathToFileURL(`${resolve(fileURLToPath(raiz), iCsv >= 0 ? (args[iCsv + 1] ?? '') : 'kit/seed')}/`)
+
+function falhar(mensagem) {
+  console.error(`seed: ${mensagem}`)
+  process.exit(1)
+}
+if (!destino) falhar('diga onde aplicar: npm run seed:local ou npm run seed:remoto')
 
 // ---------- leitura ----------
 
@@ -47,16 +66,20 @@ function lerCsv(nome) {
     }))
 }
 
-function falhar(mensagem) {
-  console.error(`gerar-seed: ${mensagem}`)
-  process.exit(1)
-}
-
-function senhaDeTeste() {
-  const exemplo = readFileSync(new URL('.dev.vars.exemplo', raiz), 'utf8')
-  const senha = exemplo.match(/^SENHA_TESTE=(.+)$/m)?.[1]?.trim()
-  if (!senha || senha.length < 8) falhar('defina SENHA_TESTE (8 caracteres ou mais) no .dev.vars.exemplo')
-  return senha
+/** As senhas dos usuários de teste, do .dev.vars. */
+function senhasDeTeste() {
+  let texto = ''
+  try {
+    texto = readFileSync(new URL('.dev.vars', raiz), 'utf8')
+  } catch {
+    falhar('crie o .dev.vars a partir do .dev.vars.exemplo e preencha as senhas SEED_SENHA_*')
+  }
+  const ler = (chave) => {
+    const valor = texto.match(new RegExp(`^${chave}=(.*)$`, 'm'))?.[1]?.trim()
+    if (!valor || valor.length < 12) falhar(`defina ${chave} no .dev.vars, com 12 caracteres ou mais`)
+    return valor
+  }
+  return { CLIENTE: ler('SEED_SENHA_CLIENTE'), LOJISTA: ler('SEED_SENHA_LOJISTA'), ADMIN_SHOPPING: ler('SEED_SENHA_ADMIN') }
 }
 
 // ---------- valores derivados ----------
@@ -73,25 +96,23 @@ function uuid(nome) {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
-/** CNPJ fictício (raiz começando em 9) com dígitos verificadores válidos. */
-function cnpjFicticio(indice) {
+/** CNPJ fictício (raiz começando em 8) estável por loja, com dígitos verificadores válidos. */
+function cnpjFicticio(mapaId, usados) {
   const digito = (base) => {
     const pesos = base.length === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
     const resto = [...base].reduce((soma, d, i) => soma + Number(d) * pesos[i], 0) % 11
     return resto < 2 ? 0 : 11 - resto
   }
-  const raiz12 = `9${String(indice).padStart(7, '0')}0001`
-  const d1 = digito(raiz12)
-  return `${raiz12}${d1}${digito(raiz12 + d1)}`
-}
-
-/** Mesmo formato de functions/_lib/auth/senha.ts: pbkdf2_sha256$iterações$sal$hash (base64). */
-async function hashSenha(senha, email) {
-  const iteracoes = 100_000
-  const sal = sha256(`tyranitar-seed:${email}`).subarray(0, 16)
-  const chave = await webcrypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveBits'])
-  const bits = await webcrypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: sal, iterations: iteracoes }, chave, 256)
-  return `pbkdf2_sha256$${iteracoes}$${sal.toString('base64')}$${Buffer.from(bits).toString('base64')}`
+  let n = sha256(`cnpj:${mapaId}`).readUInt32BE(0) % 10_000_000
+  let cnpj
+  do {
+    const raiz12 = `8${String(n).padStart(7, '0')}0001`
+    const d1 = digito(raiz12)
+    cnpj = `${raiz12}${d1}${digito(raiz12 + d1)}`
+    n = (n + 1) % 10_000_000
+  } while (usados.has(cnpj))
+  usados.add(cnpj)
+  return cnpj
 }
 
 function precoEmCentavos(texto, numero) {
@@ -111,34 +132,28 @@ function json(texto, padrao, onde) {
 
 // ---------- SQL ----------
 
-const valorSql = (v) =>
-  v === null || v === undefined ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replaceAll("'", "''")}'`
-
-function inserir(tabela, linhas) {
-  if (linhas.length === 0) return `-- ${tabela}: nada para inserir`
-  const colunas = Object.keys(linhas[0])
-  const valores = linhas.map((l) => `  (${colunas.map((c) => valorSql(l[c])).join(', ')})`)
-  return `INSERT INTO ${tabela} (${colunas.join(', ')}) VALUES\n${valores.join(',\n')};`
-}
+const v = (valor) =>
+  valor === null || valor === undefined ? 'NULL' : typeof valor === 'number' ? String(valor) : `'${String(valor).replaceAll("'", "''")}'`
+const lista = (valores) => valores.map(v).join(', ')
+const idDaLoja = (mapaId) => `(SELECT id FROM loja WHERE mapa_id = ${v(mapaId)})`
 
 // ---------- lojas ----------
 
 const PLACEHOLDER = 'LOJA 000'
-const lojasCsv = lerCsv('lojas.csv')
-const lojas = lojasCsv.map((l, i) => {
+const cnpjs = new Set()
+const lojas = lerCsv('lojas.csv').map((l) => {
   const piso = /t[ée]rreo/i.test(l.piso) ? 1 : /2/.test(l.piso) ? 2 : falhar(`lojas.csv linha ${l.numero}: piso "${l.piso}"`)
+  const cnpj = /^\d{14}$/.test(l.cnpj ?? '') ? l.cnpj : null
   return {
     codigo: l.loja,
-    linha: {
-      id: uuid(`loja:${l.loja}`),
-      nome: l.nome_da_marca || l.loja.replace(/^LOJA\b/i, 'Loja'),
-      cnpj: cnpjFicticio(i + 1),
-      piso,
-      tipo: piso === 2 ? 'alimentacao' : 'loja',
-      categorias: [],
-      mapa_id: l.id_mapa,
-      ativa: l.situacao.toUpperCase() === 'VAGA' ? 0 : 1,
-    },
+    id: uuid(`loja:${l.loja}`),
+    nome: l.nome_da_marca || l.loja.replace(/^LOJA\b/i, 'Loja'),
+    cnpj: cnpj ?? cnpjFicticio(l.id_mapa, cnpjs),
+    piso,
+    tipo: piso === 2 ? 'alimentacao' : 'loja',
+    categorias: [],
+    mapaId: l.id_mapa,
+    ativa: l.situacao.toUpperCase() === 'VAGA' ? 0 : 1,
   }
 })
 const lojaPorCodigo = new Map(lojas.map((l) => [l.codigo.toUpperCase(), l]))
@@ -148,147 +163,173 @@ const lojaPorCodigo = new Map(lojas.map((l) => [l.codigo.toUpperCase(), l]))
 // Produtos ainda com "LOJA 000" (o modelo do kit) vão para lojas ativas do térreo, uma por
 // categoria, até alguém preencher produtos.csv com o número real da loja.
 const avisos = []
-const reservaPorCategoria = new Map()
-const livres = lojas.filter((l) => l.linha.ativa && l.linha.piso === 1)
+const lojaDaCategoria = new Map()
+const livres = lojas.filter((l) => l.ativa && l.piso === 1)
 function lojaDoProduto(p) {
   if (p.loja.toUpperCase() !== PLACEHOLDER) {
     return lojaPorCodigo.get(p.loja.toUpperCase()) ?? falhar(`produtos.csv linha ${p.numero}: loja "${p.loja}" não está em lojas.csv`)
   }
-  if (!reservaPorCategoria.has(p.categoria)) {
+  if (!lojaDaCategoria.has(p.categoria)) {
     const loja = livres.shift() ?? falhar('não há lojas ativas livres para os produtos de exemplo')
-    reservaPorCategoria.set(p.categoria, loja)
+    lojaDaCategoria.set(p.categoria, loja)
     avisos.push(`"${PLACEHOLDER}" na categoria ${p.categoria}: produtos foram para ${loja.codigo}`)
   }
-  return reservaPorCategoria.get(p.categoria)
+  return lojaDaCategoria.get(p.categoria)
 }
 
 const produtos = lerCsv('produtos.csv').map((p) => {
   const loja = lojaDoProduto(p)
-  if (!loja.linha.ativa) falhar(`produtos.csv linha ${p.numero}: a loja ${loja.codigo} está vaga`)
-  if (!loja.linha.categorias.includes(p.categoria)) loja.linha.categorias.push(p.categoria)
+  if (!loja.ativa) falhar(`produtos.csv linha ${p.numero}: a loja ${loja.codigo} está vaga`)
+  if (!loja.categorias.includes(p.categoria)) loja.categorias.push(p.categoria)
   const fotos = p.fotos.startsWith('[') ? json(p.fotos, [], `produtos.csv linha ${p.numero}`) : p.fotos.split('|').filter(Boolean)
   return {
     id: uuid(`produto:${loja.codigo}:${p.nome}`),
-    loja_id: loja.linha.id,
+    mapaId: loja.mapaId,
     nome: p.nome,
     descricao: p.descricao,
     categoria: p.categoria,
-    preco_centavos: precoEmCentavos(p.preco, p.numero),
+    preco: precoEmCentavos(p.preco, p.numero),
     estoque: Number.parseInt(p.estoque || '0', 10),
     fotos: JSON.stringify(fotos),
     atributos: JSON.stringify(json(p.atributos, {}, `produtos.csv linha ${p.numero}`)),
   }
 })
+const lojasComProduto = lojas.filter((l) => l.categorias.length > 0)
 
 // ---------- usuários ----------
 
-const senha = senhaDeTeste()
-const lojasComProduto = lojas.filter((l) => l.linha.categorias.length > 0)
-const ana = { email: 'ana.souza@demo.test', id: uuid('usuario:ana.souza') }
+const senhas = senhasDeTeste()
+const ANA = 'ana.souza@demo.test'
 const usuarios = [
-  {
-    id: ana.id,
-    nome: 'Ana Souza',
-    email: ana.email,
-    perfil: 'CLIENTE',
-    loja_id: null,
-    qr_token: `q-${sha256('qr:ana.souza').toString('hex').slice(0, 24)}`,
-    pontos: 2140,
-    consentimento_ficha: 1,
-  },
+  { id: uuid('usuario:ana.souza'), nome: 'Ana Souza', email: ANA, perfil: 'CLIENTE', mapaId: null },
   ...lojasComProduto.map((l) => ({
     id: uuid(`usuario:lojista:${l.codigo}`),
-    nome: `Equipe da ${l.linha.nome}`,
-    email: `lojista.${l.linha.mapa_id}@demo.test`,
+    nome: `Equipe da ${l.nome}`,
+    email: `lojista.${l.mapaId}@demo.test`,
     perfil: 'LOJISTA',
-    loja_id: l.linha.id,
-    qr_token: null,
-    pontos: 0,
-    consentimento_ficha: 0,
+    mapaId: l.mapaId,
   })),
-  {
-    id: uuid('usuario:admin'),
-    nome: 'Administração do shopping',
-    email: 'admin@demo.test',
-    perfil: 'ADMIN_SHOPPING',
-    loja_id: null,
-    qr_token: null,
-    pontos: 0,
-    consentimento_ficha: 0,
-  },
+  { id: uuid('usuario:admin'), nome: 'Administração do shopping', email: 'admin@demo.test', perfil: 'ADMIN_SHOPPING', mapaId: null },
 ]
-for (const u of usuarios) u.senha_hash = await hashSenha(senha, u.email)
-
-// Ficha da Ana (ela deu consentimento): interesses por categoria, em frases curtas.
-const ficha = {
-  cliente_id: ana.id,
-  interesses: JSON.stringify([
-    { categoria: 'calcados', detalhe: 'Tênis de corrida, número 42, até R$ 400' },
-    { categoria: 'calcados', detalhe: 'Prefere preto' },
-    { categoria: 'roupas', detalhe: 'Camisetas dry-fit' },
-  ]),
-}
+for (const u of usuarios) u.senhaHash = await hashSenha(senhas[u.perfil])
 
 // ---------- cupons ----------
 
-const lojaCalcados = lojasComProduto.find((l) => l.linha.categorias.includes('calcados')) ?? lojasComProduto[0]
+const lojaCalcados = lojasComProduto.find((l) => l.categorias.includes('calcados')) ?? lojasComProduto[0]
 const cupons = [
-  lojaCalcados && {
-    id: uuid('cupom:10-calcados'),
-    loja_id: lojaCalcados.linha.id,
-    titulo: '10% em calçados',
-    tipo: 'PERCENTUAL',
-    valor: 10,
-    categoria_alvo: null,
-    nivel_minimo: 'SEMENTE',
-    limite_por_cliente: 1,
-    validade: '2026-12-31',
-  },
-  {
-    id: uuid('cupom:20-reais-shopping'),
-    loja_id: null,
-    titulo: 'R$ 20 em qualquer loja',
-    tipo: 'VALOR',
-    valor: 2000,
-    categoria_alvo: null,
-    nivel_minimo: 'SEMENTE',
-    limite_por_cliente: 1,
-    validade: '2026-12-15',
-  },
-  {
-    id: uuid('cupom:estacionamento'),
-    loja_id: null,
-    titulo: 'Estacionamento grátis por 2 h',
-    tipo: 'BRINDE',
-    valor: 0,
-    categoria_alvo: null,
-    nivel_minimo: 'CAPIM',
-    limite_por_cliente: 2,
-    validade: '2026-11-30',
-  },
+  lojaCalcados && { id: uuid('cupom:10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
+  { id: uuid('cupom:20-reais-shopping'), mapaId: null, titulo: 'R$ 20 em qualquer loja', tipo: 'VALOR', valor: 2000, nivel: 'SEMENTE', limite: 1, validade: '2026-12-15' },
+  { id: uuid('cupom:estacionamento'), mapaId: null, titulo: 'Estacionamento grátis por 2 h', tipo: 'BRINDE', valor: 0, nivel: 'CAPIM', limite: 2, validade: '2026-11-30' },
 ].filter(Boolean)
 
-// ---------- saída ----------
+// ---------- histórico da Ana ----------
+
+// Compras no caixa em lojas diferentes nos últimos 12 meses, somando os 2.140 pontos do saldo
+// dela (RN07: 1 ponto por real). Alimentam o nível (RN08) e os relatórios.
+const lojasDoHistorico = [...lojasComProduto, ...livres].slice(0, 6)
+const compras = [
+  { dias: 300, valor: 45980, comFicha: 0 },
+  { dias: 240, valor: 18990, comFicha: 0 },
+  { dias: 170, valor: 24900, comFicha: 1 },
+  { dias: 95, valor: 39990, comFicha: 1 },
+  { dias: 40, valor: 52000, comFicha: 0 },
+  { dias: 12, valor: 32400, comFicha: 1 },
+].map((c, i) => ({ ...c, id: uuid(`compra:ana:${i + 1}`), mapaId: lojasDoHistorico[i % lojasDoHistorico.length].mapaId, pontos: Math.floor(c.valor / 100) }))
+const pontosDaAna = compras.reduce((soma, c) => soma + c.pontos, 0)
+
+// ---------- SQL ----------
 
 const sql = [
-  '-- Migration 0002: dados da demo. Gerado por scripts/gerar-seed.mjs; não edite à mão (npm run seed).',
-  `-- ${lojas.length} lojas da planta (${lojas.filter((l) => !l.linha.ativa).length} vagas, inativas), ${produtos.length} produtos, ${cupons.length} cupons e ${usuarios.length} usuários de teste.`,
-  '-- CNPJs fictícios. A senha dos usuários de teste está em SENHA_TESTE no .dev.vars.exemplo.',
-  '',
-  inserir('loja', lojas.map((l) => ({ ...l.linha, categorias: JSON.stringify(l.linha.categorias) }))),
-  '',
-  inserir('produto', produtos),
-  '',
-  inserir('usuario', usuarios),
-  '',
-  inserir('ficha', [ficha]),
-  '',
-  inserir('cupom', cupons),
-  '',
-].join('\n')
+  '-- Seed da demo (scripts/gerar-seed.mjs). Arquivo temporário: contém hashes de senha.',
+  'PRAGMA defer_foreign_keys = true;',
 
-writeFileSync(saida, sql)
+  `INSERT INTO loja (id, nome, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES\n${lojas
+    .map((l) => `  (${lista([l.id, l.nome, l.cnpj, l.piso, l.tipo, JSON.stringify(l.categorias), l.mapaId, l.ativa])})`)
+    .join(',\n')}
+ON CONFLICT (mapa_id) DO UPDATE SET
+  nome = excluded.nome, piso = excluded.piso, tipo = excluded.tipo, ativa = excluded.ativa,
+  categorias = CASE WHEN excluded.categorias <> '[]' THEN excluded.categorias ELSE loja.categorias END;`,
+
+  ...produtos.map(
+    (p) => `INSERT INTO produto (id, loja_id, nome, descricao, categoria, preco_centavos, estoque, fotos, atributos, ativo)
+SELECT ${lista([p.id])}, l.id, ${lista([p.nome, p.descricao, p.categoria, p.preco, p.estoque, p.fotos, p.atributos])}, 1
+FROM loja l WHERE l.mapa_id = ${v(p.mapaId)}
+ON CONFLICT (id) DO UPDATE SET
+  loja_id = excluded.loja_id, nome = excluded.nome, descricao = excluded.descricao, categoria = excluded.categoria,
+  preco_centavos = excluded.preco_centavos, estoque = excluded.estoque, fotos = excluded.fotos,
+  atributos = excluded.atributos, ativo = 1, atualizado_em = datetime('now');`,
+  ),
+
+  // Produtos do seed anterior que saíram do CSV ficam inativos (podem ter reservas: não são apagados).
+  `UPDATE produto SET ativo = 0, atualizado_em = datetime('now')
+WHERE id IN (SELECT value FROM json_each(COALESCE((SELECT valor FROM configuracao WHERE chave = 'seed_produtos'), '[]')))
+  AND id NOT IN (SELECT value FROM json_each(${v(JSON.stringify(produtos.map((p) => p.id)))}));`,
+  `INSERT INTO configuracao (chave, valor) VALUES ('seed_produtos', ${v(JSON.stringify(produtos.map((p) => p.id)))})
+ON CONFLICT (chave) DO UPDATE SET valor = excluded.valor;`,
+
+  ...usuarios.map(
+    (u) => `INSERT INTO usuario (id, nome, email, senha_hash, perfil, loja_id, qr_token, pontos, consentimento_ficha)
+SELECT ${lista([u.id, u.nome, u.email, u.senhaHash, u.perfil])}, ${u.mapaId ? 'l.id' : 'NULL'}, ${
+      u.perfil === 'CLIENTE' ? v(`q-${sha256(`qr:${u.email}`).toString('hex').slice(0, 24)}`) : 'NULL'
+    }, ${u.email === ANA ? pontosDaAna : 0}, ${u.email === ANA ? 1 : 0}
+FROM ${u.mapaId ? `loja l WHERE l.mapa_id = ${v(u.mapaId)}` : '(SELECT 1) WHERE true'}
+ON CONFLICT (email) DO UPDATE SET
+  nome = excluded.nome, senha_hash = excluded.senha_hash, perfil = excluded.perfil, loja_id = excluded.loja_id;`,
+  ),
+
+  // Ficha da Ana (só se o consentimento dela continuar dado).
+  `INSERT OR IGNORE INTO ficha (cliente_id, interesses)
+SELECT id, ${v(
+    JSON.stringify([
+      { categoria: 'calcados', detalhe: 'Tênis de corrida, número 42, até R$ 400' },
+      { categoria: 'calcados', detalhe: 'Prefere preto' },
+      { categoria: 'roupas', detalhe: 'Camisetas dry-fit' },
+    ]),
+  )}
+FROM usuario WHERE email = ${v(ANA)} AND consentimento_ficha = 1;`,
+
+  ...cupons.map(
+    (c) => `INSERT INTO cupom (id, loja_id, titulo, tipo, valor, nivel_minimo, limite_por_cliente, validade)
+SELECT ${lista([c.id])}, ${c.mapaId ? 'l.id' : 'NULL'}, ${lista([c.titulo, c.tipo, c.valor, c.nivel, c.limite, c.validade])}
+FROM ${c.mapaId ? `loja l WHERE l.mapa_id = ${v(c.mapaId)}` : '(SELECT 1) WHERE true'}
+ON CONFLICT (id) DO UPDATE SET
+  loja_id = excluded.loja_id, titulo = excluded.titulo, tipo = excluded.tipo, valor = excluded.valor,
+  nivel_minimo = excluded.nivel_minimo, limite_por_cliente = excluded.limite_por_cliente, validade = excluded.validade;`,
+  ),
+
+  // Histórico da Ana: entra uma vez (as datas contam a partir do primeiro seed).
+  ...compras.map(
+    (c) => `INSERT OR IGNORE INTO compra (id, cliente_id, loja_id, valor_centavos, origem, pontos_gerados, com_ficha, criado_em)
+SELECT ${v(c.id)}, u.id, ${idDaLoja(c.mapaId)}, ${c.valor}, 'CAIXA', ${c.pontos}, ${c.comFicha}, datetime('now', ${v(`-${c.dias} days`)})
+FROM usuario u WHERE u.email = ${v(ANA)};`,
+  ),
+
+  'PRAGMA defer_foreign_keys = false;',
+  '',
+].join('\n\n')
+
+// ---------- aplica ----------
+
+const pasta = mkdtempSync(join(tmpdir(), 'tyranitar-seed-'))
+const arquivo = join(pasta, 'seed.sql')
+try {
+  writeFileSync(arquivo, sql)
+  const wrangler = join(dirname(createRequire(import.meta.url).resolve('wrangler/package.json')), 'bin', 'wrangler.js')
+  const resultado = spawnSync(
+    process.execPath,
+    [wrangler, 'd1', 'execute', 'tyranitar', destino === 'remoto' ? '--remote' : '--local', '--file', arquivo, '--yes'],
+    { cwd: fileURLToPath(raiz), stdio: ['inherit', 'pipe', 'inherit'], env: { ...process.env, CI: '1' }, encoding: 'utf8' },
+  )
+  if (resultado.status !== 0) {
+    console.error(resultado.stdout)
+    falhar(`o wrangler terminou com erro (código ${resultado.status})`)
+  }
+} finally {
+  rmSync(pasta, { recursive: true, force: true })
+}
+
 for (const aviso of avisos) console.warn(`aviso: ${aviso}`)
 console.log(
-  `0002_seed.sql gerado: ${lojas.length} lojas, ${produtos.length} produtos, ${cupons.length} cupons, ${usuarios.length} usuários.`,
+  `seed ${destino}: ${lojas.length} lojas (${lojas.filter((l) => !l.ativa).length} vagas), ${produtos.length} produtos, ` +
+    `${cupons.length} cupons, ${usuarios.length} usuários e ${compras.length} compras da Ana (${pontosDaAna} pontos).`,
 )

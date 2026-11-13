@@ -14,9 +14,10 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:unidade": "vitest run tests/unidade",
-    "seed": "node scripts/gerar-seed.mjs",
     "db:migrar": "wrangler d1 migrations apply tyranitar --local",
-    "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote"
+    "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote",
+    "seed:local": "node scripts/gerar-seed.mjs --local",
+    "seed:remoto": "node scripts/gerar-seed.mjs --remoto"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

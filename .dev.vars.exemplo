@@ -1,12 +1,14 @@
 # Copie este arquivo para .dev.vars (que fica fora do Git) e preencha os valores.
-# Em produção, cadastre os mesmos nomes como secrets do Cloudflare.
+# Em produção, ANTHROPIC_API_KEY e JWT_SECRET são secrets do projeto no Cloudflare Pages.
 ANTHROPIC_API_KEY=
 # Pelo menos 32 caracteres aleatórios. Ex.: node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 JWT_SECRET=
 
-# Usuários de teste do seed (migrations/0002_seed.sql), todos com a senha SENHA_TESTE:
+# Senhas dos usuários de teste, usadas só pelo npm run seed:local e npm run seed:remoto
+# (12 caracteres ou mais). O banco guarda só os hashes. Os usuários:
 #   cliente  ana.souza@demo.test (Ana Souza, nível Capim, 2.140 pontos, com consentimento)
-#   lojista  lojista.<id_mapa da loja>@demo.test, um por loja com produto (veja o seed)
+#   lojista  lojista.<id_mapa da loja>@demo.test, um por loja com produto
 #   admin    admin@demo.test
-# O scripts/gerar-seed.mjs lê esta senha para gerar os hashes. São dados de demonstração.
-SENHA_TESTE=capim-demo-2026
+SEED_SENHA_CLIENTE=
+SEED_SENHA_LOJISTA=
+SEED_SENHA_ADMIN=
