@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:unidade": "vitest run tests/unidade",
+    "test:unidade": "vitest run --project unidade",
+    "test:api": "vitest run --project workers",
     "db:migrar": "wrangler d1 migrations apply tyranitar --local",
     "db:migrar:remoto": "wrangler d1 migrations apply tyranitar --remote",
     "seed:local": "node scripts/gerar-seed.mjs --local",
@@ -29,6 +30,7 @@
     "react-router": "^7.18.5"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.8.1",
     "@cloudflare/workers-types": "^5.20261113.1",
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.5",
