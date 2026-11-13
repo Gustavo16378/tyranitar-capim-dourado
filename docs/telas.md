@@ -83,4 +83,4 @@ Atendimento no painel da loja:
 
 ![Painel da loja, atendimento](img/painel-atendimento.png)
 
-O mapa do protótipo usa uma planta ilustrativa. Na versão final, a planta oficial do shopping (Planta Mix, térreo e 2º pavimento) é convertida em SVG, cada loja recebe como id o seu número (`loja-209`), e o desenho vira 3D com React Three Fiber.
+O mapa é 3D (React Three Fiber), um piso por vez, porque o térreo e o 2º piso têm escalas diferentes. As plantas ficam em `src/mapa/piso-1.svg` e `piso-2.svg`, cada loja com o id do seu número (`loja-209`), e a rota sai de `src/mapa/rotas.json` (pontos e caminhos, em metros) pelo menor caminho.

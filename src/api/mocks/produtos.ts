@@ -1,5 +1,5 @@
 // Mock de GET /api/produtos e GET /api/produtos/{id}, no formato das rotas de functions/api/produtos.
-// Os mapaId batem com a planta ilustrativa de src/mapa/planta.ts.
+// As lojas e os mapaId são de exemplo: o mapa de verdade usa as lojas do seed (GET /api/lojas).
 import type { FiltroProdutos, Lista, LojaDoProduto, ProdutoDetalhe, ProdutoResumo } from '../../tipos'
 import { falhar, responder } from './atraso'
 

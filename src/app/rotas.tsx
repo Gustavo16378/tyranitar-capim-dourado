@@ -6,7 +6,7 @@ import Carteira from './Carteira'
 import Entrar from './Entrar'
 import Inicio from './Inicio'
 import LayoutApp from './LayoutApp'
-import Mapa from './Mapa'
+import Mapa from './MapaSobDemanda'
 import Produto from './Produto'
 import Reserva from './Reserva'
 
