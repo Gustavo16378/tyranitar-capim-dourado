@@ -1,4 +1,5 @@
-// POST /api/reservas e POST /api/reservas/{id}/pagamento (docs/api.md › Reservas).
+// POST /api/reservas, GET /api/reservas/{id} e POST /api/reservas/{id}/pagamento (docs/api.md › Reservas).
+import type { ProdutoResumo } from './produto'
 
 export type StatusReserva = 'PENDENTE' | 'CONFIRMADA' | 'SEPARADA' | 'RETIRADA' | 'CANCELADA' | 'EXPIRADA'
 
@@ -10,8 +11,10 @@ export interface NovaReserva {
   formaPagamento: FormaPagamento
 }
 
+/** Resposta de POST /api/reservas e de POST /api/reservas/{id}/pagamento. */
 export interface Reserva {
   id: string
+  /** Pagar o Pix não muda o status: a reserva segue PENDENTE, agora paga. Quem separa é a loja. */
   status: StatusReserva
   formaPagamento: FormaPagamento
   pago: boolean
@@ -20,4 +23,9 @@ export interface Reserva {
   expiraEm: string
   /** Só quando a forma é PIX. */
   pix?: { copiaECola: string; simulado: boolean }
+}
+
+/** GET /api/reservas/{id}: a reserva com o produto no formato da busca. */
+export interface ReservaDetalhe extends Reserva {
+  produto: ProdutoResumo
 }

@@ -1,15 +1,13 @@
 // Mock de GET /api/me/carteira: a Ana, nível Capim, 2.140 pontos, como no seed.
 import type { Carteira } from '../../tipos'
 import { responder } from './atraso'
-import { RESERVAS } from './reservas'
+import { reservasEmAberto } from './reservas'
 
 /** Estado da carteira. O registro de compra do painel da loja (Fase 4) soma pontos aqui. */
 export const CARTEIRA = {
   qrToken: 'q-7f3a-ana-demo',
   pontos: 2140,
 }
-
-const ATIVAS = new Set(['PENDENTE', 'CONFIRMADA', 'SEPARADA'])
 
 export function obterCarteira(): Promise<Carteira> {
   return responder({
@@ -37,10 +35,6 @@ export function obterCarteira(): Promise<Carteira> {
         nivelMinimo: 'SEMENTE',
       },
     ],
-    reservasAtivas: RESERVAS.filter((r) => ATIVAS.has(r.status)).map(({ id, produto, status }) => ({
-      id,
-      produto,
-      status,
-    })),
+    reservasAtivas: reservasEmAberto(),
   })
 }

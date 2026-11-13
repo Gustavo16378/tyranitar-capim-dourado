@@ -61,11 +61,42 @@ describe('mock de reservas', () => {
     expect(m.produtos.acharProduto('p-run')?.estoque).toBe(4)
   })
 
-  it('Pix: traz o copia e cola simulado e, pago, expira em 48 h (RN02)', async () => {
+  it('Pix: traz o copia e cola simulado e, pago, expira em 48 h (RN02) e segue PENDENTE', async () => {
     const reserva = await m.reservas.criarReserva({ produtoId: 'p-pulse', quantidade: 1, formaPagamento: 'PIX' }, agora)
     expect(reserva.pix).toEqual({ copiaECola: expect.stringMatching(/^000201/), simulado: true })
     const paga = await m.reservas.pagarReserva(reserva.id, agora)
-    expect(paga).toMatchObject({ pago: true, expiraEm: '2026-11-15T12:00:00.000Z' })
+    // Quem separa é a loja: pagar não muda o status.
+    expect(paga).toMatchObject({ status: 'PENDENTE', pago: true, expiraEm: '2026-11-15T12:00:00.000Z' })
+  })
+
+  it('GET /api/reservas/{id}: a reserva com o produto no formato da busca', async () => {
+    const criada = await m.reservas.criarReserva({ produtoId: 'p-pulse', quantidade: 1, formaPagamento: 'PIX' }, agora)
+    const lida = await m.reservas.obterReserva(criada.id, agora)
+    expect(lida).toEqual({
+      ...criada,
+      produto: {
+        id: 'p-pulse',
+        nome: 'Tênis de corrida Pulse',
+        categoria: 'calcados',
+        precoCentavos: 39990,
+        estoque: 2,
+        foto: null,
+        loja: { id: 'l-esportes', nome: 'Loja de esportes', piso: 1, mapaId: 'loja-esportes' },
+      },
+    })
+    await expect(m.reservas.obterReserva('r-999')).rejects.toMatchObject({ status: 404, erro: 'NAO_ENCONTRADO' })
+  })
+
+  it('prazo vencido é conferido na leitura: vira EXPIRADA e o estoque volta (RN03)', async () => {
+    const criada = await m.reservas.criarReserva(
+      { produtoId: 'p-run', quantidade: 1, formaPagamento: 'NA_LOJA' },
+      agora,
+    )
+    expect(m.produtos.acharProduto('p-run')?.estoque).toBe(4)
+    const depois = agora + 5 * 60 * 60 * 1000
+    expect(await m.reservas.obterReserva(criada.id, depois)).toMatchObject({ status: 'EXPIRADA' })
+    expect(m.produtos.acharProduto('p-run')?.estoque).toBe(5)
+    expect(m.reservas.reservasEmAberto(depois)).toEqual([])
   })
 
   it('pagar duas vezes dá 409', async () => {
