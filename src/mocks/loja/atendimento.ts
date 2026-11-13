@@ -15,7 +15,7 @@ import {
   ok,
   type PedidoMock,
   type RespostaMock,
-} from './resposta'
+} from '../comum/resposta'
 
 const QR_DESCONHECIDO = 'Não achamos esse QR. Peça para o cliente abrir a carteira de novo.'
 

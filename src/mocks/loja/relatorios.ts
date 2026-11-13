@@ -6,7 +6,7 @@ import { STATUS_ATIVOS } from '../../loja/comum/reserva'
 import { usosDoCupom } from './atendimento'
 import { exigirLojista } from './auth'
 import { banco } from './dados'
-import { dadosInvalidos, ok, type PedidoMock, type RespostaMock } from './resposta'
+import { dadosInvalidos, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
 
 const ESCALA: Record<Periodo, number> = { '7d': 0.25, '30d': 1, '90d': 2.8 }
 

@@ -4,7 +4,7 @@ import { lerValorEmCentavos } from '../../painel/comum/formatos'
 import { categoria, CATEGORIAS } from '../../loja/telas/produtos/categorias'
 import { exigirLojista } from './auth'
 import { banco, novoId } from './dados'
-import { dadosInvalidos, naoEncontrado, objeto, ok, type PedidoMock, type RespostaMock } from './resposta'
+import { dadosInvalidos, naoEncontrado, objeto, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
 
 const sem = (texto: string) => texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 

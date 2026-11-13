@@ -3,7 +3,7 @@ import type { Pagina, ReservaDaLoja, StatusReserva } from '../../tipos/loja'
 import { podeMudar, ROTULO_DO_STATUS, TRANSICOES_DA_LOJA } from '../../loja/comum/reserva'
 import { exigirLojista } from './auth'
 import { banco, type ReservaMock } from './dados'
-import { dadosInvalidos, erro, naoEncontrado, objeto, ok, type PedidoMock, type RespostaMock } from './resposta'
+import { dadosInvalidos, erro, naoEncontrado, objeto, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
 
 const TODOS_OS_STATUS = Object.keys(TRANSICOES_DA_LOJA) as StatusReserva[]
 

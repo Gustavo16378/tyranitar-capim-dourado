@@ -6,7 +6,7 @@ import { categoria } from '../../loja/telas/produtos/categorias'
 import { usosDoCupom } from './atendimento'
 import { exigirLojista } from './auth'
 import { banco, novoId, ORDEM_DOS_NIVEIS, type CupomMock } from './dados'
-import { dadosInvalidos, objeto, ok, type PedidoMock, type RespostaMock } from './resposta'
+import { dadosInvalidos, objeto, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
 
 const TIPOS: readonly TipoCupom[] = ['PERCENTUAL', 'VALOR', 'BRINDE']
 
