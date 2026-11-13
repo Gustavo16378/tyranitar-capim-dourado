@@ -24,13 +24,13 @@ flowchart TB
   carteira --> balcao(["Vendedor lê o QR no balcão"])
 ```
 
-A barra de navegação fixa no rodapé leva a Início, Capi, Mapa e Carteira de qualquer tela.
+A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a página) e depois segue para a tela que a pessoa abriu, inclusive num link direto. Um toque pula; com movimento reduzido ela é curta. A barra de navegação fixa no rodapé leva a Início, Capi, Mapa e Carteira de qualquer tela.
 
 ## App do cliente
 
 | Tela | Para que serve | Componentes | Requisitos |
 | --- | --- | --- | --- |
-| Abertura | Apresentar a Capi; a trança se desenha | CapiMark, Button | RF01 |
+| Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Início | Ofertas para o cliente, produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
 | Capi | Conversa com texto, foto ou link; respostas com produtos das lojas | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
