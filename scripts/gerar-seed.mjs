@@ -303,6 +303,12 @@ ON CONFLICT (id) DO UPDATE SET
   nivel_minimo = excluded.nivel_minimo, limite_por_cliente = excluded.limite_por_cliente, validade = excluded.validade;`,
   ),
 
+  // Favoritos da Ana ("Você salvou" no Início): os produtos da demo, se ainda não estiverem.
+  ...produtos.slice(0, 3).map(
+    (p, i) => `INSERT OR IGNORE INTO favorito (cliente_id, produto_id, criado_em)
+SELECT u.id, ${v(p.id)}, datetime('now', ${v(`-${i} hours`)}) FROM usuario u WHERE u.email = ${v(ANA)};`,
+  ),
+
   // Histórico da Ana: entra uma vez (as datas contam a partir do primeiro seed).
   ...compras.map(
     (c) => `INSERT OR IGNORE INTO compra (id, cliente_id, loja_id, valor_centavos, origem, pontos_gerados, com_ficha, criado_em)
