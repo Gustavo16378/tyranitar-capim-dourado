@@ -12,6 +12,7 @@ import { entrar } from './auth'
 import { buscarDemanda } from './demanda'
 import { buscarConfiguracao, criarVoucher, listarVouchers, salvarConfiguracao } from './fidelidade'
 import { criarLojista, editarLoja, listarLojas, listarLojistas } from './lojas'
+import { buscarVagas } from './vagas'
 
 export { reiniciarMocks } from './dados'
 
@@ -26,6 +27,7 @@ export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'GET /api/shopping/cupons': listarVouchers,
   'POST /api/shopping/cupons': criarVoucher,
   'GET /api/shopping/demanda': buscarDemanda,
+  'GET /api/shopping/vagas': buscarVagas,
 }
 
 /** Responde como a API se a rota estiver mockada; senão devolve null e o cliente HTTP chama a API. */

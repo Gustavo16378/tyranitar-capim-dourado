@@ -15,6 +15,7 @@ import type {
   PedidoLojista,
   Periodo,
   RespostaLogin,
+  VagasEDemanda,
   VoucherDoShopping,
 } from '../../tipos/shopping'
 import { requisitar } from './cliente'
@@ -70,4 +71,9 @@ export function criarVoucher(voucher: PedidoCupom) {
 /** GET /api/shopping/demanda: o que os clientes buscam e não acham em nenhuma loja (RF29). */
 export function buscarDemanda(periodo: Periodo, sinal?: AbortSignal) {
   return requisitar<Demanda>('GET', '/api/shopping/demanda', { busca: { periodo }, sinal })
+}
+
+/** GET /api/shopping/vagas: as lojas vagas cruzadas com a demanda, com a sugestão para cada vaga. */
+export function buscarVagas(periodo: Periodo, sinal?: AbortSignal) {
+  return requisitar<VagasEDemanda>('GET', '/api/shopping/vagas', { busca: { periodo }, sinal })
 }
