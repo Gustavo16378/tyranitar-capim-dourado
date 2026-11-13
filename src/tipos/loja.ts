@@ -1,52 +1,14 @@
 // Tipos das rotas que o painel da loja usa, no formato de docs/api.md.
 // O front (src/loja/api) e os mocks (src/mocks/loja) leem daqui; quando as Functions
-// existirem, elas podem importar os mesmos tipos.
+// existirem, elas podem importar os mesmos tipos. Os comuns aos dois painéis ficam em
+// comum.ts e são repetidos aqui, para as telas da loja importarem tudo de um lugar.
+import type { CupomComUso, NivelApi, Periodo } from './comum'
 
-// ---------- comuns ----------
-
-/** Corpo de todo erro da API: { status, erro, mensagem }. */
-export interface CorpoErro {
-  status: number
-  /** Código estável para o front decidir o que fazer: SEM_ESTOQUE, CUPOM_INVALIDO... */
-  erro: string
-  /** Frase pronta para mostrar ao usuário. */
-  mensagem: string
-}
-
-/** Listas paginadas: ?pagina=1&tamanho=20. */
-export interface Pagina<T> {
-  itens: T[]
-  total: number
-}
-
-export type Perfil = 'CLIENTE' | 'LOJISTA' | 'ADMIN_SHOPPING'
-
-/** Níveis de fidelidade como a API escreve. Os componentes usam minúsculas: paraNivel(). */
-export type NivelApi = 'SEMENTE' | 'BROTO' | 'CAPIM' | 'DOURADO'
+export type * from './comum'
 
 export type StatusReserva = 'PENDENTE' | 'CONFIRMADA' | 'SEPARADA' | 'RETIRADA' | 'CANCELADA' | 'EXPIRADA'
 
 export type FormaPagamento = 'PIX' | 'NA_LOJA'
-
-// ---------- POST /api/auth/login ----------
-
-export interface PedidoLogin {
-  email: string
-  senha: string
-}
-
-export interface UsuarioLogado {
-  id: string
-  nome: string
-  perfil: Perfil
-  /** Só lojista tem loja. */
-  lojaId: string | null
-}
-
-export interface RespostaLogin {
-  token: string
-  usuario: UsuarioLogado
-}
 
 // ---------- GET /api/loja/atendimento/{qr} ----------
 
@@ -177,36 +139,10 @@ export interface ResultadoImportacao {
 
 // ---------- /api/loja/cupons (RF23) ----------
 
-export type TipoCupom = 'PERCENTUAL' | 'VALOR' | 'BRINDE'
-
-export interface CupomDaLoja {
-  id: string
-  titulo: string
-  tipo: TipoCupom
-  /** PERCENTUAL: 1 a 100. VALOR: centavos. BRINDE: 0. */
-  valor: number
-  /** Se preenchido, o cupom só aparece para quem tem interesse nessa categoria. */
-  categoriaAlvo: string | null
-  nivelMinimo: NivelApi
-  limitePorCliente: number
-  /** Último dia de uso, em Palmas: "2026-12-31". */
-  validade: string
-  ativo: boolean
-  /** Quantas compras usaram o cupom. */
-  usos: number
-  /** Soma dos descontos dados com ele. */
-  descontoCentavos: number
-}
-
-/** Corpo de POST /api/loja/cupons. */
-export type PedidoCupom = Pick<
-  CupomDaLoja,
-  'titulo' | 'tipo' | 'valor' | 'categoriaAlvo' | 'nivelMinimo' | 'limitePorCliente' | 'validade'
->
+/** Cupom da loja com o uso dele; o corpo do POST é o PedidoCupom de comum.ts. */
+export type CupomDaLoja = CupomComUso
 
 // ---------- GET /api/loja/relatorios (RF24) ----------
-
-export type Periodo = '7d' | '30d' | '90d'
 
 export interface Relatorio {
   periodo: Periodo
