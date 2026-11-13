@@ -2,3 +2,4 @@
 export { Icon, type IconProps } from './Icon'
 export type { IconName } from './icones'
 export { CapiMark, type CapiMarkProps } from './CapiMark'
+export { Button, type ButtonProps } from './Button'
