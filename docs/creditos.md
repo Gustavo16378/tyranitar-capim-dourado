@@ -2,15 +2,24 @@
 
 ## Fotos dos produtos da demonstração
 
-As fotos dos produtos de exemplo do seed ficam em `public/produtos/`. São fotos livres do Unsplash, usadas sob a [Licença do Unsplash](https://unsplash.com/license): uso gratuito, inclusive comercial, sem precisar pedir permissão. A licença não exige crédito; ele fica aqui por cortesia.
+As fotos dos produtos de exemplo do seed (`kit/seed/produtos.csv`) ficam em `public/produtos/`. Os produtos são de exemplo, com preços inventados, nas lojas reais do shopping. São fotos livres do Unsplash, usadas sob a [Licença do Unsplash](https://unsplash.com/license): uso gratuito, inclusive comercial, sem precisar pedir permissão. A licença não exige crédito; ele fica aqui por cortesia.
 
-Cada foto foi recortada em quadrado e reduzida para 800 × 800 px, em WebP. Quando a equipe mandar as fotos reais, é só trocar os arquivos (mesmo nome) ou apontar a coluna `fotos` do `produtos.csv` do kit para os novos.
+Cada foto foi recortada em quadrado e reduzida para 800 × 800 px, em WebP, pelo CDN do Unsplash (a das meias foi completada com fundo branco, para as três caberem). Quando a equipe mandar as fotos reais, é só trocar os arquivos (mesmo nome) ou apontar a coluna `fotos` do `produtos.csv` do kit para os novos.
 
 | Arquivo | Produto | Foto | Autor | Fonte |
 | --- | --- | --- | --- | --- |
-| `tenis-de-corrida.webp` | Tênis de corrida (exemplo) | Par de tênis de corrida pretos | [Kelly Sikkema](https://unsplash.com/@kellysikkema) | [Unsplash](https://unsplash.com/photos/bE6k8SQT2FQ) |
-| `perfume-100-ml.webp` | Perfume 100 ml (exemplo) | Frasco de perfume numa superfície escura e texturizada | [Kier in Sight Archives](https://unsplash.com/@kierinsightarchives) | [Unsplash](https://unsplash.com/photos/perfume-bottle-on-a-dark-textured-surface-smVxAu_lqlo) |
-| `jaqueta-corta-vento.webp` | Jaqueta corta-vento (exemplo) | Homem de jaqueta verde na neblina | [Clay Banks](https://unsplash.com/@claybanks) | [Unsplash](https://unsplash.com/photos/a-man-in-a-green-jacket-standing-in-the-fog-nbH5FnJvNL0) |
+| `tenis-de-corrida.webp` | Tênis de corrida preto (Centauro) | Par de tênis de corrida pretos | [Kelly Sikkema](https://unsplash.com/@kellysikkema) | [Unsplash](https://unsplash.com/photos/bE6k8SQT2FQ) |
+| `tenis-de-corrida-leve.webp` | Tênis de corrida leve preto (Authentic Feet) | Tênis preto de malha num fundo branco | [Boitumelo](https://unsplash.com/@writecodenow) | [Unsplash](https://unsplash.com/photos/hOhZdUxq2XY) |
+| `perfume-100-ml.webp` | Perfume masculino amadeirado 100 ml (L'essence Perfumes) | Frasco de perfume numa superfície escura e texturizada | [Kier in Sight Archives](https://unsplash.com/@kierinsightarchives) | [Unsplash](https://unsplash.com/photos/perfume-bottle-on-a-dark-textured-surface-smVxAu_lqlo) |
+| `jaqueta-corta-vento.webp` | Jaqueta corta-vento verde (Renner) | Homem de jaqueta verde na neblina | [Clay Banks](https://unsplash.com/@claybanks) | [Unsplash](https://unsplash.com/photos/a-man-in-a-green-jacket-standing-in-the-fog-nbH5FnJvNL0) |
+| `camiseta-basica.webp` | Camiseta básica branca de algodão (Hering) | Camiseta branca num cabide de madeira | [Avtar Singh](https://unsplash.com/@avtar9w) | [Unsplash](https://unsplash.com/photos/8ACmRoleM24) |
+| `colar-de-prata.webp` | Colar de prata com pingente de coração (Vivara) | Colar prateado com pingente | [freestocks](https://unsplash.com/@freestocks) | [Unsplash](https://unsplash.com/photos/-1aE4Kpy-Qc) |
+| `oculos-de-sol.webp` | Óculos de sol redondo com lente amarela (Chilli Beans) | Óculos de sol sobre uma mesa | [Marios Gkortsilas](https://unsplash.com/@mr_mgk) | [Unsplash](https://unsplash.com/photos/llMiSJhJHBA) |
+| `urso-de-pelucia.webp` | Urso de pelúcia 40 cm (Ri Happy) | Urso de pelúcia marrom | [Sandy Millar](https://unsplash.com/@sandym10) | [Unsplash](https://unsplash.com/photos/6TZ1Xp3ZNA4) |
+| `caixa-de-bombons.webp` | Caixa de bombons sortidos 250 g (Cacau Show) | Bombons de chocolate variados | [Hrushi Chavhan](https://unsplash.com/@hcphotos) | [Unsplash](https://unsplash.com/photos/Fvmk6_Ryakg) |
+| `hidratante-corporal.webp` | Hidratante corporal 400 ml (Natura) | Caixa e bisnaga de creme sem rótulo | [Avtar Singh](https://unsplash.com/@avtar9w) | [Unsplash](https://unsplash.com/photos/X2Q219qUF6A) |
+| `kit-de-meias.webp` | Kit com 3 pares de meias (Lupo) | Três meias de tricô num fundo branco | [Mockup Graphics](https://unsplash.com/@mockupgraphics) | [Unsplash](https://unsplash.com/photos/YHmZBuNCLvQ) |
+| `trufas-de-chocolate.webp` | Caixa de trufas de chocolate 250 g (Kopenhagen) | Trufas de chocolate enfileiradas | [Merve Aydın](https://unsplash.com/@viledaaa) | [Unsplash](https://unsplash.com/photos/IB6e97oAx-E) |
 
 ## Capas das categorias de loja (`public/capas/`)
 

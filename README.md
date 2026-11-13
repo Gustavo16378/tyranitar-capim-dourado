@@ -37,7 +37,7 @@ A Capi é a assistente de IA do app; o nome do app será definido junto com o sh
 ### A jornada do cliente
 
 <p align="center">
-  <img src="docs/img/jornada.gif" width="300" alt="A jornada no celular: a Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a Morofit no mapa 3D e abre a carteira com o QR e os pontos.">
+  <img src="docs/img/jornada.gif" width="300" alt="A jornada no celular: a Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a Centauro no mapa 3D e abre a carteira com o QR e os pontos.">
 </p>
 
 A Capi acha o tênis pela foto, a cliente reserva com Pix, segue a rota até a loja no mapa 3D e abre a carteira. Gravado com o Playwright num celular de 390 px (`node scripts/gravar-jornada.mjs`).
