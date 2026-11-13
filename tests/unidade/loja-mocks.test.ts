@@ -194,6 +194,47 @@ describe('mocks: POST /api/loja/compras', () => {
   })
 })
 
+describe('mocks: POST /api/loja/atendimento/previa', () => {
+  it('dá o total do protótipo antes de registrar, sem gravar nada', async () => {
+    const pedido = { qrToken: QR_DA_ANA, valorCentavos: 45980, cupons: ['cp1', 'cp2'] }
+    const { status, corpo } = await chamar('POST', '/api/loja/atendimento/previa', pedido)
+    expect(status).toBe(200)
+    expect(corpo).toEqual({
+      valorBrutoCentavos: 45980,
+      descontos: [
+        { cupom: 'cp1', centavos: 4598 },
+        { cupom: 'cp2', centavos: 2000 },
+      ],
+      valorPagoCentavos: 39382,
+      pontosGerados: 393,
+      reembolsoGerado: { cupom: 'cp2', centavos: 2000 },
+    })
+    // A prévia não gasta os cupons: a compra de verdade dá o mesmo resultado.
+    const compra = await chamar<Compra>('POST', '/api/loja/compras', pedido)
+    expect(compra.corpo).toEqual({ id: expect.any(String), ...(corpo as object) })
+  })
+
+  it('mostra a retirada paga com Pix pelo valor da reserva', async () => {
+    const { corpo } = await chamar('POST', '/api/loja/atendimento/previa', {
+      qrToken: QR_DA_ANA,
+      valorCentavos: 0,
+      cupons: [],
+      reservaId: 'r1',
+    })
+    expect(corpo).toMatchObject({ valorPagoCentavos: 39990, pontosGerados: 399 })
+  })
+
+  it('responde com os mesmos erros da compra', async () => {
+    const { status, corpo } = await chamar('POST', '/api/loja/atendimento/previa', {
+      qrToken: QR_DA_ANA,
+      valorCentavos: 10000,
+      cupons: ['cp1', 'cp3'],
+    })
+    expect(status).toBe(422)
+    expect(corpo).toMatchObject({ erro: 'CUPONS_INCOMPATIVEIS' })
+  })
+})
+
 describe('mocks: reservas da loja', () => {
   it('lista as ativas paginadas, as que vencem primeiro no topo', async () => {
     const { status, corpo } = await chamar<Pagina<ReservaDaLoja>>(

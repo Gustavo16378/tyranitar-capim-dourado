@@ -8,7 +8,7 @@
 // Ordem segura: o login primeiro. As rotas mockadas aceitam o token real (só leem o
 // perfil), mas a API real recusa o token do mock.
 import { entrar } from './auth'
-import { buscarAtendimento, registrarCompra } from './atendimento'
+import { buscarAtendimento, calcularPrevia, registrarCompra } from './atendimento'
 import { listarReservas, mudarStatusReserva } from './reservas'
 import type { Manipulador } from './resposta'
 
@@ -17,6 +17,7 @@ export { reiniciarMocks } from './dados'
 export const ROTAS_MOCKADAS: Record<string, Manipulador> = {
   'POST /api/auth/login': entrar,
   'GET /api/loja/atendimento/:qr': buscarAtendimento,
+  'POST /api/loja/atendimento/previa': calcularPrevia,
   'POST /api/loja/compras': registrarCompra,
   'GET /api/loja/reservas': listarReservas,
   'PATCH /api/loja/reservas/:id': mudarStatusReserva,

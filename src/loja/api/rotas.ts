@@ -8,6 +8,8 @@ import type {
   Pagina,
   PedidoCompra,
   PedidoLogin,
+  PedidoPrevia,
+  PreviaCompra,
   ReservaDaLoja,
   RespostaLogin,
   StatusPedidoPelaLoja,
@@ -22,6 +24,11 @@ export function entrar(pedido: PedidoLogin) {
 /** GET /api/loja/atendimento/{qr}: ficha, reservas e cupons do cliente do QR (RF18). */
 export function buscarAtendimento(qr: string, sinal?: AbortSignal) {
   return requisitar<Atendimento>('GET', `/api/loja/atendimento/${encodeURIComponent(qr)}`, { sinal })
+}
+
+/** POST /api/loja/atendimento/previa: quanto o cliente paga e quantos pontos ganha, sem gravar (RF19). */
+export function calcularPrevia(pedido: PedidoPrevia, sinal?: AbortSignal) {
+  return requisitar<PreviaCompra>('POST', '/api/loja/atendimento/previa', { corpo: pedido, sinal })
 }
 
 /** POST /api/loja/compras: registra a compra no caixa, com cupons, e soma os pontos (RF19). */
