@@ -2,10 +2,11 @@
 // playwright.config.ts): o front com o modo demonstração ligado, as Functions e um D1 local só
 // dos testes, apagado e preenchido de novo a cada vez.
 //
-// O banco é o tests/seed.sql (o mesmo dos testes de API) com três ajustes para a jornada:
+// O banco é o tests/seed.sql (o mesmo dos testes de API) com estes ajustes para a jornada:
 // - a Ana com o e-mail da conta de demonstração (POST /api/auth/demo procura por ele) e o QR
 //   fixo da demonstração (o mesmo do botão "Simular leitura" do painel da loja);
-// - o lojista da Loja A com uma senha de verdade, para entrar pelo login;
+// - o lojista da Loja A e a administração com senhas de verdade, para entrar pelo login;
+// - a Carla, cliente com seis interesses na ficha, para a Minha conta apagar um (TE14);
 // - a Loja A numa loja que existe na planta, para o mapa desenhar a rota;
 // - buscas recentes nas categorias da Loja A, para o Desempenho (TX07) ter o que mostrar.
 // Sem ANTHROPIC_API_KEY: a Capi responde com as respostas salvas (CAPI_MODO_DEMO=1) e, fora do
@@ -65,6 +66,17 @@ rodar('migrations no D1 dos testes', wrangler, [
 const ajustes = `
 UPDATE usuario SET email = ${aspas(dados.ana.email)}, qr_token = ${aspas(dados.ana.qrToken)} WHERE id = 'c-ana';
 UPDATE usuario SET senha_hash = ${aspas(await hashSenha(dados.lojista.senha))} WHERE email = ${aspas(dados.lojista.email)};
+UPDATE usuario SET senha_hash = ${aspas(await hashSenha(dados.admin.senha))} WHERE email = ${aspas(dados.admin.email)};
+INSERT INTO usuario (id, nome, email, senha_hash, perfil, qr_token, consentimento_ficha) VALUES
+  ('c-carla', 'Carla Dias', ${aspas(dados.carla.email)}, ${aspas(await hashSenha(dados.carla.senha))}, 'CLIENTE', ${aspas(dados.carla.qrToken)}, 1);
+INSERT INTO ficha (cliente_id, interesses) VALUES ('c-carla', ${aspas(JSON.stringify([
+  { categoria: 'calcados', detalhe: 'Tênis de trilha, número 38' },
+  { categoria: 'calcados', detalhe: 'Sandália rasteira caramelo' },
+  { categoria: 'roupas', detalhe: 'Jaqueta corta-vento, tamanho M' },
+  { categoria: 'roupas', detalhe: 'Prefere cores neutras' },
+  { categoria: 'perfumaria', detalhe: 'Perfume floral suave' },
+  { categoria: 'calcados', detalhe: 'Meia de compressão' },
+]))});
 UPDATE loja SET mapa_id = ${aspas(dados.mapaDaLojaA)} WHERE id = 'loja-a';
 INSERT INTO busca (id, termo, categoria, encontrou, criado_em) VALUES
   ('b-e2e-1', 'tênis de trilha', 'calcados', 0, datetime('now', '-1 days')),
