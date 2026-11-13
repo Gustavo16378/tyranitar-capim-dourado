@@ -71,17 +71,67 @@ export function reservaParaLoja(r: ReservaCompleta) {
     status: r.status,
     formaPagamento: r.forma_pagamento,
     pago: r.pago === 1,
-    precoCentavos: r.preco_centavos,
+    /** O total da reserva (preço da unidade vezes a quantidade), como no app do cliente. */
+    precoCentavos: r.preco_centavos * r.quantidade,
     expiraEm: deSqlite(r.expira_em).toISOString(),
     criadoEm: deSqlite(r.criado_em).toISOString(),
   }
 }
 
-/** Reservas ativas do cliente nesta loja (as que o balcão pode atender). */
-export async function reservasAtivasDoCliente(db: D1Database, clienteId: string, lojaId: string) {
+/** Código "copia e cola" do Pix simulado da demonstração (não é um Pix de verdade). */
+export function pixSimulado(id: string, centavos: number) {
+  const valor = (centavos / 100).toFixed(2)
+  return `00020126360014BR.GOV.BCB.PIX0114SIMULADO-${id.slice(0, 8)}520400005303986540${valor.length}${valor}5802BR5913CAPIM DOURADO6006PALMAS6304SIMU`
+}
+
+/** Reserva como o cliente vê (POST /api/reservas, pagamento): o Pix só quando a forma é PIX. */
+export function reservaParaCliente(r: Pick<ReservaCompleta, 'id' | 'status' | 'forma_pagamento' | 'pago' | 'preco_centavos' | 'quantidade' | 'expira_em'>) {
+  const total = r.preco_centavos * r.quantidade
+  return {
+    id: r.id,
+    status: r.status,
+    formaPagamento: r.forma_pagamento,
+    pago: r.pago === 1,
+    precoCentavos: total,
+    expiraEm: deSqlite(r.expira_em).toISOString(),
+    ...(r.forma_pagamento === 'PIX' ? { pix: { copiaECola: pixSimulado(r.id, total), simulado: true } } : {}),
+  }
+}
+
+/** A reserva se for deste cliente; null se não existe ou é de outro (a rota responde 404 igual). */
+export async function reservaDoCliente(db: D1Database, id: string, clienteId: string, agora = new Date()) {
+  await expirarVencidas(db, { reservaId: id }, agora)
+  const reserva = await buscarReserva(db, id)
+  return reserva && reserva.cliente_id === clienteId ? reserva : null
+}
+
+/**
+ * Confirma o Pix simulado (RN02): a reserva fica paga e passa a valer 48 h a partir de agora.
+ * O status não muda (quem separa é a loja). Só uma reserva PIX ativa e ainda não paga.
+ */
+export async function pagarReserva(db: D1Database, reserva: ReservaCompleta, agora = new Date()) {
+  const expira = calcularExpiracao(
+    { forma: 'PIX', criadaEm: deSqlite(reserva.criado_em), pagaEm: agora },
+    await lerPrazosReserva(db),
+  )
+  const { meta } = await db
+    .prepare(
+      `UPDATE reserva SET pago = 1, expira_em = ?2, atualizado_em = ?3
+       WHERE id = ?1 AND forma_pagamento = 'PIX' AND pago = 0 AND status IN ${ATIVAS}`,
+    )
+    .bind(reserva.id, paraSqlite(expira), paraSqlite(agora))
+    .run()
+  if (meta.changes !== 1) throw new ErroApi('TRANSICAO_INVALIDA', 'Essa reserva não está esperando pagamento.')
+  return (await buscarReserva(db, reserva.id))!
+}
+
+/** Reservas ativas do cliente; com lojaId, só as desta loja (as que o balcão pode atender). */
+export async function reservasAtivasDoCliente(db: D1Database, clienteId: string, lojaId?: string) {
   const { results } = await db
-    .prepare(`${SELECAO} WHERE r.cliente_id = ?1 AND r.loja_id = ?2 AND r.status IN ${ATIVAS} ORDER BY r.expira_em`)
-    .bind(clienteId, lojaId)
+    .prepare(
+      `${SELECAO} WHERE r.cliente_id = ?1 AND r.status IN ${ATIVAS}${lojaId ? ' AND r.loja_id = ?2' : ''} ORDER BY r.expira_em`,
+    )
+    .bind(...(lojaId ? [clienteId, lojaId] : [clienteId]))
     .all<ReservaCompleta>()
   return results
 }

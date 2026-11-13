@@ -62,6 +62,37 @@ export async function categoriasComProduto(db: D1Database) {
   return results.map((r) => r.categoria)
 }
 
+/** Produtos salvos pelo cliente (ativos), do mais recente para o mais antigo. */
+export async function listarFavoritos(db: D1Database, clienteId: string, pagina: { tamanho: number; inicio: number }) {
+  const favoritos = `FROM favorito f WHERE f.cliente_id = ?1 AND f.produto_id = p.id`
+  const [itens, contagem] = await db.batch([
+    db
+      .prepare(
+        `${SELECAO} AND EXISTS (SELECT 1 ${favoritos})
+         ORDER BY (SELECT f.criado_em ${favoritos}) DESC, p.nome LIMIT ?2 OFFSET ?3`,
+      )
+      .bind(clienteId, pagina.tamanho, pagina.inicio),
+    db
+      .prepare(
+        `SELECT count(*) AS total FROM favorito f JOIN produto p ON p.id = f.produto_id JOIN loja l ON l.id = p.loja_id
+         WHERE f.cliente_id = ?1 AND p.ativo = 1 AND l.ativa = 1`,
+      )
+      .bind(clienteId),
+  ])
+  return {
+    itens: (itens.results as ProdutoLinha[]).map(produtoParaApi),
+    total: (contagem.results[0] as { total: number }).total,
+  }
+}
+
+/** O produto mesmo que tenha saído de linha (para mostrar numa reserva antiga). */
+export function buscarProdutoQualquer(db: D1Database, id: string) {
+  return db
+    .prepare(SELECAO.replace('WHERE p.ativo = 1 AND l.ativa = 1', 'WHERE p.id = ?1'))
+    .bind(id)
+    .first<ProdutoLinha>()
+}
+
 export function buscarProdutoAtivo(db: D1Database, id: string) {
   return db.prepare(`${SELECAO} AND p.id = ?1`).bind(id).first<ProdutoLinha>()
 }
