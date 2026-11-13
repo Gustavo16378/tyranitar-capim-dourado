@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Link, Route, Routes } from 'react-router'
-import { APP_NOME } from './config'
+import { rotasDoApp } from './app/rotas'
 
 // Página pública do design system, carregada só quando alguém abre /design-system.
 const PaginaDesignSystem = lazy(() => import('./design-system/PaginaDesignSystem'))
@@ -9,7 +9,7 @@ const PaginaDesignSystem = lazy(() => import('./design-system/PaginaDesignSystem
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<EmMontagem titulo={APP_NOME} />} />
+      {rotasDoApp}
       <Route path="/loja/*" element={<EmMontagem titulo="Painel da loja" />} />
       <Route path="/shopping/*" element={<EmMontagem titulo="Painel do shopping" />} />
       <Route
