@@ -167,7 +167,7 @@ As unidades da planta: lojas do térreo, restaurantes da praça de alimentação
 | `cnpj` | texto | 14 dígitos, único; identifica a loja na NFC-e (RN09). Obrigatório na loja ativa e vazio na vaga |
 | `piso` | inteiro | 1 (lojas) ou 2 (praça de alimentação) |
 | `tipo` | texto | `loja` ou `alimentacao` |
-| `categorias` | texto (JSON) | Lista das categorias que a loja vende; filtra a ficha (RN04) |
+| `categorias` | texto (JSON) | Lista das categorias que a loja vende; filtra a ficha (RN04). A primeira é a da marca (seed) e dá a capa no painel do shopping |
 | `mapa_id` | texto | Id do elemento da loja no SVG da planta; único |
 | `ativa` | inteiro | 0 (unidade vaga) ou 1 |
 

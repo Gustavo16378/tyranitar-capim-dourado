@@ -16,6 +16,9 @@ export const CATEGORIAS_DO_SHOPPING = [
   { id: 'livraria', rotulo: 'Livraria e papelaria' },
   { id: 'esportes', rotulo: 'Artigos esportivos' },
   { id: 'joias', rotulo: 'Joias e relógios' },
+  { id: 'beleza', rotulo: 'Beleza e saúde' },
+  { id: 'lazer', rotulo: 'Lazer e entretenimento' },
+  { id: 'servicos', rotulo: 'Serviços' },
 ] as const
 
 export type Categoria = (typeof CATEGORIAS_DO_SHOPPING)[number]['id']

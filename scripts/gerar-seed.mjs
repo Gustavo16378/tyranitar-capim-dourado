@@ -19,6 +19,7 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { categoriaDaMarca } from './categorias-das-marcas.mjs'
 import { hashSenha } from './lib/senha.mjs'
 
 const raiz = new URL('../', import.meta.url)
@@ -158,10 +159,16 @@ for (const l of linhasDasLojas) vezesDoRotulo.set(rotuloDaUnidade(l), (vezesDoRo
 const numeroDaUnidade = (l) =>
   vezesDoRotulo.get(rotuloDaUnidade(l)) > 1 ? l.id_mapa.replace(/^loja-/i, '').toUpperCase() : rotuloDaUnidade(l)
 
+// Lojas ativas com marca que ficou sem categoria (a capa e o filtro da ficha dependem dela).
+const marcasSemCategoria = []
+
 const lojas = linhasDasLojas.map((l) => {
   const piso = /t[ée]rreo/i.test(l.piso) ? 1 : /2/.test(l.piso) ? 2 : falhar(`lojas.csv linha ${l.numero}: piso "${l.piso}"`)
   const vaga = l.situacao.toUpperCase() === 'VAGA'
   const cnpj = /^\d{14}$/.test(l.cnpj ?? '') ? l.cnpj : null
+  // A categoria da marca vem primeiro (a capa no painel do shopping); a dos produtos entra depois.
+  const categoria = vaga ? null : l.categoria?.trim() || categoriaDaMarca(l.nome_da_marca)
+  if (!vaga && l.nome_da_marca && !categoria) marcasSemCategoria.push(l.nome_da_marca)
   return {
     codigo: l.loja,
     id: uuid(`loja:${l.loja}`),
@@ -173,7 +180,7 @@ const lojas = linhasDasLojas.map((l) => {
     cnpj: vaga ? null : (cnpj ?? cnpjFicticio(l.id_mapa, cnpjs)),
     piso,
     tipo: piso === 2 ? 'alimentacao' : 'loja',
-    categorias: [],
+    categorias: categoria ? [categoria] : [],
     mapaId: l.id_mapa,
     ativa: vaga ? 0 : 1,
   }
@@ -216,7 +223,8 @@ const produtos = lerCsv('produtos.csv').map((p) => {
     atributos: JSON.stringify(json(p.atributos, {}, `produtos.csv linha ${p.numero}`)),
   }
 })
-const lojasComProduto = lojas.filter((l) => l.categorias.length > 0)
+const comProduto = new Set(produtos.map((p) => p.mapaId))
+const lojasComProduto = lojas.filter((l) => comProduto.has(l.mapaId))
 
 // ---------- usuários ----------
 
@@ -411,6 +419,9 @@ try {
 }
 
 for (const aviso of avisos) console.warn(`aviso: ${aviso}`)
+if (marcasSemCategoria.length) {
+  console.warn(`aviso: marcas sem categoria (scripts/categorias-das-marcas.mjs): ${marcasSemCategoria.join(', ')}`)
+}
 console.log(
   `seed ${destino}: ${lojas.length} lojas (${lojas.filter((l) => !l.ativa).length} vagas), ${produtos.length} produtos, ` +
     `${cupons.length} cupons, ${usuarios.length} usuários e ${compras.length} compras da Ana (${pontosDaAna} pontos), ` +

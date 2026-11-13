@@ -33,6 +33,9 @@ Cada arquivo é a foto original recortada em 3:2 e reduzida para 800 × 533 px, 
 | Livraria e papelaria | `livraria.webp` | [Livraria com estantes cheias](https://unsplash.com/photos/interior-view-of-a-bookstore-with-shelves-full-of-books-lUVOWdpPEW4) | [Christopher Stites](https://unsplash.com/@christopherstites) |
 | Artigos esportivos | `esportes.webp` | [Bicicletas expostas numa loja](https://unsplash.com/photos/lined-red-blue-and-black-bicycles-on-display-6pRIXT8EcSI) | [Waldemar Brandt](https://unsplash.com/@waldemarbrandt67w) |
 | Joias e relógios | `joias.webp` | [Joias douradas numa vitrine iluminada](https://unsplash.com/photos/yellow-jewelry-displayed-in-a-brightly-lit-store-window-qYZQTtTrdek) | [Caesar Akbar](https://unsplash.com/@caesarakbr) |
+| Beleza e saúde | `beleza.webp` | [Cosméticos numa prateleira iluminada](https://unsplash.com/photos/cosmetics-displayed-in-a-well-lit-cabinet-z3Mjl9KzgXI) | [T](https://unsplash.com/@tanyabarrow) |
+| Lazer e entretenimento | `lazer.webp` | [Sala vazia com cortina e poltronas vermelhas](https://unsplash.com/photos/an-empty-theater-with-red-curtains-and-seats-25OeoEKoNP8) | [Richard Heinen](https://unsplash.com/@richard_he) |
+| Serviços | `servicos.webp` | [Balcão de atendimento num saguão](https://unsplash.com/photos/empty-hotel-lobby-FPS7a7XQZ0w) | [Tim Photoguy](https://unsplash.com/@tim0at0unsplash) |
 
 Para trocar uma capa: escolha uma foto gratuita do Unsplash ou do Pexels (não as do Unsplash+), baixe em WebP com até 800 px de largura e 3:2, salve com o id da categoria (`src/painel/comum/categorias.ts`) e atualize a linha desta tabela.
 
