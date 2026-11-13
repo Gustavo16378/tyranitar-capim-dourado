@@ -12,14 +12,29 @@ const TOKENS = {
   rota: 'marrom',
   voce: 'cerrado',
   texto: 'ink',
+  entrada: 'ink-muted',
 } as const
+
+/** No escuro, o contorno das lojas vem num token mais claro, para separar uma loja da outra. */
+const TOKENS_NO_ESCURO: Partial<Record<keyof typeof TOKENS, string>> = { borda: 'ink-muted', entrada: 'ink' }
 
 export type CoresDoMapa = Record<keyof typeof TOKENS, string>
 
+/** O tema em uso: data-theme manda; sem ele, a preferência do sistema. */
+function temaEscuro() {
+  const tema = document.documentElement.dataset.theme
+  if (tema) return tema === 'dark'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
 function lerCores(): CoresDoMapa {
   const estilo = getComputedStyle(document.documentElement)
+  const escuro = temaEscuro()
   return Object.fromEntries(
-    Object.entries(TOKENS).map(([nome, token]) => [nome, estilo.getPropertyValue(`--${token}`).trim()]),
+    Object.entries(TOKENS).map(([nome, token]) => {
+      const doTema = (escuro && TOKENS_NO_ESCURO[nome as keyof typeof TOKENS]) || token
+      return [nome, estilo.getPropertyValue(`--${doTema}`).trim()]
+    }),
   ) as CoresDoMapa
 }
 
