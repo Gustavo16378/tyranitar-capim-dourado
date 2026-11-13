@@ -117,9 +117,14 @@ export function pagarReserva(id: string, agora = Date.now()) {
 /** As reservas em aberto, para a carteira (já com o prazo conferido). */
 export function reservasEmAberto(agora = Date.now()) {
   RESERVAS.forEach((r) => conferirPrazo(r, agora))
-  return RESERVAS.filter((r) => EM_ABERTO.has(r.status)).map(({ id, produto, status }) => ({
-    id,
-    produto: produto.nome,
-    status,
-  }))
+  return RESERVAS.filter((r) => EM_ABERTO.has(r.status))
+    .sort((a, b) => Date.parse(a.expiraEm) - Date.parse(b.expiraEm))
+    .map(({ id, produto, status, pago, expiraEm }) => ({
+      id,
+      produto: produto.nome,
+      status,
+      pago,
+      expiraEm,
+      loja: { nome: produto.loja.nome, piso: produto.loja.piso, mapaId: produto.loja.mapaId },
+    }))
 }
