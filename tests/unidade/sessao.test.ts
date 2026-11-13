@@ -13,6 +13,7 @@ describe('login com o auth em mock', () => {
   let sessao: typeof import('../../src/api/sessao')
   beforeEach(async () => {
     vi.resetModules()
+    vi.doMock('../../src/api/fonte', () => ({ usarMock: () => true }))
     auth = await import('../../src/api/auth')
     sessao = await import('../../src/api/sessao')
   })

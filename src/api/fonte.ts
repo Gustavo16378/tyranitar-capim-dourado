@@ -6,23 +6,26 @@
  */
 export const FONTE = {
   /** POST /api/auth/login (Fase 2) e POST /api/auth/demo. Com mock, as duas entram como a Ana. */
-  auth: 'mock',
+  auth: 'api',
   /** GET /api/produtos e /api/produtos/{id}: prontos na Fase 2. */
-  produtos: 'mock',
+  produtos: 'api',
   /** GET /api/ofertas: pronto na Fase 2. */
-  ofertas: 'mock',
+  ofertas: 'api',
   /** GET /api/me/favoritos. */
-  favoritos: 'mock',
+  favoritos: 'api',
   /** POST /api/reservas, GET /api/reservas/{id} e o pagamento. Precisam de login de cliente. */
-  reservas: 'mock',
+  reservas: 'api',
   /** GET /api/me/carteira. Precisa de login de cliente. */
-  carteira: 'mock',
+  carteira: 'api',
   /** POST /api/chat (Fase 5). */
-  chat: 'mock',
+  chat: 'api',
 } satisfies Record<string, 'mock' | 'api'>
 
 export type Recurso = keyof typeof FONTE
 
 export function usarMock(recurso: Recurso) {
-  return FONTE[recurso] === 'mock'
+  // Lido como 'mock' | 'api', não como o valor de agora: com tudo em 'api', o TypeScript
+  // acusaria a comparação de impossível.
+  const fontes: Record<Recurso, 'mock' | 'api'> = FONTE
+  return fontes[recurso] === 'mock'
 }

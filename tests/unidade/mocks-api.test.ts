@@ -2,9 +2,11 @@
 // API, para a troca pela API real não mudar nada nas telas.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Cada teste começa com o estado dos mocks zerado (estoque, reservas, pontos).
+// Cada teste começa com o estado dos mocks zerado (estoque, reservas, pontos). Os mocks que leem
+// o catálogo pela fonte atual leem dos mocks também, seja qual for a fonte do app.
 async function mocks() {
   vi.resetModules()
+  vi.doMock('../../src/api/fonte', () => ({ usarMock: () => true }))
   return {
     produtos: await import('../../src/api/mocks/produtos'),
     reservas: await import('../../src/api/mocks/reservas'),
