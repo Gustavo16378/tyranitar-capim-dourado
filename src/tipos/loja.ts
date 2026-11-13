@@ -1,6 +1,6 @@
 // Tipos das rotas que o painel da loja usa, no formato de docs/api.md.
-// O front (src/loja/api) e os mocks (src/mocks/loja) leem daqui; quando as Functions
-// existirem, elas podem importar os mesmos tipos. Os gerais (erro, lista, nível, login,
+// O front (src/loja/api) e os mocks que sobraram (src/mocks/loja) leem daqui; as Functions
+// (functions/api/loja) respondem neste formato. Os gerais (erro, lista, nível, login,
 // cupom) ficam em comum.ts, usuario.ts e cupom.ts e são repetidos aqui, para as telas da
 // loja importarem tudo de um lugar.
 import type { Lista, NivelApi, Periodo } from './comum'

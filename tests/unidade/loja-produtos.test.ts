@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { criarTokenFalso } from '../../src/mocks/comum/token'
 import { reiniciarMocks, responderMock } from '../../src/mocks/loja'
 import { lerCsv } from '../../src/mocks/loja/produtos'
 import {
@@ -7,7 +8,7 @@ import {
   resumoDosAtributos,
   textoParaAtributos,
 } from '../../src/loja/telas/produtos/categorias'
-import type { Lista, ProdutoDaLoja, ResultadoImportacao, RespostaLogin } from '../../src/tipos/loja'
+import type { Lista, ProdutoDaLoja, ResultadoImportacao } from '../../src/tipos/loja'
 
 let token: string | null = null
 
@@ -26,11 +27,8 @@ async function chamar<T = unknown>(metodo: string, url: string, corpo?: unknown,
 beforeEach(async () => {
   reiniciarMocks()
   token = null
-  const { corpo } = await chamar<RespostaLogin>('POST', '/api/auth/login', {
-    email: 'lojista.loja-19@demo.test',
-    senha: '12345678',
-  })
-  token = corpo.token
+  // O token do login real (o mock só lê o perfil e o exp).
+  token = criarTokenFalso({ sub: 'l-pc01a', perfil: 'LOJISTA', lojaId: 'loja-pc01a' })
 })
 
 const NOVO = {

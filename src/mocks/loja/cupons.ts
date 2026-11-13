@@ -5,9 +5,8 @@ import { hojeEmPalmas } from '../../painel/comum/formatos'
 import { CATEGORIAS } from '../../loja/telas/produtos/categorias'
 import { validarCupom } from '../comum/cupons'
 import { dadosInvalidos, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
-import { usosDoCupom } from './atendimento'
 import { exigirLojista } from './auth'
-import { banco, novoId, type CupomMock } from './dados'
+import { banco, novoId, usosDoCupom, type CupomMock } from './dados'
 
 function paraLoja(cupom: CupomMock): CupomDaLoja {
   const usos = usosDoCupom(cupom)

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { criarTokenFalso } from '../../src/mocks/comum/token'
 import { reiniciarMocks, responderMock } from '../../src/mocks/loja'
 import { hojeEmPalmas } from '../../src/painel/comum/formatos'
-import { QR_DA_ANA } from '../../src/loja/telas/atendimento/demo'
 import { situacaoDoCupom, textoDoDesconto } from '../../src/painel/cupons/textos'
-import type { Atendimento, CupomDaLoja, Lista, PedidoCupom, Relatorio, RespostaLogin } from '../../src/tipos/loja'
+import type { CupomDaLoja, Lista, PedidoCupom, Relatorio } from '../../src/tipos/loja'
 
 let token: string | null = null
 
@@ -16,11 +16,8 @@ async function chamar<T = unknown>(metodo: string, url: string, corpo?: unknown)
 beforeEach(async () => {
   reiniciarMocks()
   token = null
-  const { corpo } = await chamar<RespostaLogin>('POST', '/api/auth/login', {
-    email: 'lojista.loja-19@demo.test',
-    senha: '12345678',
-  })
-  token = corpo.token
+  // O token do login real (o mock só lê o perfil e o exp).
+  token = criarTokenFalso({ sub: 'l-pc01a', perfil: 'LOJISTA', lojaId: 'loja-pc01a' })
 })
 
 const daqui = (dias: number) => hojeEmPalmas(Date.now() + dias * 86_400_000)
@@ -44,12 +41,12 @@ describe('mocks: cupons da loja', () => {
     expect(corpo.itens.find((c) => c.id === 'cp2')).toBeUndefined()
   })
 
-  it('cria o cupom, que já vale no atendimento de quem tem o nível', async () => {
+  it('cria o cupom, que entra na lista da loja', async () => {
     const criado = await chamar<CupomDaLoja>('POST', '/api/loja/cupons', NOVO)
     expect(criado.status).toBe(201)
     expect(criado.corpo).toMatchObject({ ...NOVO, ativo: true, usos: 0, descontoCentavos: 0 })
-    const atendimento = await chamar<Atendimento>('GET', `/api/loja/atendimento/${QR_DA_ANA}`)
-    expect(atendimento.corpo.cupons.map((c) => c.titulo)).toContain('R$ 30 em tênis')
+    const lista = await chamar<Lista<CupomDaLoja>>('GET', '/api/loja/cupons')
+    expect(lista.corpo.itens.map((c) => c.titulo)).toContain('R$ 30 em tênis')
   })
 
   it('recusa cupom fora das regras com 400', async () => {

@@ -3,9 +3,8 @@
 // o período, para simplificar); as reservas em aberto são as ativas agora.
 import type { Periodo, Relatorio } from '../../tipos/loja'
 import { STATUS_ATIVOS } from '../../loja/comum/reserva'
-import { usosDoCupom } from './atendimento'
 import { exigirLojista } from './auth'
-import { banco } from './dados'
+import { banco, usosDoCupom } from './dados'
 import { dadosInvalidos, ok, type PedidoMock, type RespostaMock } from '../comum/resposta'
 
 const ESCALA: Record<Periodo, number> = { '7d': 0.25, '30d': 1, '90d': 2.8 }

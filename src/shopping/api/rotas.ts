@@ -1,6 +1,6 @@
 // Uma função por rota da API que o painel do shopping usa, com os tipos de src/tipos/shopping.ts.
 // As telas chamam estas funções, nunca fetch direto. Rota nova: escreva a função aqui e,
-// enquanto a API não existir, o mock em src/mocks/shopping/.
+// enquanto a API não existir, um mock (veja docs/como-fazer-uma-tela.md).
 import type {
   ConfiguracaoDoShopping,
   Demanda,

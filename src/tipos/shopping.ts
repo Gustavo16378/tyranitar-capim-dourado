@@ -1,5 +1,5 @@
 // Tipos das rotas do painel do shopping (/api/shopping/*), no formato de docs/api.md.
-// O front (src/shopping/api) e os mocks (src/mocks/shopping) leem daqui.
+// O front (src/shopping/api) lê daqui; as Functions (functions/api/shopping) respondem neste formato.
 import type { NivelApi, Periodo, Piso } from './comum'
 import type { CupomComUso } from './cupom'
 

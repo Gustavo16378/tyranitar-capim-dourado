@@ -1,46 +1,58 @@
-// Banco de mentira do painel da loja: o lojista da "Loja de esportes", a Ana do seed, as
-// reservas, o catálogo e os cupons da loja. Fica na memória: recarregar a página volta tudo
-// ao início, o que deixa a demonstração repetível. Os testes chamam reiniciarMocks().
-import { diasAtras, reiniciarReembolsos, VOUCHERS_DA_LOJA_DE_ESPORTES } from '../comum/reembolsos'
-import { cupomMock, emDias, reiniciarVouchers, type CupomMock } from '../comum/vouchers'
-
-export type { CupomMock }
-import { QR_DA_ANA } from '../../loja/telas/atendimento/demo'
-import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, Usuario } from '../../tipos/loja'
+// Banco de mentira das telas do painel da loja que a API ainda não tem: Produtos, Cupons e
+// Desempenho (/api/loja/produtos, /cupons e /relatorios). As outras telas já usam a API real.
+// Fica na memória: recarregar a página volta tudo ao início. Os testes chamam reiniciarMocks().
+import type { NivelApi, ProdutoDaLoja, ReservaDaLoja, TipoCupom } from '../../tipos/loja'
+import { hojeEmPalmas } from '../../painel/comum/formatos'
 
 export const LOJA = {
   id: 'loja-esportes',
   nome: 'Loja de esportes',
-  /** Categorias iniciais da loja; as atuais ficam em banco.categorias e filtram a ficha (RN04). */
+  /** Categorias iniciais da loja; as atuais ficam em banco.categorias. */
   categorias: ['calcados', 'roupas', 'acessorios'],
 }
 
-/** Aceita qualquer e-mail lojista.*@demo.test, como os lojistas do seed. */
-export const EMAIL_DO_LOJISTA = /^lojista\.[a-z0-9-]+@demo\.test$/
-
-export const LOJISTA: Usuario = {
-  id: 'usuario-lojista-esportes',
-  nome: `Equipe da ${LOJA.nome}`,
-  perfil: 'LOJISTA',
-  lojaId: LOJA.id,
+/** Um cupom como o banco guarda (tabela cupom). Sem loja, é voucher do shopping. */
+export interface CupomMock {
+  id: string
+  titulo: string
+  /** LOJA: desta loja. SHOPPING: voucher do shopping, vale em qualquer loja. */
+  origem: 'LOJA' | 'SHOPPING'
+  tipo: TipoCupom
+  /** PERCENTUAL: 1 a 100. VALOR: centavos. BRINDE: 0. */
+  valor: number
+  categoriaAlvo: string | null
+  nivelMinimo: NivelApi
+  limitePorCliente: number
+  /** Último dia de uso: "2026-12-31". */
+  validade: string
+  ativo: boolean
 }
 
-export interface ClienteMock {
-  id: string
-  /** Só o primeiro nome vai para a loja. */
-  nome: string
-  nivel: NivelApi
-  qrToken: string
-  pontos: number
-  consentimentoFicha: boolean
-  interesses: { categoria: string; detalhe: string }[]
+const DIA = 24 * 60 * 60 * 1000
+const HORA = 60 * 60 * 1000
+
+/** A data daqui a tantos dias (negativo: no passado), para as validades não vencerem com o tempo. */
+export function emDias(dias: number) {
+  return hojeEmPalmas(Date.now() + dias * DIA)
+}
+
+/** Data de tantos dias atrás, às `hora` de Palmas (UTC-3). */
+function diasAtras(dias: number, hora = 15) {
+  const data = new Date(Date.now() - dias * DIA)
+  data.setUTCHours(hora + 3, (dias * 7) % 60, 0, 0)
+  return data.toISOString()
+}
+
+/** Cupom com os valores que quase todo cupom tem; passe só o que muda. */
+function cupomMock(c: Partial<CupomMock> & Pick<CupomMock, 'id' | 'titulo' | 'origem' | 'tipo' | 'valor'>): CupomMock {
+  return { categoriaAlvo: null, nivelMinimo: 'SEMENTE', limitePorCliente: 1, validade: emDias(48), ativo: true, ...c }
 }
 
 export interface ReservaMock extends ReservaDaLoja {
   clienteId: string
 }
 
-/** Uma compra registrada pela plataforma (POST /api/loja/compras), como o Extrato lê. */
+/** Uma compra registrada pela plataforma, para o Desempenho e o uso dos cupons. */
 export interface CompraMock {
   id: string
   clienteId: string
@@ -60,45 +72,11 @@ export interface UsoDeCupom {
   centavos: number
 }
 
-export const ORDEM_DOS_NIVEIS: readonly NivelApi[] = ['SEMENTE', 'BROTO', 'CAPIM', 'DOURADO']
-
-export function nivelAtende(nivel: NivelApi, minimo: NivelApi) {
-  return ORDEM_DOS_NIVEIS.indexOf(nivel) >= ORDEM_DOS_NIVEIS.indexOf(minimo)
-}
-
-const HORA = 60 * 60 * 1000
-
 function emHoras(horas: number) {
   return new Date(Date.now() + horas * HORA).toISOString()
 }
 
 function estadoInicial() {
-  const ana: ClienteMock = {
-    id: 'cliente-ana',
-    nome: 'Ana',
-    nivel: 'CAPIM',
-    qrToken: QR_DA_ANA,
-    pontos: 2140,
-    consentimentoFicha: true,
-    interesses: [
-      { categoria: 'calcados', detalhe: 'Tênis de corrida, número 42, até R$ 400' },
-      { categoria: 'calcados', detalhe: 'Prefere preto' },
-      { categoria: 'roupas', detalhe: 'Camisetas dry-fit' },
-      // A loja de esportes não vende perfume: este interesse nunca chega ao painel (RN04).
-      { categoria: 'perfumaria', detalhe: 'Perfume amadeirado' },
-    ],
-  }
-  // Cliente sem consentimento: a ficha chega vazia.
-  const bruno: ClienteMock = {
-    id: 'cliente-bruno',
-    nome: 'Bruno',
-    nivel: 'SEMENTE',
-    qrToken: 'q-demo-bruno',
-    pontos: 120,
-    consentimentoFicha: false,
-    interesses: [{ categoria: 'roupas', detalhe: 'Bermuda de corrida' }],
-  }
-
   const cupons: CupomMock[] = [
     cupomMock({ id: 'cp1', titulo: '10% em calçados', origem: 'LOJA', tipo: 'PERCENTUAL', valor: 10, categoriaAlvo: 'calcados' }),
     // Segundo cupom da loja: não combina com o cp1 na mesma compra (RN05).
@@ -135,8 +113,8 @@ function estadoInicial() {
 
   // 7 reservas ativas, 2 pagas com Pix, como no protótipo.
   const reservas: ReservaMock[] = [
-    reserva('r1', ana.id, 'Ana', 'Tênis de corrida Pulse', 39990, 'SEPARADA', 'PIX', 30),
-    reserva('r2', bruno.id, 'Bruno', 'Camiseta dry-fit Trilha', 8990, 'PENDENTE', 'NA_LOJA', 3),
+    reserva('r1', 'cliente-ana', 'Ana', 'Tênis de corrida Pulse', 39990, 'SEPARADA', 'PIX', 30),
+    reserva('r2', 'cliente-bruno', 'Bruno', 'Camiseta dry-fit Trilha', 8990, 'PENDENTE', 'NA_LOJA', 3),
     reserva('r3', 'cliente-carla', 'Carla', 'Meia de compressão', 5990, 'CONFIRMADA', 'NA_LOJA', 2),
     reserva('r4', 'cliente-diego', 'Diego', 'Tênis Run 2 preto', 34990, 'SEPARADA', 'PIX', 40),
     reserva('r5', 'cliente-elaine', 'Elaine', 'Garrafa térmica 1 L', 12990, 'PENDENTE', 'NA_LOJA', 0.6),
@@ -172,7 +150,6 @@ function estadoInicial() {
   return {
     /** Categorias que a loja vende agora: crescem quando ela cadastra produto de outra. */
     categorias: [...LOJA.categorias],
-    clientes: [ana, bruno],
     cupons,
     reservas,
     produtos,
@@ -184,10 +161,12 @@ function estadoInicial() {
 
 const NOMES = ['Rafael', 'Juliana', 'Pedro', 'Marina', 'Lucas', 'Camila', 'Thiago', 'Beatriz', 'Felipe', 'Larissa', 'Hugo', 'Aline']
 
+/** Compras com voucher do shopping, há tantos dias (R$ 20 cada). */
+const COMPRAS_COM_VOUCHER = [74, 61, 48, 35, 27, 19, 9, 4]
+
 /**
- * As compras pela plataforma nos últimos 90 dias, para o Extrato, e os usos de cupom que
- * saem delas, para a tela de Cupons: as duas telas contam a mesma história. As compras com
- * voucher do shopping têm os ids de VOUCHERS_DA_LOJA_DE_ESPORTES, que geram os reembolsos.
+ * As compras pela plataforma nos últimos 90 dias, para o Desempenho, e os usos de cupom que
+ * saem delas, para a tela de Cupons: as duas telas contam a mesma história.
  */
 function historicoDeCompras() {
   const compras: CompraMock[] = []
@@ -219,8 +198,8 @@ function historicoDeCompras() {
   for (let i = 0; i < 12; i++) registrar(`co-h${i + 1}`, 29900 + 4100 * i, { cupomId: 'cp1', centavos: 2990 + 410 * i })
   for (let i = 0; i < 5; i++) registrar(`co-c${i + 1}`, 17980 + 1000 * i, { cupomId: 'cp3', centavos: 1500 })
   for (let i = 0; i < 9; i++) registrar(`co-b${i + 1}`, 12990 + 500 * i, { cupomId: 'cp4', centavos: 0 })
-  for (const [i, voucher] of VOUCHERS_DA_LOJA_DE_ESPORTES.entries()) {
-    registrar(voucher.compraId, 8990 + 2500 * i, { cupomId: 'cp2', centavos: voucher.centavos, doShopping: true }, voucher.dias)
+  for (const [i, dias] of COMPRAS_COM_VOUCHER.entries()) {
+    registrar(`co-v${i + 1}`, 8990 + 2500 * i, { cupomId: 'cp2', centavos: 2000, doShopping: true }, dias)
   }
   for (let i = 0; i < 16; i++) registrar(`co-s${i + 1}`, 5990 + 2700 * i)
 
@@ -229,11 +208,14 @@ function historicoDeCompras() {
 
 export let banco = estadoInicial()
 
-/** Volta os dados ao início (testes e "recomeçar a demonstração"), com reembolsos e vouchers. */
+/** Volta os dados ao início (os testes chamam antes de cada um). */
 export function reiniciarMocks() {
   banco = estadoInicial()
-  reiniciarReembolsos()
-  reiniciarVouchers()
+}
+
+/** As compras que usaram o cupom. */
+export function usosDoCupom(cupom: CupomMock) {
+  return banco.usos.filter((u) => u.cupomId === cupom.id)
 }
 
 /** Id novo para o que o mock cria: novoId('p') → 'p100'. */

@@ -2,7 +2,7 @@
 // perfil, barra lateral e rotas vêm do RotasDoPainel; aqui fica só o que é do shopping.
 import { RotasDoPainel } from '../painel/RotasDoPainel'
 import type { ConfigDoPainel } from '../painel/painel'
-import { MOCKS_LIGADOS, sessao } from './api'
+import { sessao } from './api'
 import { BASE_DO_SHOPPING } from './enderecos'
 import { TELAS_DO_SHOPPING } from './navegacao'
 
@@ -12,7 +12,7 @@ const PAINEL_DO_SHOPPING: ConfigDoPainel = {
   perfil: 'ADMIN_SHOPPING',
   telas: TELAS_DO_SHOPPING,
   sessao,
-  mocksLigados: MOCKS_LIGADOS,
+  mocksLigados: false,
 }
 
 export default function RotasShopping() {

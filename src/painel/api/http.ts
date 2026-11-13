@@ -76,7 +76,7 @@ export interface ConfigDoCliente {
   sessao: ArmazemDeSessao
   mocksLigados: boolean
   /** Import dinâmico dos mocks: () => import('../../mocks/loja'). Ficam num pedaço separado do bundle. */
-  carregarMocks: () => Promise<MocksDoPainel>
+  carregarMocks?: () => Promise<MocksDoPainel>
 }
 
 export type Requisitar = <T>(metodo: Metodo, caminho: string, opcoes?: OpcoesRequisicao) => Promise<T>
@@ -88,7 +88,7 @@ export function criarRequisitar({ sessao, mocksLigados, carregarMocks }: ConfigD
     const tipo = opcoes.texto?.tipo ?? 'application/json'
     const token = sessao.lerSessao()?.token ?? null
 
-    if (mocksLigados) {
+    if (mocksLigados && carregarMocks) {
       const { responderMock } = await carregarMocks()
       const resposta = await responderMock({ metodo, url, corpo, tipo, token })
       if (resposta) return tratar<T>(resposta, sessao)

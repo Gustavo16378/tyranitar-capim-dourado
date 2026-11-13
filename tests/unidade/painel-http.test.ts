@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRequisitar, ErroApi, paraErroApi } from '../../src/painel/api/http'
 import { criarSessao, tokenVencido } from '../../src/painel/api/sessao'
+import { criarTokenFalso } from '../../src/mocks/comum/token'
 
 // Um cliente como o de um painel, com os mocks da loja.
 const { apagarSessao, gravarSessao, lerSessao } = criarSessao('teste.sessao')
@@ -70,10 +71,10 @@ describe('requisitar', () => {
   it('usa o mock quando a rota está na tabela, sem chamar a rede', async () => {
     const fetch = vi.fn()
     vi.stubGlobal('fetch', fetch)
-    const resposta = await requisitar<{ usuario: { perfil: string } }>('POST', '/api/auth/login', {
-      corpo: { email: 'lojista.loja-19@demo.test', senha: '12345678' },
-    })
-    expect(resposta.usuario.perfil).toBe('LOJISTA')
+    const usuario = { id: 'l-pc01a', nome: 'Equipe da Loja PC01A', perfil: 'LOJISTA' as const, lojaId: 'loja-pc01a' }
+    gravarSessao({ token: criarTokenFalso({ sub: usuario.id, perfil: 'LOJISTA', lojaId: usuario.lojaId }), usuario })
+    const resposta = await requisitar<{ total: number }>('GET', '/api/loja/produtos')
+    expect(resposta.total).toBeGreaterThan(0)
     expect(fetch).not.toHaveBeenCalled()
   })
 })
