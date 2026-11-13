@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-plugin'
 import { defineConfig } from 'vitest/config'
 
-// Dois projetos: "unidade" (regras puras, no Node) e "workers" (rotas, banco e Capi, no
+// Dois projetos: "unidade" (regras puras, no Node) e "workers" (banco, rotas e Capi, no
 // runtime do Workers com um D1 local, as migrations aplicadas e tests/seed.sql).
 export default defineConfig({
   test: {
@@ -31,7 +31,7 @@ export default defineConfig({
         ],
         test: {
           name: 'workers',
-          include: ['tests/api/**/*.test.ts', 'tests/capi/**/*.test.ts'],
+          include: ['tests/banco/**/*.test.ts', 'tests/api/**/*.test.ts', 'tests/capi/**/*.test.ts'],
           setupFiles: ['tests/workers/preparar-banco.ts'],
         },
       },
