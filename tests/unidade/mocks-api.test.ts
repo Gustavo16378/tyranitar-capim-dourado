@@ -74,6 +74,12 @@ describe('mock de reservas', () => {
     await expect(m.reservas.pagarReserva(reserva.id)).rejects.toMatchObject({ status: 409 })
   })
 
+  it('produto que não existe dá 404, no formato da API', async () => {
+    await expect(
+      m.reservas.criarReserva({ produtoId: 'nao-existe', quantidade: 1, formaPagamento: 'PIX' }),
+    ).rejects.toMatchObject({ status: 404, erro: 'NAO_ENCONTRADO' })
+  })
+
   it('sem estoque dá 409 SEM_ESTOQUE', async () => {
     await expect(
       m.reservas.criarReserva({ produtoId: 'p-fone', quantidade: 1, formaPagamento: 'NA_LOJA' }),
@@ -104,6 +110,10 @@ describe('mock da carteira', () => {
 describe('mock da Capi', () => {
   it('a pergunta do roteiro tem a resposta salva, com reservar e rota', async () => {
     const resposta = await m.chat.enviarMensagem({ texto: m.chat.PERGUNTA_DEMO.texto })
+    expect(resposta.resposta).toBe(
+      'Achei dois parecidos aqui no térreo, os dois com o seu número.\n\n' +
+        'O Pulse está nas últimas unidades. Quer que eu separe um para você?',
+    )
     expect(resposta.produtos.map((p) => p.id)).toEqual(['p-pulse', 'p-run'])
     expect(resposta.acoes).toEqual([
       { tipo: 'RESERVAR', produtoId: 'p-pulse' },

@@ -1,6 +1,9 @@
 // Mock de POST /api/reservas e POST /api/reservas/{id}/pagamento, com as regras da API:
 // estoque desconta na reserva (RN03), pagar na loja vale 4 h (RN01) e pago por Pix vale 48 h (RN02).
+// O produto vem do catálogo da fonte atual (src/api/produtos): com produtos já na API real, a
+// reserva continua funcionando aqui até a rota de reservas existir.
 import type { NovaReserva, Reserva } from '../../tipos'
+import { obterProduto } from '../produtos'
 import { falhar, responder } from './atraso'
 import { acharProduto } from './produtos'
 
@@ -23,15 +26,17 @@ function comoResposta({ id, status, formaPagamento, pago, precoCentavos, expiraE
   return { id, status, formaPagamento, pago, precoCentavos, expiraEm, ...(pix ? { pix } : {}) }
 }
 
-export function criarReserva({ produtoId, quantidade, formaPagamento }: NovaReserva, agora = Date.now()) {
-  const produto = acharProduto(produtoId)
-  if (!produto) return falhar(404, 'NAO_ENCONTRADO', 'Esse produto não está mais no catálogo.')
+export async function criarReserva({ produtoId, quantidade, formaPagamento }: NovaReserva, agora = Date.now()) {
   if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 5) {
     return falhar(400, 'DADOS_INVALIDOS', 'A quantidade vai de 1 a 5.')
   }
+  // 404 no formato da API quando o produto não existe.
+  const produto = await obterProduto(produtoId)
   if (produto.estoque < quantidade) return falhar(409, 'SEM_ESTOQUE', 'Esse produto acabou de esgotar nesta loja.')
 
-  produto.estoque -= quantidade
+  // O estoque só desconta no catálogo do mock; o do banco quem desconta é a rota de verdade.
+  const local = acharProduto(produtoId)
+  if (local) local.estoque -= quantidade
   const id = `r-${proximoId++}`
   const precoCentavos = produto.precoCentavos * quantidade
   const reserva: Reserva & { produto: string } = {
