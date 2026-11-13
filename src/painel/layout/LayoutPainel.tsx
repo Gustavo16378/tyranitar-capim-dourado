@@ -43,10 +43,11 @@ export function LayoutPainel() {
   }
 
   return (
-    <div className="min-h-dvh bg-surface text-ink lg:grid lg:grid-cols-[220px_minmax(0,1fr)]">
+    <div className="min-h-dvh bg-surface text-ink lg:grid lg:grid-cols-[220px_minmax(0,1fr)] print:block print:min-h-0 print:bg-white">
+      {/* Na impressão (QR das entradas), só a tela: sem a barra lateral nem as margens. */}
       <aside
         onKeyDown={fecharComEsc}
-        className="sticky top-0 z-20 flex flex-col bg-terra px-3 text-on-terra lg:h-dvh lg:gap-6 lg:py-6"
+        className="sticky top-0 z-20 flex flex-col bg-terra px-3 text-on-terra lg:h-dvh lg:gap-6 lg:py-6 print:hidden"
       >
         <div className="flex min-h-14 items-center justify-between gap-3 lg:min-h-0">
           <p className="px-2 text-caption font-semibold uppercase tracking-wider opacity-[.85]">{painel.nome}</p>
@@ -97,7 +98,7 @@ export function LayoutPainel() {
         </div>
       </aside>
 
-      <main className="mx-auto w-full max-w-[1120px] px-4 py-6 md:px-8 md:py-8">
+      <main className="mx-auto w-full max-w-[1120px] px-4 py-6 md:px-8 md:py-8 print:max-w-none print:p-0">
         {/* Para as telas carregadas sob demanda (lazy na lista de telas do painel). */}
         <Suspense
           fallback={

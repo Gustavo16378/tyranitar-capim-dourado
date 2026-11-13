@@ -5,7 +5,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { comToken, dados, tokenDoLojista } from './apoio'
 
 const TELAS_DA_LOJA = ['atendimento', 'reservas', 'produtos', 'cupons', 'desempenho', 'extrato'].map((t) => `/loja/${t}`)
-const TELAS_DO_SHOPPING = ['lojas', 'fidelidade', 'demanda', 'vagas', 'reembolsos'].map((t) => `/shopping/${t}`)
+const TELAS_DO_SHOPPING = ['lojas', 'fidelidade', 'demanda', 'vagas', 'reembolsos', 'entradas'].map((t) => `/shopping/${t}`)
 const TODAS = [...TELAS_DA_LOJA, ...TELAS_DO_SHOPPING]
 /** Daqui para cima, a barra lateral fica sempre à vista; abaixo, a navegação abre pelo Menu. */
 const BARRA_LATERAL = 1024
@@ -65,7 +65,7 @@ async function colunasDoFormulario(page: Page) {
 }
 
 for (const largura of [390, 768, 1440]) {
-  test(`TE15: em ${largura} px, as 11 telas dos painéis não rolam para o lado`, async ({ page, request, isMobile }) => {
+  test(`TE15: em ${largura} px, as 12 telas dos painéis não rolam para o lado`, async ({ page, request, isMobile }) => {
     test.skip(isMobile, 'as três larguras rodam uma vez, no projeto de computador')
     // Uma compra na Loja A, para o extrato ter o que mostrar.
     const compra = await request.post('/api/loja/compras', {

@@ -25,6 +25,9 @@ export const entradasDoPiso = (piso: Piso) => ENTRADAS.filter((e) => e.piso === 
 
 export const acharEntrada = (id: string | null | undefined) => ENTRADAS.find((e) => e.id === id)
 
+/** O link do QR de uma entrada: o mapa do app já saindo dela. `site` é o endereço do app. */
+export const linkDaEntrada = (id: string, site: string) => `${site.replace(/\/+$/, '')}/mapa?origem=${encodeURIComponent(id)}`
+
 /** A resposta "não sei": a rota sai da entrada mais próxima, sem perguntar de novo. */
 export const MAIS_PROXIMA = 'mais-proxima'
 

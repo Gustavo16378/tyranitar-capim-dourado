@@ -64,6 +64,7 @@ Os dois painéis funcionam de 390 px em diante sem rolar para o lado. Abaixo de 
 | Fidelidade e campanhas | Níveis, vouchers e campanhas da vitrine | NivelBadge, CupomTicket | RF28 |
 | Demanda | O que os clientes procuram e não acham em nenhuma loja | StatTile | RF29 |
 | Jornada e reembolsos | Conversão das reservas e reembolsos devidos às lojas | StatTile | RF30, RF31 |
+| QR das entradas | Um QR por entrada, com o link do mapa já saindo dela (`/mapa?origem=<entrada>`), a letra e o piso; "Imprimir" sai um por página, sem a barra lateral | Button | RF10 |
 
 ## Estados de cada tela
 

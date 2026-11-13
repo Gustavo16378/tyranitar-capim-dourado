@@ -2,7 +2,7 @@
 // de impacto serious ou critical das regras WCAG 2.1 A e AA, nos temas claro e escuro.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { comSessaoDaAna, entrarNoPainelDaLoja, novaConversa, perguntarPeloTenisDaFoto } from '../e2e/apoio'
+import { comSessaoDaAna, dados, entrarNoPainelDaLoja, novaConversa, perguntarPeloTenisDaFoto } from '../e2e/apoio'
 
 const GRAVES = new Set(['serious', 'critical'])
 
@@ -135,6 +135,15 @@ for (const tema of ['light', 'dark'] as const) {
     test('TX07: relatórios do painel da loja', async ({ page }) => {
       await entrarNoPainelDaLoja(page, '/loja/desempenho')
       await expect(page.getByRole('heading', { name: 'Mais vendidos' })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
+
+    test('TX10: QR das entradas do painel do shopping', async ({ page, request }) => {
+      const login = await request.post('/api/auth/login', { data: dados.admin })
+      const sessao = await login.json()
+      await page.addInitScript((s) => localStorage.setItem('shopping.sessao', JSON.stringify(s)), sessao)
+      await page.goto('/shopping/entradas')
+      await expect(page.getByRole('article')).toHaveCount(7)
       await semViolacoesGraves(page)
     })
 

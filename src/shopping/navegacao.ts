@@ -3,6 +3,7 @@
 import { lazy } from 'react'
 import { MODO_DEMO } from '../app/modoDemo'
 import type { TelaDoPainel } from '../painel/painel'
+import { TelaEntradas } from './telas/entradas/TelaEntradas'
 import { TelaFidelidade } from './telas/fidelidade/TelaFidelidade'
 import { TelaLojas } from './telas/lojas/TelaLojas'
 import { TelaReembolsos } from './telas/reembolsos/TelaReembolsos'
@@ -20,4 +21,5 @@ export const TELAS_DO_SHOPPING: readonly TelaDoPainel[] = [
   { caminho: 'demanda', rotulo: 'Demanda', Tela: TelaDemanda, selo: SELO_DA_DEMO },
   { caminho: 'vagas', rotulo: 'Lojas vagas e demanda', Tela: TelaVagas, selo: SELO_DA_DEMO },
   { caminho: 'reembolsos', rotulo: 'Reembolsos', Tela: TelaReembolsos },
+  { caminho: 'entradas', rotulo: 'QR das entradas', Tela: TelaEntradas },
 ]

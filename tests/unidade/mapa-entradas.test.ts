@@ -9,6 +9,7 @@ import {
   entradasDoPiso,
   escolhaLembrada,
   lembrarEscolha,
+  linkDaEntrada,
   MAIS_PROXIMA,
   VALIDADE_DA_ESCOLHA_MS,
   type Armazem,
@@ -30,6 +31,13 @@ describe('entradas do mapa', () => {
     expect(ENTRADAS.map((e) => e.id).sort()).toEqual(doGrafo.map((p) => p.id).sort())
     for (const entrada of ENTRADAS) expect(GRAFO.pontos.get(entrada.id)?.piso).toBe(entrada.piso)
     expect(entradasDoPiso(1).map((e) => e.nome)).toEqual(['Entrada A', 'Entrada B', 'Entrada C'])
+  })
+
+  it('o link do QR de cada entrada abre o mapa já saindo dela', () => {
+    expect(linkDaEntrada('p1-c34', 'https://tyranitar-capim-dourado.pages.dev')).toBe(
+      'https://tyranitar-capim-dourado.pages.dev/mapa?origem=p1-c34',
+    )
+    expect(linkDaEntrada('p2-c4', 'http://localhost:8788/')).toBe('http://localhost:8788/mapa?origem=p2-c4')
   })
 
   it('a rota sai da entrada escolhida; sem escolha, da mais próxima; entrada de outro piso não vale', () => {

@@ -195,13 +195,14 @@ Com o Claude simulado:
 | TE12 | Cupons do Início no celular | RF06, RNF01 | O dedo desliza a faixa; as setas não aparecem |
 | TE13 | Minha conta: nome, senha e dados | RF01, RF13 | O nome novo aparece no Início; a senha atual errada é recusada sem sair da conta e a nova entra; o arquivo JSON baixa com a conta |
 | TE14 | Minha conta: apagar um interesse da ficha | RF13, RN04 | O interesse some da lista e do atendimento da loja |
-| TE15 | As 11 telas dos painéis em 390, 768 e 1440 px | RNF01 | Nada rola para o lado, nem com os formulários abertos; abaixo de 1024 px a navegação fica no Menu; o extrato vira cartões; no celular, formulário em uma coluna |
+| TE15 | As 12 telas dos painéis em 390, 768 e 1440 px | RNF01 | Nada rola para o lado, nem com os formulários abertos; abaixo de 1024 px a navegação fica no Menu; o extrato vira cartões; no celular, formulário em uma coluna |
 | TE16 | Menu do painel no celular | RNF01, RNF08 | O Menu abre a navegação (`aria-expanded`); Esc fecha e devolve o foco; escolher uma tela navega e fecha |
 | TE17 | Capi vazia | RF02, RF03 | Sem roteiro automático: sugestões que só preenchem o campo (a do tênis anexa a foto); somem depois da primeira mensagem e voltam com "Nova conversa" |
 | TE18 | Sair da Capi e voltar | RF02 | A conversa salva volta (com o selo da foto e os cartões), também recarregando; só "Nova conversa" apaga |
 | TE19 | Capi demorando | RNF10 | "A Capi está procurando nas lojas…" depois de 2 s; em 25 s, mensagem amigável e "Tentar de novo", que manda a mesma mensagem |
 | TE20 | Mapa até uma loja | RF10 | Pergunta por qual entrada o cliente chegou (sem "Você está aqui" inventado), lembra a escolha, aceita `?origem=` do QR da entrada e escreve o nome da loja de destino uma vez só |
 | TE21 | Foto da câmera na Capi | RF03 | A foto escolhida fica anexada no campo, com prévia e um X para tirar; nada vai antes de tocar em enviar, e o texto escrito vai junto |
+| TE22 | QR das entradas no painel do shopping | RF10 | Um cartão por entrada (letra, piso e o QR com o link `/mapa?origem=`); na impressão, sem a barra lateral e um por página; o link abre o mapa na entrada |
 
 ### Acessibilidade (TX)
 
@@ -218,6 +219,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX07 | Relatórios do painel da loja (gráficos com texto alternativo) |
 | TX08 | Painel no celular com o Menu aberto |
 | TX09 | Minha conta, com a ficha e a folha de trocar a senha |
+| TX10 | QR das entradas do painel do shopping |
 
 ### Manual (TM)
 
