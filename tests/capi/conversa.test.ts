@@ -265,7 +265,7 @@ describe('Capi com o Claude simulado', () => {
     })
   })
 
-  it('TI10: a foto fica no histórico pela descrição que a Capi fez; depois de "não gostei", ela sabe que viu o tênis', async () => {
+  it('TI12: a foto fica no histórico pela descrição que a Capi fez; depois de "não gostei", ela sabe que viu o tênis', async () => {
     const { modelo, chamadas } = modeloSimulado(gravada(fotoTenis))
     const foto = { tipo: 'image/jpeg' as const, base64: 'iVBORw0KGgo=' }
     await conversar({ clienteId: 'c-ana', texto: 'Tem esse tênis aí?', imagem: foto }, { db: env.DB, modelo })
