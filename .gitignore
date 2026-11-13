@@ -1,6 +1,8 @@
 # Dependências e build
 node_modules/
 dist/
+# Build do front com o modo demonstração, só para os testes no navegador
+dist-e2e/
 dev-dist/
 .vite/
 coverage/
