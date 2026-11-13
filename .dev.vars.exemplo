@@ -1,4 +1,12 @@
 # Copie este arquivo para .dev.vars (que fica fora do Git) e preencha os valores.
 # Em produção, cadastre os mesmos nomes como secrets do Cloudflare.
 ANTHROPIC_API_KEY=
+# Pelo menos 32 caracteres aleatórios. Ex.: node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 JWT_SECRET=
+
+# Usuários de teste do seed (migrations/0002_seed.sql), todos com a senha SENHA_TESTE:
+#   cliente  ana.souza@demo.test (Ana Souza, nível Capim, 2.140 pontos, com consentimento)
+#   lojista  lojista.<id_mapa da loja>@demo.test, um por loja com produto (veja o seed)
+#   admin    admin@demo.test
+# O scripts/gerar-seed.mjs lê esta senha para gerar os hashes. São dados de demonstração.
+SENHA_TESTE=capim-demo-2026
