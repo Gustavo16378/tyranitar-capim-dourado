@@ -9,7 +9,7 @@ Cada foto foi recortada em quadrado e reduzida para 800 × 800 px, em WebP, pelo
 | Arquivo | Produto | Foto | Autor | Fonte |
 | --- | --- | --- | --- | --- |
 | `tenis-de-corrida.webp` | Tênis de corrida preto (Centauro) | Par de tênis de corrida pretos | [Kelly Sikkema](https://unsplash.com/@kellysikkema) | [Unsplash](https://unsplash.com/photos/bE6k8SQT2FQ) |
-| `tenis-de-corrida-leve.webp` | Tênis de corrida leve preto (Authentic Feet) | Tênis preto de malha num fundo branco | [Boitumelo](https://unsplash.com/@writecodenow) | [Unsplash](https://unsplash.com/photos/hOhZdUxq2XY) |
+| `tenis-de-corrida-leve.webp` | Tênis de corrida preto em malha (Authentic Feet) | Tênis preto de malha num fundo branco | [Boitumelo](https://unsplash.com/@writecodenow) | [Unsplash](https://unsplash.com/photos/hOhZdUxq2XY) |
 | `perfume-100-ml.webp` | Perfume masculino amadeirado 100 ml (L'essence Perfumes) | Frasco de perfume numa superfície escura e texturizada | [Kier in Sight Archives](https://unsplash.com/@kierinsightarchives) | [Unsplash](https://unsplash.com/photos/perfume-bottle-on-a-dark-textured-surface-smVxAu_lqlo) |
 | `jaqueta-corta-vento.webp` | Jaqueta corta-vento verde (Renner) | Homem de jaqueta verde na neblina | [Clay Banks](https://unsplash.com/@claybanks) | [Unsplash](https://unsplash.com/photos/a-man-in-a-green-jacket-standing-in-the-fog-nbH5FnJvNL0) |
 | `camiseta-basica.webp` | Camiseta básica branca de algodão (Hering) | Camiseta branca num cabide de madeira | [Avtar Singh](https://unsplash.com/@avtar9w) | [Unsplash](https://unsplash.com/photos/8ACmRoleM24) |
