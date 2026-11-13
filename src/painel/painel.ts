@@ -12,6 +12,8 @@ export interface TelaDoPainel {
   /** Nome na barra lateral. */
   rotulo: string
   Tela: ComponentType
+  /** A tela ainda responde com mocks: mostra o selo "Dados de exemplo" no título e na barra. */
+  dadosDeExemplo?: boolean
 }
 
 export interface ConfigDoPainel {
@@ -24,8 +26,6 @@ export interface ConfigDoPainel {
   /** Na ordem da barra lateral; a primeira é a tela inicial. */
   telas: readonly TelaDoPainel[]
   sessao: ArmazemDeSessao
-  /** Mostra o selo "Dados de exemplo": alguma tela ainda responde com mocks. */
-  mocksLigados: boolean
 }
 
 export const ContextoDoPainel = createContext<ConfigDoPainel | null>(null)

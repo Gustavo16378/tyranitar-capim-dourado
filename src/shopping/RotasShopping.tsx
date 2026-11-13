@@ -12,7 +12,6 @@ const PAINEL_DO_SHOPPING: ConfigDoPainel = {
   perfil: 'ADMIN_SHOPPING',
   telas: TELAS_DO_SHOPPING,
   sessao,
-  mocksLigados: false,
 }
 
 export default function RotasShopping() {

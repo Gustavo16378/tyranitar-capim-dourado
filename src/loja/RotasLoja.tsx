@@ -3,7 +3,7 @@
 // RotasDoPainel; aqui fica só o que é da loja.
 import { RotasDoPainel } from '../painel/RotasDoPainel'
 import type { ConfigDoPainel } from '../painel/painel'
-import { MOCKS_LIGADOS, sessao } from './api'
+import { sessao } from './api'
 import { BASE_DA_LOJA } from './enderecos'
 import { TELAS_DA_LOJA } from './navegacao'
 
@@ -13,7 +13,6 @@ const PAINEL_DA_LOJA: ConfigDoPainel = {
   perfil: 'LOJISTA',
   telas: TELAS_DA_LOJA,
   sessao,
-  mocksLigados: MOCKS_LIGADOS,
 }
 
 export default function RotasLoja() {

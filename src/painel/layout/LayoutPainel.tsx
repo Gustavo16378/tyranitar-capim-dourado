@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router'
-import { Badge } from '../../componentes'
 import { cx } from '../../componentes/cx'
 import { Carregando, Esqueleto } from '../comum/Estados'
 import { urlNoPainel, usePainel } from '../painel'
@@ -21,17 +20,15 @@ export function LayoutPainel() {
   return (
     <div className="min-h-dvh bg-surface text-ink md:grid md:grid-cols-[220px_minmax(0,1fr)]">
       <aside className="flex flex-col gap-4 bg-terra px-3 py-4 text-on-terra md:sticky md:top-0 md:h-dvh md:gap-6 md:py-6">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-2">
-          <p className="text-caption font-semibold uppercase tracking-wider opacity-[.85]">{painel.nome}</p>
-          {painel.mocksLigados && <Badge>Dados de exemplo</Badge>}
-        </div>
+        <p className="px-2 text-caption font-semibold uppercase tracking-wider opacity-[.85]">{painel.nome}</p>
 
         <nav aria-label="Telas do painel" className="-mx-3 overflow-x-auto px-3 md:mx-0 md:overflow-visible md:px-0">
           <ul className="flex gap-1 md:flex-col">
-            {painel.telas.map(({ caminho, rotulo }) => (
+            {painel.telas.map(({ caminho, rotulo, dadosDeExemplo }) => (
               <li key={caminho}>
-                <NavLink to={urlNoPainel(painel, caminho)} className={({ isActive }) => cx(ITEM, isActive && ATIVO)}>
+                <NavLink to={urlNoPainel(painel, caminho)} className={({ isActive }) => cx(ITEM, 'gap-2', isActive && ATIVO)}>
                   {rotulo}
+                  {dadosDeExemplo && <span className="text-caption font-normal opacity-75">exemplo</span>}
                 </NavLink>
               </li>
             ))}
