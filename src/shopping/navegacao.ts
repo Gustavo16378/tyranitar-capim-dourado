@@ -1,6 +1,7 @@
 // As telas do painel do shopping, na ordem da barra lateral. Tela nova: crie a pasta em
 // telas/ e acrescente uma linha aqui; a rota e o item da barra lateral saem desta lista.
 import { lazy } from 'react'
+import { MODO_DEMO } from '../app/modoDemo'
 import type { TelaDoPainel } from '../painel/painel'
 import { TelaFidelidade } from './telas/fidelidade/TelaFidelidade'
 import { TelaLojas } from './telas/lojas/TelaLojas'
@@ -10,10 +11,13 @@ import { TelaReembolsos } from './telas/reembolsos/TelaReembolsos'
 const TelaDemanda = lazy(() => import('./telas/demanda/TelaDemanda').then((m) => ({ default: m.TelaDemanda })))
 const TelaVagas = lazy(() => import('./telas/vagas/TelaVagas').then((m) => ({ default: m.TelaVagas })))
 
+const SELO_DA_DEMO = MODO_DEMO ? 'Dados de demonstração' : undefined
+
 export const TELAS_DO_SHOPPING: readonly TelaDoPainel[] = [
   { caminho: 'lojas', rotulo: 'Lojas', Tela: TelaLojas },
   { caminho: 'fidelidade', rotulo: 'Fidelidade e campanhas', Tela: TelaFidelidade },
-  { caminho: 'demanda', rotulo: 'Demanda', Tela: TelaDemanda },
-  { caminho: 'vagas', rotulo: 'Lojas vagas e demanda', Tela: TelaVagas },
+  // No modo demonstração, as buscas que alimentam Demanda e Lojas vagas vêm do seed.
+  { caminho: 'demanda', rotulo: 'Demanda', Tela: TelaDemanda, selo: SELO_DA_DEMO },
+  { caminho: 'vagas', rotulo: 'Lojas vagas e demanda', Tela: TelaVagas, selo: SELO_DA_DEMO },
   { caminho: 'reembolsos', rotulo: 'Reembolsos', Tela: TelaReembolsos },
 ]
