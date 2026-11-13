@@ -150,6 +150,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA35 | Tempo das rotas sem IA com o seed | RNF02 | Menos de 500 ms |
 | TA36 | Respostas e build do front | RNF04, RNF07 | Nenhuma resposta contém `senha_hash`; o bundle não contém a chave da IA |
 | TA37 | Trocar o nome e a senha na Minha conta | RF01 | Nome novo na conta; a senha só troca com a atual certa (errada: 400, sem encerrar a sessão) e a nova entra no login |
+| TA38 | Ver e apagar um interesse da ficha | RF13, RN04 | O interesse apagado some da ficha e do atendimento da loja; os outros mantêm o id |
 
 ### Capi (TI)
 
@@ -232,7 +233,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF10 Mapa e rota | TE01, TE09, TM01 |
 | RF11 Carteira | TU05, TA17, TE01 |
 | RF12 Nota fiscal | TU22, TA18 |
-| RF13 Consentimento | TA21, TE06 |
+| RF13 Consentimento | TA21, TA38, TE06 |
 | RF14 Notificações | TE01 (notificação de pontos) |
 | RF15 Avaliar | TA22, TB11 |
 | RF16 Favoritos e histórico | TE02 |

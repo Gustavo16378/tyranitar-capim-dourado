@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filtrarFicha } from '../../../functions/_lib/regras/ficha'
+import { filtrarFicha, idDoInteresse, juntarInteresses, removerInteresse } from '../../../functions/_lib/regras/ficha'
 import {
   calcularExpiracao,
   mudarStatus,
@@ -73,5 +73,30 @@ describe('ficha do cliente (RN04)', () => {
 
   it('TU21: sem consentimento a ficha vem vazia', () => {
     expect(filtrarFicha(interesses, ['calcados', 'roupas'], false)).toEqual([])
+  })
+})
+
+describe('interesses que o cliente apaga na Minha conta', () => {
+  const tenis = { categoria: 'calcados', detalhe: 'Tênis de corrida, número 42' }
+  const jaqueta = { categoria: 'roupas', detalhe: 'Jaqueta corta-vento verde' }
+
+  it('o id sai da frase: o mesmo para a mesma frase, outro para outra frase', () => {
+    expect(idDoInteresse(tenis)).toMatch(/^[0-9a-z]+$/)
+    expect(idDoInteresse(tenis)).toBe(idDoInteresse({ detalhe: 'Tênis de corrida, número 42' }))
+    // Acento, caixa e espaço a mais não mudam o interesse (como no juntarInteresses).
+    expect(idDoInteresse({ detalhe: '  TENIS de  corrida, numero 42 ' })).toBe(idDoInteresse(tenis))
+    expect(idDoInteresse(jaqueta)).not.toBe(idDoInteresse(tenis))
+  })
+
+  it('o id não muda quando a Capi anota outros interesses', () => {
+    const antes = idDoInteresse(tenis)
+    const ficha = juntarInteresses([tenis], [jaqueta, { categoria: 'calcados', detalhe: 'Prefere preto' }])
+    expect(ficha.map(idDoInteresse)).toContain(antes)
+  })
+
+  it('removerInteresse tira só o do id e diz se ele estava lá', () => {
+    expect(removerInteresse([tenis, jaqueta], idDoInteresse(tenis))).toEqual({ restantes: [jaqueta], removido: true })
+    expect(removerInteresse([tenis, jaqueta], 'outro')).toEqual({ restantes: [tenis, jaqueta], removido: false })
+    expect(removerInteresse([], idDoInteresse(tenis))).toEqual({ restantes: [], removido: false })
   })
 })

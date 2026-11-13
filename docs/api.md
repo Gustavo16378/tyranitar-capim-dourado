@@ -48,6 +48,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `POST /api/reservas/{id}/cancelar` | CLIENTE | RF08 |
 | `GET /api/me`, `PATCH /api/me`, `DELETE /api/me` | CLIENTE | RF13 |
 | `PUT /api/me/senha` | CLIENTE | RF01 |
+| `GET /api/me/ficha`, `DELETE /api/me/ficha/{id}` | CLIENTE | RF13, RN04 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
 | `GET /api/me/historico` | CLIENTE | RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
@@ -304,6 +305,27 @@ Troca o nome (de 2 a 100 caracteres, sem os espaços a mais, como no cadastro). 
 ```
 
 Troca a senha, pedindo a atual. Resposta `204`. Erros: `400` (`DADOS_INVALIDOS`) com a senha atual errada (não `401`, que encerraria a sessão no app), a nova com menos de 8 caracteres ou igual à atual; `403` para a conta de demonstração enquanto `DEMO=1`.
+
+### `GET /api/me/ficha`
+
+O que a Capi anotou sobre o cliente: a ficha que as lojas veem no atendimento (RN04), para ele conferir e apagar o que não quer.
+
+```json
+{
+  "compartilharFicha": true,
+  "interesses": [
+    { "id": "1x7k2q9", "categoria": "calcados", "detalhe": "Tênis de corrida, número 42, até R$ 400" },
+    { "id": "0m3a8pd", "categoria": "roupas", "detalhe": "Camisetas dry-fit" }
+  ],
+  "atualizadaEm": "2026-11-13T15:02:11.000Z"
+}
+```
+
+O `id` sai da frase do interesse (a ficha não repete a frase): continua o mesmo quando a Capi anota outros. Sem consentimento, `interesses` vem vazia e `atualizadaEm` é `null`.
+
+### `DELETE /api/me/ficha/{id}`
+
+Apaga um interesse da ficha; a loja deixa de ver na hora. Resposta `200`: a ficha atualizada, no formato de `GET /api/me/ficha`. Erro `404` se o interesse não está na ficha.
 
 ### `DELETE /api/me`
 

@@ -1,10 +1,14 @@
-// Conta do cliente (tela Minha conta): GET e PATCH /api/me (nome), PUT /api/me/senha,
-// PUT /api/me/consentimento (RF13, RNF06, TA21) e DELETE /api/me (exclusão da conta, LGPD).
+// Conta do cliente (tela Minha conta): GET e PATCH /api/me (nome), PUT /api/me/senha, a ficha
+// que a Capi anotou (GET /api/me/ficha e DELETE /api/me/ficha/{id}), PUT /api/me/consentimento
+// (RF13, RNF06, TA21) e DELETE /api/me (exclusão da conta, LGPD).
 import { env } from 'cloudflare:test'
 import { describe, expect, it } from 'vitest'
 import { gerarHashSenha } from '../../functions/_lib/auth/senha'
 import { onRequestPost as login } from '../../functions/api/auth/login'
+import { onRequestGet as atendimento } from '../../functions/api/loja/atendimento/[qr]'
 import { onRequestPut as consentimento } from '../../functions/api/me/consentimento'
+import { onRequestDelete as apagarInteresse } from '../../functions/api/me/ficha/[id]'
+import { onRequestGet as ficha } from '../../functions/api/me/ficha/index'
 import {
   onRequestDelete as excluir,
   onRequestGet as conta,
@@ -220,5 +224,57 @@ describe('PUT /api/me/senha', () => {
     const corpo = { senhaAtual: SENHA, novaSenha: 'senha-nova-456' }
     expect((await trocar(corpo, { usuario: undefined })).status).toBe(401)
     expect((await trocar(corpo, { usuario: LOJISTA_A })).status).toBe(403)
+  })
+})
+
+describe('GET /api/me/ficha e DELETE /api/me/ficha/{id}', () => {
+  const lerFicha = (usuario = ANA) => chamar(ficha, { url: '/api/me/ficha', usuario })
+  const apagar = (id: string, usuario = ANA) =>
+    chamar(apagarInteresse, { metodo: 'DELETE', url: `/api/me/ficha/${id}`, params: { id }, usuario })
+  const fichaNoBalcao = async () =>
+    (await chamar(atendimento, { url: '/api/loja/atendimento/q-ana', params: { qr: 'q-ana' }, usuario: LOJISTA_A })).corpo
+      .ficha
+
+  it('o que a Capi anotou, cada interesse com um id para apagar', async () => {
+    const r = await lerFicha()
+    expect(r.status).toBe(200)
+    expect(r.corpo).toMatchObject({
+      compartilharFicha: true,
+      interesses: [
+        { id: expect.any(String), categoria: 'calcados', detalhe: 'Tênis de corrida, número 42, até R$ 400' },
+        { id: expect.any(String), categoria: 'roupas', detalhe: 'Camisetas dry-fit' },
+      ],
+      atualizadaEm: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
+    })
+    expect(new Set(r.corpo.interesses.map((i: { id: string }) => i.id)).size).toBe(2)
+    // Sem consentimento, nada anotado.
+    expect((await lerFicha(BRUNO)).corpo).toEqual({ compartilharFicha: false, interesses: [], atualizadaEm: null })
+  })
+
+  it('TA38: apagar um interesse tira ele da ficha e do que a loja vê; o outro fica com o mesmo id', async () => {
+    const [tenis, camisetas] = (await lerFicha()).corpo.interesses
+    const r = await apagar(tenis.id)
+    expect(r.status).toBe(200)
+    expect(r.corpo.interesses).toEqual([camisetas])
+    expect(await um("SELECT interesses FROM ficha WHERE cliente_id = 'c-ana'")).toEqual({
+      interesses: JSON.stringify([{ categoria: 'roupas', detalhe: 'Camisetas dry-fit' }]),
+    })
+    expect(await fichaNoBalcao()).toEqual(['Camisetas dry-fit'])
+  })
+
+  it('interesse que não está na ficha: 404; outro cliente não apaga o da Ana', async () => {
+    const [tenis] = (await lerFicha()).corpo.interesses
+    expect((await apagar('nao-existe')).status).toBe(404)
+    expect((await apagar(tenis.id, BRUNO)).status).toBe(404)
+    expect((await lerFicha()).corpo.interesses).toHaveLength(2)
+    // Apagado uma vez, a segunda é 404.
+    expect((await apagar(tenis.id)).status).toBe(200)
+    expect((await apagar(tenis.id)).status).toBe(404)
+  })
+
+  it('sem login 401; lojista 403', async () => {
+    expect((await chamar(ficha, { url: '/api/me/ficha' })).status).toBe(401)
+    expect((await lerFicha(LOJISTA_A)).status).toBe(403)
+    expect((await apagar('x', LOJISTA_A)).status).toBe(403)
   })
 })
