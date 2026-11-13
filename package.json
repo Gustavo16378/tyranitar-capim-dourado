@@ -24,7 +24,8 @@
     "qrcode.react": "^4.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router": "^7.18.5"
+    "react-router": "^7.18.5",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261113.1",
