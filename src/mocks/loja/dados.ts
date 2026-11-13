@@ -146,6 +146,9 @@ function estadoInicial() {
     produto('p9', 'Jaqueta corta-vento', 'roupas', 18990, 3, { tamanhos: ['P', 'M', 'G'], cor: 'verde' }, false),
   ]
   for (const p of produtos) p.descricao = `${p.nome} da ${LOJA.nome}.`
+  // As fotos da demonstração em public/produtos (as mesmas do seed), nos produtos que batem.
+  produtos[0].fotos = ['/produtos/tenis-de-corrida.webp']
+  produtos[8].fotos = ['/produtos/jaqueta-corta-vento.webp']
 
   return {
     /** Categorias que a loja vende agora: crescem quando ela cadastra produto de outra. */
