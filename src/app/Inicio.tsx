@@ -117,7 +117,7 @@ export default function Inicio() {
                 (favoritos.dados.itens.length === 0 ? (
                   <Vazio>Você ainda não salvou nenhum produto. Pergunte à Capi.</Vazio>
                 ) : (
-                  <ul className="flex flex-col gap-3">
+                  <ul className="flex flex-col gap-3 md:grid md:grid-cols-2 xl:grid-cols-3">
                     {favoritos.dados.itens.map((p) => (
                       <li key={p.id} data-anim>
                         <Link to={`/produto/${p.id}`} className="block rounded-md">
