@@ -2,9 +2,12 @@ import { Link, useNavigate } from 'react-router'
 import { listarFavoritos, listarOfertas, obterCarteira, useDados, useSessao } from '../api'
 import { Button, CapiMark, CupomTicket, Icon, NivelBadge, ProdutoCard } from '../componentes'
 import { APP_NOME } from '../config'
+import { cx } from '../componentes/cx'
 import { useEntrada } from '../movimento'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
 import { dataCurta, descontoDoCupom, nomeDoPiso, paraNivel, primeiroNome, saudacao } from './formatos'
+import { SetasDoCarrossel } from './SetasDoCarrossel'
+import { useCarrossel } from './useCarrossel'
 
 /** Início: ofertas para o cliente, produtos salvos e o atalho para a Capi. */
 export default function Inicio() {
@@ -17,6 +20,7 @@ export default function Inicio() {
   // O topo entra na hora; as seções entram quando os dados chegam.
   const topo = useEntrada<HTMLDivElement>()
   const conteudo = useEntrada<HTMLDivElement>([pronto])
+  const cupons = useCarrossel()
 
   return (
     <div className="flex flex-col gap-5 px-4 py-6">
@@ -71,25 +75,34 @@ export default function Inicio() {
         ) : (
           <>
             <section data-anim aria-labelledby="titulo-ofertas" className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <h2 id="titulo-ofertas" className="text-title-sm text-marrom-ink">
                   Ofertas para você
                 </h2>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/carteira')}>
-                  Ver cupons
-                </Button>
+                <div className="flex items-center gap-2">
+                  <SetasDoCarrossel carrossel={cupons} anterior="Cupons anteriores" proximo="Próximos cupons" />
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/carteira')}>
+                    Ver cupons
+                  </Button>
+                </div>
               </div>
               {ofertas.tipo === 'erro' && <ErroTela erro={ofertas.erro} onTentar={ofertas.recarregar} />}
               {ofertas.tipo === 'ok' &&
                 (ofertas.dados.itens.length === 0 ? (
                   <Vazio>Nenhuma oferta para você agora. Volte amanhã.</Vazio>
                 ) : (
-                  // Focável para dar para rolar as ofertas pelo teclado (setas).
+                  // Focável para dar para rolar as ofertas pelo teclado (setas). No celular, o dedo
+                  // desliza; no computador, setas, arrastar com o mouse e a roda (useCarrossel).
                   <div
+                    {...cupons.faixa}
                     tabIndex={0}
                     role="region"
                     aria-label="Cupons em oferta"
-                    className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-3 pt-2.5 [scrollbar-width:none]"
+                    className={cx(
+                      'relative -mx-4 flex gap-3 overflow-x-auto px-4 pb-3 pt-2.5 [scrollbar-width:none]',
+                      '[@media(pointer:fine)]:cursor-grab [@media(pointer:fine)]:select-none',
+                      cupons.arrastando && '[@media(pointer:fine)]:cursor-grabbing',
+                    )}
                   >
                     {ofertas.dados.itens.map((cupom) => (
                       // flex: o cupom estica até a altura do mais alto, sem buraco embaixo dos baixos.

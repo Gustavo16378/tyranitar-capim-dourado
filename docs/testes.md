@@ -187,6 +187,8 @@ Com o Claude simulado:
 | TE08 | PWA | RNF01 | Manifesto válido e service worker registrado |
 | TE09 | Mapa | RF10 | Clicar numa loja abre a página dela; trocar de piso mostra a praça de alimentação |
 | TE10 | Celular (390 × 844) nas telas principais | RNF01 | Sem rolagem horizontal e botões alcançáveis |
+| TE11 | Cupons do Início no computador | RF06 | As setas, arrastar com o mouse e a roda andam a faixa; a página não rola junto |
+| TE12 | Cupons do Início no celular | RF06, RNF01 | O dedo desliza a faixa; as setas não aparecem |
 
 ### Acessibilidade (TX)
 
@@ -222,7 +224,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF03 Foto ou print | TI06, TI09, TE01 |
 | RF04 Link | TI07 |
 | RF05 Buscar | TA07, TE02, TE04 |
-| RF06 Vitrine | TA10, TU13, TE03 |
+| RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
 | RF07 Produto | TA09, TE02 |
 | RF08 Reservar na loja | TA11, TA15, TI03, TE02 |
 | RF09 Reservar com Pix | TA12, TB06, TE01 |

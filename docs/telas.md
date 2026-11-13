@@ -32,7 +32,7 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | --- | --- | --- | --- |
 | Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Entrar e Criar conta | Login com e-mail e senha ou com a conta de demonstração; o cadastro pede nome, e-mail, senha e o consentimento da ficha (desmarcado por padrão) e já entra no Início, com 0 pontos, no nível Semente | Button | RF01, RF13 |
-| Início | Ofertas para o cliente, produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
+| Início | Ofertas para o cliente (no celular, a faixa de cupons desliza com o dedo; no computador, anda pelas setas, arrastando com o mouse ou pela roda), produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
 | Capi | Conversa com texto, foto ou link; respostas com produtos das lojas | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
