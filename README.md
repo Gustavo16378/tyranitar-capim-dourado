@@ -45,14 +45,14 @@ Para o pitch e para a banca testar sem cadastro. São três chaves, ligadas com 
 | Chave | Quem lê | Onde fica | O que faz |
 | --- | --- | --- | --- |
 | `VITE_MODO_DEMO` | Front | `.env.local` (lido no build) | A Capi abre tocando o roteiro da demonstração (o print do tênis). Desligada, abre vazia. |
-| `DEMO` | Functions | `.dev.vars` e `[vars]` do `wrangler.toml` | Liga `POST /api/auth/demo`, o botão "Entrar com a conta de demonstração" (entra como a cliente Ana, sem senha). Desligada, a rota responde 404. |
-| `CAPI_MODO_DEMO` | Functions | `.dev.vars` e `[vars]` do `wrangler.toml` | A Capi responde as mensagens do roteiro com as respostas salvas (`functions/_lib/capi/demonstracao.json`), sem chamar o Claude. As outras mensagens vão para o Claude. |
+| `DEMO` | Functions | `[vars]` do `wrangler.toml` (ligada); o `.dev.vars` muda na máquina | Liga `POST /api/auth/demo`, o botão "Entrar com a conta de demonstração" (entra como a cliente Ana, sem senha). Desligada, a rota responde 404. |
+| `CAPI_MODO_DEMO` | Functions | `[vars]` do `wrangler.toml` (ligada); o `.dev.vars` muda na máquina | A Capi responde as mensagens do roteiro com as respostas salvas (`functions/_lib/capi/demonstracao.json`), sem chamar o Claude. As outras mensagens vão para o Claude. |
 
 Na máquina:
 
 ```bash
 echo VITE_MODO_DEMO=1 > .env.local   # o Vite não lê o .dev.vars; o .env.local fica fora do Git
-# DEMO=1 e CAPI_MODO_DEMO=1 já vêm no .dev.vars.exemplo
+# DEMO e CAPI_MODO_DEMO já vêm ligadas pelo wrangler.toml
 npm run dev:api                      # http://localhost:8788
 ```
 
