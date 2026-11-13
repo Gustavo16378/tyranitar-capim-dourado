@@ -45,6 +45,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/reservas/{id}` | CLIENTE | RF08, RF09 |
 | `POST /api/reservas/{id}/pagamento` | CLIENTE | RF09 |
 | `POST /api/reservas/{id}/cancelar` | CLIENTE | RF08 |
+| `GET /api/me`, `DELETE /api/me` | CLIENTE | RF13 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
 | `GET /api/me/historico` | CLIENTE | RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
@@ -240,6 +241,29 @@ Cancela e devolve o estoque (RN03). Só funciona em reservas `PENDENTE`, `CONFIR
 
 ## Área do cliente
 
+### `GET /api/me`
+
+A conta do cliente, para a tela Minha conta.
+
+```json
+{
+  "id": "c1f0...",
+  "nome": "Ana Souza",
+  "email": "ana@email.com",
+  "nivel": "CAPIM",
+  "pontos": 2140,
+  "compartilharFicha": true
+}
+```
+
+Uma conta excluída responde `401`: o token dela não vale mais.
+
+### `DELETE /api/me`
+
+Exclui a conta do cliente (LGPD). Apaga os dados pessoais: nome, e-mail, senha, QR da carteira, ficha, conversa com a Capi, favoritos, notificações e avaliações. As reservas em aberto são canceladas e o estoque volta (RN03). As compras continuam, sem dados pessoais, porque são o registro das lojas (vendas, pontos e reembolsos), e as buscas ficam anônimas (RN12). Depois disso, o e-mail não entra mais e o token antigo responde `401`.
+
+Resposta `204`. Erro `403` para a conta de demonstração enquanto `DEMO=1`, para a banca não derrubar o login de demonstração.
+
 ### `GET /api/me/carteira`
 
 ```json
@@ -304,7 +328,7 @@ A API extrai a chave de acesso (44 dígitos) e o CNPJ (dígitos 7 a 20 da chave)
 { "compartilharFicha": false }
 ```
 
-Com `false`, a ficha é apagada na hora (RNF06).
+Com `false`, a ficha é apagada na hora (RNF06); com `true` de novo, ela recomeça vazia e a Capi preenche nas próximas conversas. Resposta `200`: a conta atualizada, no formato de `GET /api/me`. Erro `400` se `compartilharFicha` não for `true` ou `false`.
 
 ## Painel da loja
 
