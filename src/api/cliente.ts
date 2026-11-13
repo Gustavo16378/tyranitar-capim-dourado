@@ -1,7 +1,8 @@
 // Cliente HTTP da API (/api, mesmo domínio). Toda chamada passa por requisitar(): ela põe o
 // token, fala JSON e transforma qualquer falha em ErroApi, no formato { status, erro, mensagem }.
 import type { RespostaErro } from '../tipos'
-import { lerSessao } from './sessao'
+import { usarMock } from './fonte'
+import { apagarSessao, lerSessao } from './sessao'
 
 export class ErroApi extends Error implements RespostaErro {
   status: number
@@ -47,7 +48,8 @@ export async function requisitar<T>(
   corpo?: unknown,
 ) {
   const cabecalhos: Record<string, string> = { Accept: 'application/json' }
-  const token = lerSessao()?.token
+  // O token do login em mock não vale na API real (que recusa token inválido até em rota pública).
+  const token = usarMock('auth') ? undefined : lerSessao()?.token
   if (token) cabecalhos.Authorization = `Bearer ${token}`
   if (corpo !== undefined) cabecalhos['Content-Type'] = 'application/json'
 
@@ -63,6 +65,8 @@ export async function requisitar<T>(
   }
 
   const json: unknown = resposta.status === 204 ? null : await resposta.json().catch(() => null)
+  // Token vencido ou inválido: a sessão acaba e o app volta para a tela de login.
+  if (resposta.status === 401 && token) apagarSessao()
   if (!resposta.ok) {
     throw new ErroApi(
       ehRespostaErro(json)

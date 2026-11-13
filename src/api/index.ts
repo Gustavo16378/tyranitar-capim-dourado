@@ -2,7 +2,8 @@
 // Cada recurso vem do mock ou da API conforme src/api/fonte.ts.
 export { ErroApi, comoErroApi } from './cliente'
 export { useDados, type EstadoDados } from './useDados'
-export { entrar, sair, usuarioAtual } from './auth'
+export { entrar, entrarComDemo, sair, usuarioAtual } from './auth'
+export { useSessao } from './sessao'
 export { listarProdutos, obterProduto } from './produtos'
 export { listarOfertas } from './ofertas'
 export { listarFavoritos } from './favoritos'

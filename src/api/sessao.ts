@@ -1,9 +1,12 @@
-// Sessão do usuário (token e dados do login), guardada no aparelho.
+// Sessão do usuário (token e dados do login), guardada no aparelho. As telas acompanham com
+// useSessao(): quando alguém entra, sai ou o token vence, elas redesenham.
+import { useSyncExternalStore } from 'react'
 import type { RespostaLogin } from '../tipos'
 
 const CHAVE = 'sessao'
+const ouvintes = new Set<() => void>()
 
-export function lerSessao(): RespostaLogin | null {
+function lerDoAparelho(): RespostaLogin | null {
   try {
     const texto = localStorage.getItem(CHAVE)
     return texto ? (JSON.parse(texto) as RespostaLogin) : null
@@ -12,18 +15,39 @@ export function lerSessao(): RespostaLogin | null {
   }
 }
 
-export function salvarSessao(sessao: RespostaLogin) {
+let atual = lerDoAparelho()
+
+function mudar(sessao: RespostaLogin | null) {
+  atual = sessao
   try {
-    localStorage.setItem(CHAVE, JSON.stringify(sessao))
+    if (sessao) localStorage.setItem(CHAVE, JSON.stringify(sessao))
+    else localStorage.removeItem(CHAVE)
   } catch {
     // Sem armazenamento (aba anônima, por exemplo): a sessão vale só até recarregar.
   }
+  ouvintes.forEach((avisar) => avisar())
+}
+
+export function lerSessao() {
+  return atual
+}
+
+export function salvarSessao(sessao: RespostaLogin) {
+  mudar(sessao)
 }
 
 export function apagarSessao() {
-  try {
-    localStorage.removeItem(CHAVE)
-  } catch {
-    // Nada a apagar.
+  mudar(null)
+}
+
+function assinar(avisar: () => void) {
+  ouvintes.add(avisar)
+  return () => {
+    ouvintes.delete(avisar)
   }
+}
+
+/** A sessão atual (ou null), sempre em dia. */
+export function useSessao() {
+  return useSyncExternalStore(assinar, lerSessao, lerSessao)
 }
