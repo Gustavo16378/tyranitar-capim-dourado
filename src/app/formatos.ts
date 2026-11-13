@@ -55,3 +55,14 @@ export function prazoDaReserva(expiraEm: string, agora = Date.now()) {
   if (minutos < 60) return `Expira em ${minutos} min`
   return `Expira em ${Math.round(minutos / 60)} h`
 }
+
+/** Prévia de um link na conversa: "loja.com.br" e "/tenis-de-corrida-pulse". */
+export function partesDoLink(link: string) {
+  try {
+    const url = new URL(link)
+    const caminho = decodeURIComponent(url.pathname)
+    return { site: url.hostname.replace(/^www\./, ''), caminho: caminho === '/' ? 'Página da loja' : caminho }
+  } catch {
+    return { site: link, caminho: '' }
+  }
+}
