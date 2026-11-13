@@ -1,6 +1,7 @@
 // Volta a demonstração ao começo, entre um ensaio e outro: cancela as reservas em aberto da
-// Ana, apaga a conversa dela com a Capi e devolve o estoque do seed. O estoque volta rodando o
-// seed de novo (scripts/gerar-seed.mjs), que também repõe os cupons, favoritos e compras da Ana.
+// Ana, apaga a conversa dela com a Capi, devolve a ficha e o consentimento dela aos do seed e
+// devolve o estoque. O estoque e a ficha voltam rodando o seed de novo (scripts/gerar-seed.mjs),
+// que também repõe os cupons, favoritos e compras da Ana.
 //
 //   npm run demo:reset                       no D1 de produção (não precisa de deploy)
 //   node scripts/demo-reset.mjs --local      no D1 local
@@ -29,6 +30,9 @@ const SQL = [
   `SELECT count(*) AS n FROM mensagem WHERE cliente_id = ${DA_ANA}`,
   `UPDATE reserva SET status = 'CANCELADA', atualizado_em = datetime('now') WHERE ${EM_ABERTO}`,
   `DELETE FROM mensagem WHERE cliente_id = ${DA_ANA}`,
+  // A Capi anota na ficha o que a Ana procura nos ensaios: o seed põe de volta só a do roteiro.
+  `DELETE FROM ficha WHERE cliente_id = ${DA_ANA}`,
+  `UPDATE usuario SET consentimento_ficha = 1 WHERE id = ${DA_ANA}`,
 ].join(';\n')
 
 /** Roda um script com o node atual, na raiz do projeto, e devolve o que ele escreveu. */
@@ -70,5 +74,5 @@ const seed = rodar(join(raiz, 'scripts', 'gerar-seed.mjs'), [destino === 'remoto
 console.log(seed.trim())
 console.log(
   `demo:reset ${destino}: ${canceladas} reserva(s) da Ana cancelada(s), ${apagadas} mensagem(ns) dela com a Capi ` +
-    'apagada(s) e o estoque do seed de volta.',
+    'apagada(s), a ficha dela e o estoque do seed de volta.',
 )

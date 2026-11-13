@@ -116,7 +116,7 @@ Entre um ensaio e outro, e antes do pitch:
 npm run demo:reset   # no D1 de produção; não precisa de deploy
 ```
 
-Ele cancela as reservas em aberto da Ana, apaga a conversa dela com a Capi (para a Capi não lembrar dos ensaios) e devolve o estoque do seed, rodando o seed de novo. Por isso precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `produtos.csv` do kit, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
+Ele cancela as reservas em aberto da Ana, apaga a conversa dela com a Capi (para a Capi não lembrar dos ensaios), devolve a ficha dela à do seed (com o consentimento ligado) e devolve o estoque do seed, rodando o seed de novo. Por isso precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `produtos.csv` do kit, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
 
 ## Documentação
 
