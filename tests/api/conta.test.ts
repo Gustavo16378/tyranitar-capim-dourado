@@ -88,6 +88,10 @@ describe('DELETE /api/me', () => {
       ),
       env.DB.prepare("INSERT INTO favorito (cliente_id, produto_id) VALUES ('c-ana', 'p-pulse')"),
       env.DB.prepare("INSERT INTO busca (id, cliente_id, termo, encontrou) VALUES ('b-1', 'c-ana', 'tênis', 1)"),
+      env.DB.prepare(
+        `INSERT INTO reserva (id, cliente_id, produto_id, loja_id, preco_centavos, forma_pagamento, pago, expira_em)
+         VALUES ('r-pix', 'c-ana', 'p-camiseta', 'loja-a', 7990, 'PIX', 1, datetime('now', '+48 hours'))`,
+      ),
     ])
 
     const r = await chamar(excluir, { metodo: 'DELETE', url: '/api/me', usuario: ANA })
@@ -113,8 +117,16 @@ describe('DELETE /api/me', () => {
       ),
     ).toEqual({ ficha: 0, mensagens: 0, favoritos: 0, buscas: 0, buscaAnonima: 1, compras: 2 })
     // A reserva aberta foi cancelada e as duas unidades voltaram ao estoque (RN03).
-    expect(await um('SELECT status FROM reserva WHERE id = ?1', reserva.corpo.id)).toEqual({ status: 'CANCELADA' })
+    expect(await um('SELECT status, estorno_solicitado FROM reserva WHERE id = ?1', reserva.corpo.id)).toEqual({
+      status: 'CANCELADA',
+      estorno_solicitado: 0,
+    })
     expect(await um("SELECT estoque FROM produto WHERE id = 'p-run'")).toEqual({ estoque: 5 })
+    // A paga por Pix fica com o estorno pedido, como quando o cliente cancela.
+    expect(await um("SELECT status, estorno_solicitado FROM reserva WHERE id = 'r-pix'")).toEqual({
+      status: 'CANCELADA',
+      estorno_solicitado: 1,
+    })
   })
 
   it('depois de excluída, a conta não entra mais e o token antigo não vale', async () => {

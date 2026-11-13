@@ -90,7 +90,9 @@ export async function excluirConta(db: D1Database, clienteId: string, agora = ne
       .bind(clienteId, paraSqlite(agora)),
     db
       .prepare(
-        `UPDATE reserva SET status = 'CANCELADA', atualizado_em = ?2 WHERE cliente_id = ?1 AND status IN ${ABERTAS}`,
+        // A paga por Pix fica com o estorno pedido, como quando o cliente cancela uma.
+        `UPDATE reserva SET status = 'CANCELADA', estorno_solicitado = pago, atualizado_em = ?2
+         WHERE cliente_id = ?1 AND status IN ${ABERTAS}`,
       )
       .bind(clienteId, paraSqlite(agora)),
     db.prepare('DELETE FROM ficha WHERE cliente_id = ?1').bind(clienteId),

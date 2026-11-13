@@ -128,6 +128,16 @@ describe('TB06: reserva paga só com Pix', () => {
   })
 })
 
+describe('TB16: estorno só em reserva paga', () => {
+  it('estorno pedido numa reserva que não foi paga é recusado', async () => {
+    await aceita(NOVA_RESERVA, 'r-1', 'CANCELADA', 'NA_LOJA', 0)
+    await aceita(NOVA_RESERVA, 'r-2', 'CANCELADA', 'PIX', 1)
+    await recusa(CHECK, "UPDATE reserva SET estorno_solicitado = 1 WHERE id = 'r-1'")
+    await aceita("UPDATE reserva SET estorno_solicitado = 1 WHERE id = 'r-2'")
+    await recusa(CHECK, "UPDATE reserva SET estorno_solicitado = 2 WHERE id = 'r-2'")
+  })
+})
+
 describe('TB07: nota fiscal', () => {
   it('a mesma chave de acesso duas vezes é recusada', async () => {
     await aceita(NOVA_COMPRA, 'co-1', 'NOTA', chave('7'), null)

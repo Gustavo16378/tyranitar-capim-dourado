@@ -205,6 +205,7 @@ Clientes, lojistas e administração do shopping numa tabela só.
 | `status` | texto | `PENDENTE`, `CONFIRMADA`, `SEPARADA`, `RETIRADA`, `CANCELADA` ou `EXPIRADA` (ver diagrama de estados na [UML](uml.md)) |
 | `forma_pagamento` | texto | `NA_LOJA` ou `PIX` |
 | `pago` | inteiro | Só pode ser 1 em reserva `PIX` |
+| `estorno_solicitado` | inteiro | 1 quando a reserva foi cancelada depois de paga por Pix (estorno simulado); só pode ser 1 em reserva paga |
 | `expira_em` | texto | Criação + 4 h (`NA_LOJA`) ou + 48 h depois do pagamento (`PIX`) (RN01, RN02) |
 
 ### cupom

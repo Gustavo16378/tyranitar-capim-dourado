@@ -245,6 +245,7 @@ Resposta `201`:
   "status": "PENDENTE",
   "formaPagamento": "PIX",
   "pago": false,
+  "estornoSolicitado": false,
   "precoCentavos": 39990,
   "expiraEm": "2026-11-13T18:00:00Z",
   "pix": { "copiaECola": "00020126...", "simulado": true }
@@ -284,9 +285,28 @@ Uma reserva do cliente logado, com o produto no formato da busca. É o que a tel
 
 Confirma o Pix simulado. A reserva fica `pago: true` e passa a expirar em 48 horas (RN02). O status não muda: ela continua `PENDENTE`, agora paga, porque quem separa o produto é a loja (`PATCH /api/loja/reservas/{id}`). Resposta `200` no formato de `POST /api/reservas`. Erro `409` se já estiver paga, retirada, cancelada ou expirada.
 
-### `POST /api/reservas/{id}/cancelar`
+### `PATCH /api/reservas/{id}/cancelar`
 
-Cancela e devolve o estoque (RN03). Só funciona em reservas `PENDENTE`, `CONFIRMADA` ou `SEPARADA`.
+O cliente cancela a própria reserva (perfil `CLIENTE`, só o dono). Sem corpo. Vale enquanto ela está em aberto: `PENDENTE`, `CONFIRMADA` ou `SEPARADA` (para o cliente, a confirmada aparece como reserva feita). A reserva fica `CANCELADA` e o estoque volta na hora (RN03). Se estava paga por Pix, o estorno fica pedido: `estornoSolicitado: true`, simulado como o próprio Pix da demonstração. A loja vê a reserva cancelada em `GET /api/loja/reservas`, com o mesmo `estornoSolicitado`.
+
+Resposta `200` no formato de `POST /api/reservas`:
+
+```json
+{
+  "id": "r1",
+  "status": "CANCELADA",
+  "formaPagamento": "PIX",
+  "pago": true,
+  "estornoSolicitado": true,
+  "precoCentavos": 39990,
+  "expiraEm": "2026-11-15T18:00:00Z",
+  "pix": { "copiaECola": "00020126...", "simulado": true }
+}
+```
+
+Erros: `404` quando a reserva não existe ou é de outro cliente (a mesma resposta nos dois casos); `409` (`TRANSICAO_INVALIDA`) quando ela já foi retirada, já está cancelada ou expirou; `403` para lojista e administração.
+
+`estornoSolicitado` vem em todas as respostas de reserva do cliente: é `false` até uma reserva paga por Pix ser cancelada (pelo cliente, pela loja ou pela exclusão da conta).
 
 ## Área do cliente
 
@@ -510,6 +530,7 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
       "status": "SEPARADA",
       "formaPagamento": "PIX",
       "pago": true,
+      "estornoSolicitado": false,
       "precoCentavos": 39990,
       "expiraEm": "2026-11-14T18:00:00Z",
       "criadoEm": "2026-11-12T18:00:00Z"
@@ -519,7 +540,7 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
 }
 ```
 
-`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o total da reserva, pelo preço do momento da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido (RN01, RN02, RN03).
+`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o total da reserva, pelo preço do momento da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido (RN01, RN02, RN03). Uma reserva que o cliente cancelou vem `CANCELADA`; `estornoSolicitado: true` quando ela estava paga por Pix.
 
 ### `PATCH /api/loja/reservas/{id}`
 
@@ -527,7 +548,7 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
 { "status": "SEPARADA" }
 ```
 
-Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`; cancelar devolve o estoque e separar avisa o cliente. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`); reserva de outra loja, `403`. Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
+Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`; cancelar devolve o estoque (e pede o estorno, se a reserva estava paga por Pix) e separar avisa o cliente. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`); reserva de outra loja, `403`. Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
 
 ### `GET /api/loja/produtos`
 

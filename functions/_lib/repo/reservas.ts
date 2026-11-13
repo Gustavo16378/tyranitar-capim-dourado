@@ -53,13 +53,16 @@ export interface ReservaCompleta {
   status: StatusReserva
   forma_pagamento: FormaPagamento
   pago: 0 | 1
+  /** 1 quando a reserva foi cancelada depois de paga por Pix: o estorno (simulado) foi pedido. */
+  estorno_solicitado: 0 | 1
   expira_em: string
   criado_em: string
 }
 
 const SELECAO = `
   SELECT r.id, r.cliente_id, u.nome AS cliente_nome, r.produto_id, p.nome AS produto_nome, p.fotos AS produto_fotos, r.loja_id,
-         l.nome AS loja_nome, l.piso AS loja_piso, l.mapa_id AS loja_mapa_id, r.quantidade, r.preco_centavos, r.status, r.forma_pagamento, r.pago, r.expira_em, r.criado_em
+         l.nome AS loja_nome, l.piso AS loja_piso, l.mapa_id AS loja_mapa_id, r.quantidade, r.preco_centavos, r.status, r.forma_pagamento, r.pago,
+         r.estorno_solicitado, r.expira_em, r.criado_em
   FROM reserva r JOIN produto p ON p.id = r.produto_id JOIN usuario u ON u.id = r.cliente_id
   JOIN loja l ON l.id = r.loja_id`
 
@@ -77,6 +80,7 @@ export function reservaParaLoja(r: ReservaCompleta) {
     status: r.status,
     formaPagamento: r.forma_pagamento,
     pago: r.pago === 1,
+    estornoSolicitado: r.estorno_solicitado === 1,
     /** O total da reserva (preço da unidade vezes a quantidade), como no app do cliente. */
     precoCentavos: r.preco_centavos * r.quantidade,
     expiraEm: deSqlite(r.expira_em).toISOString(),
@@ -90,14 +94,20 @@ export function pixSimulado(id: string, centavos: number) {
   return `00020126360014BR.GOV.BCB.PIX0114SIMULADO-${id.slice(0, 8)}520400005303986540${valor.length}${valor}5802BR5913CAPIM DOURADO6006PALMAS6304SIMU`
 }
 
-/** Reserva como o cliente vê (POST /api/reservas, pagamento): o Pix só quando a forma é PIX. */
-export function reservaParaCliente(r: Pick<ReservaCompleta, 'id' | 'status' | 'forma_pagamento' | 'pago' | 'preco_centavos' | 'quantidade' | 'expira_em'>) {
+/** Reserva como o cliente vê (POST /api/reservas, pagamento, cancelar): o Pix só quando a forma é PIX. */
+export function reservaParaCliente(
+  r: Pick<
+    ReservaCompleta,
+    'id' | 'status' | 'forma_pagamento' | 'pago' | 'estorno_solicitado' | 'preco_centavos' | 'quantidade' | 'expira_em'
+  >,
+) {
   const total = r.preco_centavos * r.quantidade
   return {
     id: r.id,
     status: r.status,
     formaPagamento: r.forma_pagamento,
     pago: r.pago === 1,
+    estornoSolicitado: r.estorno_solicitado === 1,
     precoCentavos: total,
     expiraEm: deSqlite(r.expira_em).toISOString(),
     ...(r.forma_pagamento === 'PIX' ? { pix: { copiaECola: pixSimulado(r.id, total), simulado: true } } : {}),
@@ -167,14 +177,17 @@ export async function listarReservasDaLoja(
 }
 
 /**
- * Muda o status pela loja, seguindo o diagrama (409 TRANSICAO_INVALIDA). Cancelar devolve o
- * estoque; separar avisa o cliente. Se a reserva mudou no meio (outro balcão), 409 também.
+ * Muda o status, seguindo o diagrama (409 TRANSICAO_INVALIDA). Cancelar devolve o estoque e, se a
+ * reserva estava paga por Pix, pede o estorno (simulado); separar avisa o cliente. Se a reserva
+ * mudou no meio (outro balcão, ou o cliente e a loja ao mesmo tempo), 409 também.
  */
 export async function mudarStatusDaReserva(db: D1Database, reserva: ReservaCompleta, novo: StatusReserva, agora = new Date()) {
   mudarStatus(reserva.status, novo)
+  // Só reserva paga pode ter estorno (CHECK da migration 0004): pago já diz se é Pix pago.
+  const estorno = novo === 'CANCELADA' ? ', estorno_solicitado = pago' : ''
   const comandos = [
     db
-      .prepare('UPDATE reserva SET status = ?2, atualizado_em = ?3 WHERE id = ?1 AND status = ?4')
+      .prepare(`UPDATE reserva SET status = ?2, atualizado_em = ?3${estorno} WHERE id = ?1 AND status = ?4`)
       .bind(reserva.id, novo, paraSqlite(agora), reserva.status),
   ]
   if (novo === 'CANCELADA') {
@@ -199,6 +212,24 @@ export async function mudarStatusDaReserva(db: D1Database, reserva: ReservaCompl
     throw new ErroApi('TRANSICAO_INVALIDA', 'Essa reserva mudou enquanto isso. Atualize a lista e tente de novo.')
   }
   return (await buscarReserva(db, reserva.id))!
+}
+
+/** Por que o cliente não pode mais cancelar, nas palavras do app. */
+const NAO_CANCELA: Partial<Record<StatusReserva, string>> = {
+  RETIRADA: 'Essa reserva já foi retirada: não dá mais para cancelar.',
+  CANCELADA: 'Essa reserva já está cancelada.',
+  EXPIRADA: 'Essa reserva já expirou, e o produto voltou para a loja.',
+}
+
+/**
+ * O cliente cancela a própria reserva enquanto ela está em aberto (PENDENTE, CONFIRMADA ou
+ * SEPARADA): o estoque volta na hora e, se estava paga por Pix, o estorno fica pedido. Retirada,
+ * cancelada ou expirada: 409 TRANSICAO_INVALIDA.
+ */
+export function cancelarPeloCliente(db: D1Database, reserva: ReservaCompleta, agora = new Date()) {
+  const motivo = NAO_CANCELA[reserva.status]
+  if (motivo) throw new ErroApi('TRANSICAO_INVALIDA', motivo)
+  return mudarStatusDaReserva(db, reserva, 'CANCELADA', agora)
 }
 
 export interface ReservaCriada {
