@@ -10,3 +10,9 @@ binding = "DB"
 database_name = "tyranitar"
 database_id = "be85546f-df5d-4364-bd06-a2acf6b3a1a2"
 migrations_dir = "migrations"
+
+# Variáveis (vão para o Cloudflare no deploy e valem no wrangler pages dev).
+[vars]
+# Liga POST /api/auth/demo: entrar como a cliente Ana sem senha, para a banca do hackathon.
+# Depois do hackathon, troque para "0".
+DEMO = "1"

@@ -8,4 +8,6 @@ interface Env {
   CAPI_MODELO?: string
   /** "1": a Capi usa as respostas salvas da demonstração sempre que a mensagem bater com uma. */
   CAPI_MODO_DEMO?: string
+  /** "1": liga POST /api/auth/demo (entrar como a Ana sem senha). Ligado para o hackathon. */
+  DEMO?: string
 }
