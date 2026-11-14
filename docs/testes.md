@@ -103,6 +103,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TU43 | Reserva nova no painel da loja | RF20 | A primeira consulta só guarda as pendentes que já existem (sem som); depois, nova é a de um id nunca visto, e confirmar uma não faz a próxima da fila contar como nova; a frase do leitor de tela e o rótulo do selo; o som vem ligado e a escolha fica no aparelho |
 | TU44 | A hora "pronta para retirar a partir de" no painel | RF20, RN01 | A próxima meia hora em Palmas já vem no campo; a frase "Hoje" ou "Amanhã, a partir das 09:00" segue a mesma regra da API; hora fora do formato não é aceita |
 | TU45 | O carrinho do caixa | RF19, RN05, RN15 | Reserva, produto do catálogo e "Outros" viram os itens do pedido; o caixa só oferece o cupom que desconta em algum item; o cupom da reserva ocupa o lado dele (loja ou shopping); o cupom escolhido sai do pedido quando o item dele sai |
+| TU46 | Desconto em porcentagem acima de 50% | RF23, RF28 | Pergunta "Este cupom dá 60% de desconto. Confirmar?" só em porcentagem e acima de 50%; na edição, só se o desconto mudou |
 
 ### Banco (TB)
 
@@ -179,6 +180,12 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA48 | A loja recusa com motivo | RF20, RN03, RN15 | `RECUSADA` com o motivo, que a cliente vê no aviso; o estoque volta, o estorno do Pix é pedido e o cupom volta a valer no balcão; sem motivo, 400; pedir `CANCELADA` ou `RETIRADA` pelo painel é 400, com o caminho certo na mensagem |
 | TA49 | Cupom na reserva (`GET /api/produtos/{id}/cupons` e `POST /api/reservas`) | RF08, RN15 | Os cupons que valem para o tênis (o de calçados e o voucher, não o de camisetas) e os tamanhos dele; o preço e o Pix saem com o desconto; o cupom preso some da carteira, do balcão e da próxima reserva, e volta quando a reserva é cancelada; tamanho que não existe, 400 |
 | TA50 | Avisos do cliente (`GET /api/me/notificacoes` e `POST .../lidas`) | RF14 | Cada mudança da reserva vira um aviso, do mais novo para o mais antigo, com o selo do Início e o da Carteira; outro cliente não vê; marcar como lidos zera os dois; tipo desconhecido, 400 |
+| TA51 | Editar um cupom nunca usado (`PUT /api/loja/cupons/{id}`) | RF23 | Tudo muda (título, tipo, valor, categoria, nível, limite e validade); os campos que não vêm ficam como estão; as regras da criação valem (400); cupom que não existe, 404 |
+| TA52 | Editar um cupom já usado | RF23 | O título, a validade e o limite mudam; o tipo, o valor, a categoria e o nível são 409 `CUPOM_EM_USO`, com a mensagem dizendo o que não muda; o formulário inteiro com os travados iguais passa |
+| TA53 | Desativar e reativar | RF23, RN06 | Desativado, o cupom sai da carteira, do atendimento e da folha de reservar, e continua no painel; reativado, volta; um cupom vencido também desativa |
+| TA54 | Excluir (`DELETE /api/loja/cupons/{id}`) | RF23 | O nunca usado sai (204); o usado e o preso numa reserva (mesmo cancelada) são 409, sugerindo desativar |
+| TA55 | A reserva com um cupom desativado | RN15 | A reserva feita com o cupom guarda o desconto: retirada depois de ele ser desativado, a compra sai com o mesmo desconto |
+| TA56 | Isolamento dos cupons | RF23, RF28, RNF05 | A loja não edita nem exclui cupom de outra loja nem voucher (403); o shopping não mexe em cupom de loja (403) e edita os vouchers; o lojista nas rotas do shopping, 403 |
 
 ### Capi (TI)
 
@@ -245,6 +252,7 @@ Com o Claude simulado:
 | TE34 | Minhas compras | RF11, RF16 | Na carteira, abaixo das reservas, as três últimas compras com loja, dia, valor pago, cupons com o desconto e pontos; "Ver tudo" abre a lista inteira com a Carteira marcada na navegação, dez por vez; "Mostrar mais" traz o resto, diz quantas aparecem e põe o foco na primeira que chegou |
 | TE35 | Página da loja | RF07, RF10 | O nome da loja no produto abre `/lojas/{id}` com nome, categoria, piso e os produtos em grade (com o coração); "Como chegar" abre o mapa na loja, e no mapa o nome dela volta para a página; loja que não existe mostra o erro sem "Tentar de novo"; sem login, o nome no mapa não vira link |
 | TE36 | A reserva com a loja de ponta a ponta, com o app e o painel lado a lado | RF08, RF14, RF18, RF19, RF20, RN01, RN15 | A Ana reserva com tamanho e cupom (o preço sai com o desconto); sem recarregar, o selo de Reservas no painel sobe e o leitor de tela ouve "Reserva nova"; a loja confirma com a hora (a próxima meia hora já vem no campo) e a Ana vê a hora na reserva, o aviso no sino do Início e o selo na Carteira; a loja separa e a Ana vê "Separado para você"; no Atendimento, "Retirar" põe a reserva na compra junto com um produto do catálogo, e os pontos do recibo chegam na carteira. Roda uma vez, com a Ana num contexto de celular e o painel noutro de computador (o cupom dela vale uma vez, e o banco é o mesmo para os dois projetos) |
+| TE37 | Editar, desativar, reativar e excluir cupons nos painéis | RF23, RF28 | Criar com 60% pergunta antes; revisar volta ao formulário; "Editar" abre o formulário preenchido e salva; "Desativar" apaga o cupom com o selo "Desativado" e o foco fica no "Reativar"; "Excluir" pede confirmação e o foco vai para o aviso; o cupom já usado não tem "Excluir" e o formulário trava o desconto; o shopping faz o mesmo com um voucher |
 
 ### Acessibilidade (TX)
 
@@ -269,6 +277,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX15 | Minhas compras, na carteira e a lista inteira |
 | TX16 | Reservas do painel com uma reserva nova (o selo no menu, também no Menu aberto) e os formulários de confirmar e de recusar, nos dois temas |
 | TX17 | Atendimento com itens na compra, um cupom e o desconto item por item, nos dois temas |
+| TX18 | Cupons e vouchers dos painéis com as ações, o formulário de editar um cupom já usado, a pergunta acima de 50% e a confirmação de excluir, nos dois temas |
 
 ### Manual (TM)
 
@@ -307,11 +316,11 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF20 Gerir reservas | TU18, TU19, TU42 a TU44, TA28, TA45, TA48, TB05, TE01, TE28, TE36, TX16 |
 | RF21 Produtos | TB12 |
 | RF22 Importar CSV | TU27, TU28, TA29, TE04 |
-| RF23 Cupons da loja | TB15, TE03 |
+| RF23 Cupons da loja | TU46, TB15, TA51 a TA56, TE03, TE37, TX18 |
 | RF24 Relatórios | TA30, TX07 |
 | RF25 Extrato | TA25 (reembolso a receber) |
 | RF27 Lojas e lojistas | TA31 |
-| RF28 Fidelidade e campanhas | TA32, TE05 |
+| RF28 Fidelidade e campanhas | TA32, TA56, TE05, TE37, TX18 |
 | RF29 Demanda | TA08, TA33 |
 | RF30 Jornada | TA30 (conversão com ficha) |
 | RF31 Reembolsos | TA34, TB10 |
@@ -326,13 +335,13 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RN12 Demanda anônima | TA08, TA33 |
 | RN13 Comparativo | TU30 |
 | RN14 Capi não inventa | TI02, TI10, TI13 |
-| RN15 Cupom por categoria e na reserva | TU39, TU40, TU41, TU45, TA46, TA48, TA49, TE36 |
+| RN15 Cupom por categoria e na reserva | TU39, TU40, TU41, TU45, TA46, TA48, TA49, TA55, TE36 |
 | RNF01 PWA | TE08, TE10, TM02, TM06 |
 | RNF02 Tempo de resposta | TA35, TM06 |
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
 | RNF06 LGPD | TA21, TA24 |
 | RNF07 Chave da IA | TA36 |
-| RNF08 Acessibilidade | TU34, TU38, TE32, TE33, TX01 a TX17 |
+| RNF08 Acessibilidade | TU34, TU38, TE32, TE33, TX01 a TX18 |
 | RNF09 Mapa no celular | TM01 |
 | RNF10 IA fora do ar | TI05, TM04 |
 | RNF11 Português e fuso | TU29 |

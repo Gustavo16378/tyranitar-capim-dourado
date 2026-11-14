@@ -22,7 +22,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | 401 | Sem token, token inválido ou vencido (`NAO_AUTENTICADO`) |
 | 403 | Perfil sem permissão ou recurso de outra loja (`SEM_PERMISSAO`) |
 | 404 | Recurso não existe (`NAO_ENCONTRADO`) |
-| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada, e-mail ou CNPJ já cadastrado (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`, `EMAIL_EM_USO`, `CNPJ_EM_USO`) |
+| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada, e-mail ou CNPJ já cadastrado, cupom já usado que não pode mudar ou sair (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`, `EMAIL_EM_USO`, `CNPJ_EM_USO`, `CUPOM_EM_USO`) |
 | 422 | Regra de negócio violada: cupom inválido, combinação proibida, loja fora do shopping, lojista numa unidade vaga (`CUPOM_INVALIDO`, `CUPONS_INCOMPATIVEIS`, `LOJA_NAO_CADASTRADA`, `LOJA_VAGA`) |
 | 503 | A IA não respondeu (`IA_INDISPONIVEL`); o app mostra a busca comum |
 
@@ -66,14 +66,14 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `PATCH /api/loja/reservas/{id}` | LOJISTA | RF20 |
 | `GET /api/loja/produtos`, `POST`, `PUT /{id}` | LOJISTA | RF21 |
 | `POST /api/loja/produtos/importar` | LOJISTA | RF22 |
-| `GET /api/loja/cupons`, `POST` | LOJISTA | RF23 |
+| `GET /api/loja/cupons`, `POST`, `PUT /{id}`, `DELETE /{id}` | LOJISTA | RF23 |
 | `GET /api/loja/relatorios` | LOJISTA | RF24 |
 | `GET /api/loja/extrato` | LOJISTA | RF25 |
 | `GET /api/shopping/lojas`, `POST`, `PUT /{id}` | ADMIN_SHOPPING | RF27 |
 | `GET /api/shopping/lojas/{id}/lojistas` | ADMIN_SHOPPING | RF27 |
 | `POST /api/shopping/lojistas` | ADMIN_SHOPPING | RF27 |
 | `GET /api/shopping/configuracao`, `PUT` | ADMIN_SHOPPING | RF28 |
-| `GET /api/shopping/cupons`, `POST` | ADMIN_SHOPPING | RF28 |
+| `GET /api/shopping/cupons`, `POST`, `PUT /{id}`, `DELETE /{id}` | ADMIN_SHOPPING | RF28 |
 | `GET /api/shopping/demanda` | ADMIN_SHOPPING | RF29 |
 | `GET /api/shopping/vagas` | ADMIN_SHOPPING | RF29 |
 | `GET /api/shopping/jornada` | ADMIN_SHOPPING | RF30 |
@@ -809,14 +809,16 @@ Os cupons da loja (não traz os vouchers do shopping), com quantas compras usara
       "validade": "2026-12-31",
       "ativo": true,
       "usos": 12,
-      "descontoCentavos": 62940
+      "descontoCentavos": 62940,
+      "reservas": 2,
+      "emUso": true
     }
   ],
   "total": 4
 }
 ```
 
-`valor` segue o `tipo`: de 1 a 100 em `PERCENTUAL`, centavos em `VALOR` e 0 em `BRINDE`. `validade` é o último dia de uso, em Palmas.
+`valor` segue o `tipo`: de 1 a 100 em `PERCENTUAL`, centavos em `VALOR` e 0 em `BRINDE`. `validade` é o último dia de uso, em Palmas. `reservas` conta as reservas feitas com o cupom, de qualquer status (elas guardam o desconto prometido). `emUso` é `true` quando o cupom já foi usado numa compra ou está numa reserva: aí só o título, a validade, o limite por cliente e o `ativo` mudam, e ele não pode ser excluído. O cupom desativado (`ativo: false`) continua na lista.
 
 ### `POST /api/loja/cupons`
 
@@ -833,6 +835,25 @@ Os cupons da loja (não traz os vouchers do shopping), com quantas compras usara
 ```
 
 Resposta `201` com o cupom, no formato de um item de `GET /api/loja/cupons`. Ele já aparece no atendimento dos clientes do nível. `categoriaAlvo` é uma das categorias do shopping, ou `null` para qualquer uma. Erro `400` (`DADOS_INVALIDOS`: título de 3 a 60 caracteres, valor fora da regra do tipo, limite de 1 a 99, validade antes de hoje, categoria desconhecida).
+
+### `PUT /api/loja/cupons/{id}`
+
+Edita, desativa ou reativa um cupom da loja do token. O corpo tem os campos de `POST /api/loja/cupons` e `ativo`; os que não vierem ficam como estão.
+
+```json
+{ "titulo": "10% em tênis e sapatos", "validade": "2027-01-31", "limitePorCliente": 2 }
+{ "ativo": false }
+```
+
+- **Nunca usado e sem reserva** (`emUso: false`): tudo pode mudar.
+- **Já usado ou preso numa reserva** (`emUso: true`): só `titulo`, `validade`, `limitePorCliente` e `ativo`. Mudar `tipo`, `valor`, `categoriaAlvo` ou `nivelMinimo` devolve `409` (`CUPOM_EM_USO`), com a mensagem dizendo o que não muda mais ("O valor não muda mais. Dá para mudar o título, a validade e o limite por cliente, ou desativar este e criar outro."). Os campos travados iguais aos de agora não atrapalham: o painel manda o formulário inteiro.
+- **Desativar** (`ativo: false`): o cupom some da carteira, da folha de reservar, do atendimento e da vitrine, mas continua no painel. A reserva já feita com ele guarda o desconto: na retirada, o caixa usa o desconto gravado na reserva, mesmo com o cupom desativado. **Reativar** (`ativo: true`) devolve.
+
+As regras da criação valem para o resultado (`400`), com uma exceção: a validade que já passou é aceita se não mudou, para dar para desativar ou renomear um cupom vencido. Resposta `200` com o cupom, no formato de um item de `GET /api/loja/cupons`. Erros: `404` (cupom não existe), `403` (`SEM_PERMISSAO`: cupom de outra loja ou voucher do shopping).
+
+### `DELETE /api/loja/cupons/{id}`
+
+Exclui o cupom da loja que nunca foi usado e não está em nenhuma reserva. Resposta `204`. Com uso ou reserva, `409` (`CUPOM_EM_USO`), sugerindo desativar: o histórico das compras e das reservas depende dele. Erros `404` e `403` como no `PUT`.
 
 ### `GET /api/loja/relatorios`
 
@@ -978,6 +999,10 @@ O `PUT` recebe o mesmo corpo. Regras: `SEMENTE` é 0 e cada nível precisa de ma
 ### `GET /api/shopping/cupons` e `POST`
 
 Os vouchers do shopping (cupons sem loja), no mesmo formato de `GET /api/loja/cupons`. Aqui `usos` conta as compras com o voucher e `descontoCentavos` é o que o shopping devolveu ou deve às lojas por eles (RN11; um brinde conta o uso com desconto zero). O `POST` recebe o mesmo corpo de `POST /api/loja/cupons`, com `categoriaAlvo` entre todas as categorias do shopping. O voucher criado já vale no atendimento das lojas e aparece na vitrine do app (`GET /api/ofertas`) para os clientes do nível.
+
+### `PUT /api/shopping/cupons/{id}` e `DELETE`
+
+Editar, desativar, reativar e excluir um voucher, com as mesmas regras de `PUT` e `DELETE /api/loja/cupons/{id}`: nunca usado e sem reserva, tudo muda e dá para excluir; já usado ou preso numa reserva, só o título, a validade, o limite por cliente e o `ativo` (`409` `CUPOM_EM_USO`). Um cupom de loja nessas rotas devolve `403`: só a própria loja mexe nele.
 
 ### `GET /api/shopping/demanda`
 
