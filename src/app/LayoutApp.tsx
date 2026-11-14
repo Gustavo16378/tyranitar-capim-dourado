@@ -31,7 +31,7 @@ function larguraDaTela(caminho: string) {
   const tela = caminho.split('/')[1]
   if (tela === 'mapa') return 'h-full'
   if (tela === 'capi') return 'h-full md:max-w-3xl'
-  if (tela === 'inicio') return 'md:max-w-5xl'
+  if (tela === 'inicio' || tela === 'lojas') return 'md:max-w-5xl'
   if (tela === 'carteira' || tela === 'salvos') return 'md:max-w-3xl'
   return 'md:max-w-2xl'
 }
