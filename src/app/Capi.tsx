@@ -15,7 +15,8 @@ import { Button, CapiMark, CapiTirana, ChatBubble, ChatComposer, Icon, ProdutoCa
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
 import { BOTAO_ACORDAR, RESPOSTA_DO_TIRANO, TIRANO_JA_ACORDADO } from '../easter-egg/falas'
-import { ehPalavraDoTirano } from '../easter-egg/gatilhos'
+import { GatoPreto } from '../easter-egg/GatoPreto'
+import { criarContadorDeToques, ehPalavraDoTirano } from '../easter-egg/gatilhos'
 import { modoTirano } from '../easter-egg/modoTirano'
 import { useModoTirano } from '../easter-egg/useModoTirano'
 import { cascata, comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
@@ -191,6 +192,9 @@ export default function Capi() {
   /** O convite da Capi Tirana depois de "tyranitar": acordar o tirano, ou ir ao mapa se ele já acordou. */
   const [convite, setConvite] = useState<'acordar' | 'mapa' | null>(null)
   const tirano = useModoTirano()
+  /** 13 toques seguidos no CapiMark do topo soltam o gato preto. */
+  const toques = useRef(criarContadorDeToques())
+  const [gato, setGato] = useState(0)
 
   const lista = useRef<HTMLDivElement>(null)
   const fim = useRef<HTMLDivElement>(null)
@@ -407,7 +411,13 @@ export default function Capi() {
     <div className="flex h-full flex-col">
       <title>{`Capi · ${APP_NOME}`}</title>
       <header className="flex flex-none items-center gap-3 border-b bg-surface p-4">
-        <span className="grid size-10 flex-none place-items-center rounded-full bg-terra">
+        {/* 13 toques seguidos aqui soltam o gato preto (um segredo do easter egg, só pelo toque:
+            o caminho pelo teclado para o tirano é a palavra "tyranitar"). */}
+        <span
+          data-capi-mark
+          onClick={(evento) => toques.current.tocar(evento.timeStamp) && setGato((g) => g + 1)}
+          className="grid size-10 flex-none select-none place-items-center rounded-full bg-terra"
+        >
           {tirana ? <CapiTirana className="size-[30px]" /> : <CapiMark className="size-[26px]" />}
         </span>
         <div>
@@ -566,6 +576,10 @@ export default function Capi() {
         onFechar={() => setFolhaFoto(false)}
         onArquivo={anexarFoto}
       />
+      {gato > 0 && <GatoPreto key={gato} aoTerminar={() => setGato(0)} />}
+      <p role="status" className="sr-only">
+        {gato > 0 ? 'Um gato preto atravessou a tela.' : ''}
+      </p>
       <FolhaLink
         aberta={folhaLink}
         onFechar={() => setFolhaLink(false)}
