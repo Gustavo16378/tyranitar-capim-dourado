@@ -17,6 +17,7 @@ import {
 import { minutosAPe } from '../mapa/grafo'
 import { Mapa3D, type ControleDoMapa } from '../mapa/Mapa3D'
 import type { Piso } from '../tipos'
+import { caminhoDaLoja } from './caminhos'
 import { nomeDoPiso } from './formatos'
 
 const PISOS: Piso[] = [1, 2]
@@ -51,6 +52,7 @@ export default function Mapa() {
   const lojas = useDados(listarLojas)
   const dados = lojas.tipo === 'ok' ? lojas.dados : undefined
   const nomes = useMemo(() => dados && Object.fromEntries(dados.itens.map((l) => [l.mapaId, l.nome])), [dados])
+  const lojaId = destino ? dados?.itens.find((l) => l.mapaId === destino)?.id : undefined
   // Destino novo começa do zero (piso da loja, câmera voando até ela).
   return (
     <MapaAte
@@ -58,6 +60,7 @@ export default function Mapa() {
       destino={destino}
       doLink={doLink}
       nomes={nomes}
+      lojaId={lojaId}
       aoEscolher={(mapaId) => setParams({ loja: mapaId, ...(doLink ? { origem: doLink.id } : {}) }, { replace: true })}
     />
   )
@@ -91,12 +94,15 @@ function MapaAte({
   destino,
   doLink,
   nomes,
+  lojaId,
   aoEscolher,
 }: {
   destino?: string
   /** A entrada do QR (?origem=): vale como resposta da pergunta. */
   doLink?: Entrada
   nomes?: Record<string, string>
+  /** O id da loja de destino: o nome dela abre a página da loja (para quem entrou). */
+  lojaId?: string
   aoEscolher: (mapaId: string) => void
 }) {
   const achado = destino ? acharNaPlanta(destino) : undefined
@@ -154,7 +160,15 @@ function MapaAte({
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-body-sm text-ink-muted">{nome ? 'Rota até' : 'Mapa do shopping'}</p>
-          <h1 className="mt-0.5 text-title-md">{nome ?? (destino ? 'Rota até a loja' : 'Mapa')}</h1>
+          <h1 className="mt-0.5 text-title-md">
+            {nome && lojaId && !visitante ? (
+              <Link to={caminhoDaLoja(lojaId)} className="text-ink underline decoration-line-strong underline-offset-4">
+                {nome}
+              </Link>
+            ) : (
+              (nome ?? (destino ? 'Rota até a loja' : 'Mapa'))
+            )}
+          </h1>
         </div>
         <div role="tablist" aria-label="Piso" className="flex flex-none rounded-pill bg-surface-sunken p-1">
           {PISOS.map((n) => (
