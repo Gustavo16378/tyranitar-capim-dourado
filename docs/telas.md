@@ -10,6 +10,16 @@ flowchart TB
   inicio --> capi["Capi (chat)"]
   inicio --> produto["Produto"]
   inicio --> carteira["Carteira"]
+  inicio --> salvos["Salvos para provar"]
+  salvos --> produto
+  salvos --> reservar
+  salvos --> mapa
+  salvos --> loja["Página da loja"]
+  produto --> loja
+  capi --> loja
+  loja --> produto
+  loja --> mapa
+  mapa --> loja
   capi --> produto
   capi --> mapa["Mapa e rota"]
   produto --> reservar["Escolher como reservar"]
@@ -21,10 +31,11 @@ flowchart TB
   reserva --> carteira
   carteira --> reserva
   carteira --> mapa
+  carteira --> compras["Minhas compras"]
   carteira --> balcao(["Vendedor lê o QR no balcão"])
 ```
 
-A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a página) e depois segue para a tela que a pessoa abriu, inclusive num link direto. Um toque pula; com movimento reduzido ela é curta. A barra de navegação fixa no rodapé leva a Início, Capi, Mapa e Carteira de qualquer tela.
+A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a página) e depois segue para a tela que a pessoa abriu, inclusive num link direto. Um toque pula; com movimento reduzido ela é curta. A barra de navegação fixa no rodapé leva a Início, Salvos, Capi, Mapa e Carteira de qualquer tela.
 
 ## App do cliente
 
@@ -32,14 +43,17 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | --- | --- | --- | --- |
 | Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Entrar e Criar conta | Login com e-mail e senha ou com a conta de demonstração; o cadastro pede nome, e-mail, senha e o consentimento da ficha (desmarcado por padrão) e já entra no Início, com 0 pontos, no nível Semente | Button | RF01, RF13 |
-| Início | Ofertas para o cliente (no celular, a faixa de cupons desliza com o dedo; no computador, anda pelas setas, arrastando com o mouse ou pela roda), produtos salvos e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
-| Capi | Conversa com texto, foto ou link; respostas com produtos das lojas. Abre a conversa salva; vazia, mostra sugestões que só preenchem o campo (a do print do tênis anexa a foto). O botão da câmera abre uma folha com "Tirar foto" (no celular, a câmera traseira direto; no computador, a webcam com o botão de capturar) e "Escolher da galeria"; sem câmera, ou com a permissão negada, só a galeria. A foto fica anexada no campo, com prévia e um X para tirar, e só vai quando a pessoa toca em enviar (com texto junto, se quiser). "Nova conversa" apaga. Esperando, avisa "A Capi está procurando nas lojas…" depois de 2 s e desiste em 25 s com "Tentar de novo" | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
-| Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar | Badge, ProdutoCard, Button | RF05, RF07 |
+| Início | Ofertas para o cliente (no celular, a faixa de cupons desliza com o dedo; no computador, anda pelas setas, arrastando com o mouse ou pela roda), Salvos para provar (os três mais recentes, com o coração, e "Ver todos"; vazio, o link para os salvos explicando o coração) e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
+| Capi | Conversa com texto, foto ou link; respostas com produtos das lojas. Abre a conversa salva; vazia, mostra sugestões que só preenchem o campo (a do print do tênis anexa a foto). O botão da câmera abre uma folha com "Tirar foto" (no celular, a câmera traseira direto; no computador, a webcam com o botão de capturar) e "Escolher da galeria"; sem câmera, ou com a permissão negada, só a galeria. A foto fica anexada no campo, com prévia e um X para tirar, e só vai quando a pessoa toca em enviar (com texto junto, se quiser). "Nova conversa" apaga. Os cartões de produto têm o coração de salvar, e o nome da loja abre a página dela. Esperando, avisa "A Capi está procurando nas lojas…" depois de 2 s e desiste em 25 s com "Tentar de novo" | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
+| Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar. O coração ao lado do nome salva o produto; o nome da loja abre a página dela | Badge, ProdutoCard, Button | RF05, RF07, RF16 |
 | Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
 | Pix simulado | QR do Pix e confirmação do pagamento | Button | RF09 |
 | Reserva confirmada | Status da reserva e próximos passos; em aberto, "Cancelar reserva" com confirmação | ReservaStatus, Button | RF08, RF09 |
-| Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota até ela. Na primeira rota, pergunta "Por qual entrada você chegou?" e lembra a resposta por 6 h; `?origem=<entrada>` (o QR de cada entrada, ids em `src/mapa/entradas.ts`) já responde. Sem resposta, a rota sai da entrada mais próxima e nenhuma vira "Você está aqui". Abre sem login, para qualquer visitante (sem a barra de navegação, com o convite "Entrar para reservar e falar com a Capi", que volta ao mesmo mapa) | Badge, Button | RF10 |
-| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo, "Como chegar" e "Cancelar reserva") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12 |
+| Salvos para provar | Os produtos salvos com o coração (`/salvos`, aba Salvos), agrupados por loja, a do salvo mais recente primeiro. Cada produto tem "Reservar" (a folha de reservar) e cada loja, "Como chegar" e o nome que abre a página dela. Tirar o coração ali deixa o produto na lista até a próxima visita, para dar para voltar atrás | ProdutoCard, Button | RF08, RF10, RF16 |
+| Página da loja | `/lojas/{id}` (no plural: `/loja` é o painel do lojista). Nome, categoria principal, piso, os produtos da loja em grade (com o coração) e "Como chegar". Abre pelo nome da loja no produto, nos cartões da Capi e do Início, nos salvos e no mapa | Badge, ProdutoCard, Button | RF07, RF10 |
+| Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota até ela. Na primeira rota, pergunta "Por qual entrada você chegou?" e lembra a resposta por 6 h; `?origem=<entrada>` (o QR de cada entrada, ids em `src/mapa/entradas.ts`) já responde. Sem resposta, a rota sai da entrada mais próxima e nenhuma vira "Você está aqui". Abre sem login, para qualquer visitante (sem a barra de navegação, com o convite "Entrar para reservar e falar com a Capi", que volta ao mesmo mapa). Para quem entrou, o nome da loja de destino abre a página dela | Badge, Button | RF10 |
+| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo, "Como chegar" e "Cancelar reserva"), Minhas compras (as três últimas, com loja, dia, valor pago, cupons usados e pontos ganhos, e "Ver tudo") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12, RF16 |
+| Minhas compras | A lista inteira das compras (`/carteira/compras`), da mais nova para a mais antiga, dez por vez: "Mostrar mais" traz as próximas, diz quantas aparecem e põe o foco na primeira que chegou | Badge, Button | RF11, RF16 |
 | Minha conta | Nome (editável), e-mail, nível e pontos; trocar a senha pedindo a atual; a ficha que a Capi anotou, com o consentimento e um botão de apagar em cada interesse; baixar os dados em JSON (LGPD); sair e excluir a conta | NivelBadge, Button | RF01, RF13 |
 
 ## Painéis no celular e no tablet
@@ -71,7 +85,7 @@ Os dois painéis funcionam de 390 px em diante sem rolar para o lado. Abaixo de 
 Toda tela prevê quatro estados, todos com os componentes do design system:
 
 - **Carregando:** esqueleto no formato do conteúdo, sem tela branca.
-- **Vazio:** frase curta dizendo o que fazer ("Você ainda não salvou nenhum produto. Pergunte à Capi.").
+- **Vazio:** frase curta dizendo o que fazer ("Nenhuma compra ainda. Mostre o QR da carteira no caixa para juntar pontos.").
 - **Erro:** o que aconteceu e como resolver, com botão de tentar de novo. Se a Capi cair, a busca comum continua (RNF10).
 - **Com dados:** o estado mostrado no protótipo.
 
