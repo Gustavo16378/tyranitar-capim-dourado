@@ -15,8 +15,10 @@ const pagarReembolso = (id: string, corpo: unknown = { status: 'PAGO' }) =>
   chamar(pagar, { metodo: 'PATCH', url: `/api/shopping/reembolsos/${id}`, params: { id }, corpo, usuario: ADMIN })
 
 describe('GET /api/loja/extrato', () => {
-  it('soma as compras do caixa no período com os descontos de cada lado', async () => {
-    await compra({ qrToken: 'q-ana', valorCentavos: 45980, cupons: ['cp-a-10', 'cp-shopping-20'] })
+  it('soma as compras do caixa no período com os descontos de cada lado, e mostra a cliente e os itens', async () => {
+    // O tênis (calçados) e um valor avulso: os 10% em calçados só descontam no tênis.
+    const itens = [{ produtoId: 'p-pulse', quantidade: 1 }, { valorCentavos: 5990, descricao: 'Outros' }]
+    await compra({ qrToken: 'q-ana', itens, cupons: ['cp-a-10', 'cp-shopping-20'] })
     await compra({ qrToken: 'q-bruno', valorCentavos: 10000 })
     await compra({ qrToken: 'q-bruno', valorCentavos: 24900 }, LOJISTA_B) // outra loja: fica fora
 
@@ -24,19 +26,23 @@ describe('GET /api/loja/extrato', () => {
     expect(r.status).toBe(200)
     expect(r.corpo).toMatchObject({
       periodo: '30d',
-      resumo: { compras: 2, brutoCentavos: 55980, descontoLojaCentavos: 4598, descontoShoppingCentavos: 2000, pagoCentavos: 49382 },
+      resumo: { compras: 2, brutoCentavos: 55980, descontoLojaCentavos: 3999, descontoShoppingCentavos: 2000, pagoCentavos: 49981 },
       reembolsos: { pendenteCentavos: 2000, pagoNoPeriodoCentavos: 0 },
       lancamentos: { total: 2 },
     })
     const comVoucher = r.corpo.lancamentos.itens.find((l: { cliente: string }) => l.cliente === 'Ana')
     expect(comVoucher).toMatchObject({
       brutoCentavos: 45980,
-      descontoLojaCentavos: 4598,
+      descontoLojaCentavos: 3999,
       descontoShoppingCentavos: 2000,
-      pagoCentavos: 39382,
+      pagoCentavos: 39981,
       retirada: false,
       reembolso: { status: 'PENDENTE', pagoEm: null },
     })
+    expect(comVoucher.itens).toEqual([
+      { descricao: 'Tênis de corrida Pulse', categoria: 'calcados', quantidade: 1, brutoCentavos: 39990, descontoCentavos: 3999 + 1715, jaPago: false, retirada: false },
+      { descricao: 'Outros', categoria: null, quantidade: 1, brutoCentavos: 5990, descontoCentavos: 285, jaPago: false, retirada: false },
+    ])
     expect(r.corpo.lancamentos.itens.find((l: { cliente: string }) => l.cliente === 'Bruno').reembolso).toBeNull()
   })
 

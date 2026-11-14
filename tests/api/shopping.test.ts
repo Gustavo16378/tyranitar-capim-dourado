@@ -232,7 +232,9 @@ describe('GET e POST /api/shopping/cupons', () => {
     expect(r.status).toBe(201)
     expect(r.corpo).toMatchObject({ ...corpo, ativo: true, usos: 0, descontoCentavos: 0 })
     const balcao = await chamar(atendimento, { url: '/api/loja/atendimento/q-ana', params: { qr: 'q-ana' }, usuario: LOJISTA_A })
-    expect(balcao.corpo.cupons).toContainEqual({ id: r.corpo.id, titulo: 'R$ 10 de boas-vindas', origem: 'SHOPPING' })
+    expect(balcao.corpo.cupons).toContainEqual(
+      expect.objectContaining({ id: r.corpo.id, titulo: 'R$ 10 de boas-vindas', origem: 'SHOPPING', categoria: null }),
+    )
 
     const vencido = await chamar(criarVoucher, { metodo: 'POST', url: '/api/shopping/cupons', corpo: { ...corpo, validade: '2020-01-01' }, usuario: ADMIN })
     expect(vencido.status).toBe(400)

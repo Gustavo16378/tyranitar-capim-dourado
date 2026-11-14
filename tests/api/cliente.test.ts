@@ -12,6 +12,10 @@ import { onRequestPatch as cancelar } from '../../functions/api/reservas/[id]/ca
 import { onRequestGet as lerReserva } from '../../functions/api/reservas/[id]/index'
 import { onRequestPost as pagar } from '../../functions/api/reservas/[id]/pagamento'
 import { onRequestPost as reservar } from '../../functions/api/reservas/index'
+import { onRequestGet as cuponsDoProduto } from '../../functions/api/produtos/[id]/cupons'
+import { onRequestGet as notificacoes } from '../../functions/api/me/notificacoes/index'
+import { onRequestPost as marcarLidas } from '../../functions/api/me/notificacoes/lidas'
+import { onRequestGet as atendimento } from '../../functions/api/loja/atendimento/[qr]'
 import { ANA, BRUNO, chamar, LOJISTA_A } from '../workers/rotas'
 
 const um = async <T>(sql: string, ...valores: unknown[]) => (await env.DB.prepare(sql).bind(...valores).first<T>())!
@@ -135,15 +139,18 @@ describe('reservas do cliente', () => {
     expect(await um("SELECT estoque FROM produto WHERE id = 'p-pulse'")).toEqual({ estoque: 1 })
   })
 
-  it('TA12: Pix: vem o copia e cola; pagar deixa paga, ainda PENDENTE, por 48 h; pagar de novo é 409', async () => {
+  it('TA12: Pix: vem o copia e cola; pagar deixa paga, ainda PENDENTE; confirmada, vale 48 h; pagar de novo é 409', async () => {
     const r = await novaReserva({ produtoId: 'p-run', quantidade: 2, formaPagamento: 'PIX' })
     expect(r.corpo).toMatchObject({ formaPagamento: 'PIX', pago: false, precoCentavos: 69980, pix: { simulado: true } })
     expect(r.corpo.pix.copiaECola).toMatch(/^000201/)
-    const antes = Date.now()
     const pago = await chamar(pagar, { metodo: 'POST', url: `/api/reservas/${r.corpo.id}/pagamento`, params: { id: r.corpo.id }, usuario: ANA })
     expect(pago.status).toBe(200)
-    expect(pago.corpo).toMatchObject({ status: 'PENDENTE', pago: true })
-    expect(Math.abs(Date.parse(pago.corpo.expiraEm) - antes - 48 * HORA)).toBeLessThan(5000)
+    // Pendente, o prazo é o da loja responder; o de retirar só conta da confirmação.
+    expect(pago.corpo).toMatchObject({ status: 'PENDENTE', pago: true, expiraEm: r.corpo.expiraEm })
+    const antes = Date.now()
+    const confirmar = { metodo: 'PATCH', url: `/api/loja/reservas/${r.corpo.id}`, params: { id: r.corpo.id }, corpo: { status: 'CONFIRMADA' }, usuario: LOJISTA_A }
+    const confirmada = await chamar(mudarNaLoja, confirmar)
+    expect(Math.abs(Date.parse(confirmada.corpo.expiraEm) - antes - 48 * HORA)).toBeLessThan(5000)
     const deNovo = await chamar(pagar, { metodo: 'POST', url: `/api/reservas/${r.corpo.id}/pagamento`, params: { id: r.corpo.id }, usuario: ANA })
     expect(deNovo.status).toBe(409)
     expect(deNovo.corpo.erro).toBe('TRANSICAO_INVALIDA')
@@ -216,7 +223,9 @@ describe('PATCH /api/reservas/{id}/cancelar: o cliente cancela a própria reserv
     const r = await novaReserva({ produtoId: 'p-camiseta', formaPagamento: 'PIX' })
     const id = r.corpo.id
     await chamar(pagar, { metodo: 'POST', url: `/api/reservas/${id}/pagamento`, params: { id }, usuario: ANA })
-    const separar = { metodo: 'PATCH', url: `/api/loja/reservas/${id}`, params: { id }, corpo: { status: 'SEPARADA' }, usuario: LOJISTA_A }
+    const confirmar = { metodo: 'PATCH', url: `/api/loja/reservas/${id}`, params: { id }, corpo: { status: 'CONFIRMADA' }, usuario: LOJISTA_A }
+    expect((await chamar(mudarNaLoja, confirmar)).status).toBe(200)
+    const separar = { ...confirmar, corpo: { status: 'SEPARADA' } }
     expect((await chamar(mudarNaLoja, separar)).status).toBe(200)
     expect(await estoque('p-camiseta')).toBe(9)
 
@@ -277,10 +286,10 @@ describe('GET /api/me/carteira', () => {
       nivel: 'CAPIM',
       proximoNivel: { nivel: 'DOURADO', faltam: 2860 },
       cupons: [
-        { id: 'cp-a-10', titulo: '10% em calçados', loja: 'Loja A', validade: '2099-12-31', tipo: 'PERCENTUAL', valor: 10, nivelMinimo: 'SEMENTE' },
-        { id: 'cp-b-5', titulo: '5% em perfumes', loja: 'Loja B', validade: '2099-12-31', tipo: 'PERCENTUAL', valor: 5, nivelMinimo: 'SEMENTE' },
-        { id: 'cp-a-15', titulo: 'R$ 15 em camisetas', loja: 'Loja A', validade: '2099-12-31', tipo: 'VALOR', valor: 1500, nivelMinimo: 'SEMENTE' },
-        { id: 'cp-shopping-20', titulo: 'R$ 20 em qualquer loja', loja: null, validade: '2099-12-31', tipo: 'VALOR', valor: 2000, nivelMinimo: 'SEMENTE' },
+        { id: 'cp-a-10', titulo: '10% em calçados', loja: 'Loja A', validade: '2099-12-31', tipo: 'PERCENTUAL', valor: 10, nivelMinimo: 'SEMENTE', categoria: 'Calçados' },
+        { id: 'cp-b-5', titulo: '5% em perfumes', loja: 'Loja B', validade: '2099-12-31', tipo: 'PERCENTUAL', valor: 5, nivelMinimo: 'SEMENTE', categoria: null },
+        { id: 'cp-a-15', titulo: 'R$ 15 em camisetas', loja: 'Loja A', validade: '2099-12-31', tipo: 'VALOR', valor: 1500, nivelMinimo: 'SEMENTE', categoria: 'Roupas' },
+        { id: 'cp-shopping-20', titulo: 'R$ 20 em qualquer loja', loja: null, validade: '2099-12-31', tipo: 'VALOR', valor: 2000, nivelMinimo: 'SEMENTE', categoria: null },
       ],
       reservasAtivas: [
         {
@@ -288,6 +297,12 @@ describe('GET /api/me/carteira', () => {
           produto: 'Tênis de corrida Pulse',
           status: 'PENDENTE',
           pago: false,
+          // O Pulse só tem uma cor: ela entra sozinha. Tamanho, a cliente não escolheu.
+          tamanho: null,
+          cor: 'preto',
+          precoCentavos: 39990,
+          cupom: null,
+          prontaEm: null,
           expiraEm: r1.corpo.expiraEm,
           loja: { nome: 'Loja A', piso: 1, mapaId: 'mapa-loja-a' },
         },
@@ -316,5 +331,67 @@ describe('GET /api/me/favoritos', () => {
     expect(f.corpo.itens[1]).toMatchObject({ nome: 'Tênis de corrida Pulse', precoCentavos: 39990, loja: { mapaId: 'mapa-loja-a' } })
     const pagina2 = await chamar(favoritos, { url: '/api/me/favoritos?pagina=2&tamanho=1', usuario: ANA })
     expect(pagina2.corpo).toMatchObject({ total: 2, itens: [{ id: 'p-pulse' }] })
+  })
+})
+
+describe('cupom na reserva (RN15)', () => {
+  const cuponsDe = (produtoId: string, usuario = ANA) =>
+    chamar(cuponsDoProduto, { url: `/api/produtos/${produtoId}/cupons`, params: { id: produtoId }, usuario })
+
+  it('TA49: os cupons que valem para o produto; o preço e o Pix saem com o desconto, e o cupom fica preso até cancelar', async () => {
+    // O tênis (calçados, Loja A): o de calçados e o voucher; o de camisetas não.
+    const valem = await cuponsDe('p-pulse')
+    expect(valem.status).toBe(200)
+    expect(valem.corpo.tamanhos).toEqual(['40', '41', '42', '43'])
+    expect(valem.corpo.itens).toEqual([
+      { id: 'cp-a-10', titulo: '10% em calçados', origem: 'LOJA', loja: 'Loja A', categoria: 'Calçados', descontoCentavos: 3999 },
+      { id: 'cp-shopping-20', titulo: 'R$ 20 em qualquer loja', origem: 'SHOPPING', loja: null, categoria: null, descontoCentavos: 2000 },
+    ])
+    // O de camisetas num tênis é recusado; tamanho que não existe é 400.
+    expect((await novaReserva({ produtoId: 'p-pulse', formaPagamento: 'PIX', cupomId: 'cp-a-15' })).status).toBe(422)
+    expect((await novaReserva({ produtoId: 'p-pulse', formaPagamento: 'PIX', tamanho: '50' })).status).toBe(400)
+
+    const r = await novaReserva({ produtoId: 'p-pulse', formaPagamento: 'PIX', tamanho: '42', cupomId: 'cp-a-10' })
+    expect(r.status).toBe(201)
+    expect(r.corpo).toMatchObject({
+      tamanho: '42',
+      cor: 'preto',
+      brutoCentavos: 39990,
+      descontoCentavos: 3999,
+      precoCentavos: 35991,
+      cupom: { id: 'cp-a-10', titulo: '10% em calçados', origem: 'LOJA' },
+    })
+    expect(r.corpo.pix.copiaECola).toContain('359.91')
+    // Preso à reserva: some da carteira, do balcão e da próxima reserva.
+    const naCarteira = await chamar(carteira, { url: '/api/me/carteira', usuario: ANA })
+    expect(naCarteira.corpo.cupons.map((c: { id: string }) => c.id)).not.toContain('cp-a-10')
+    expect((await cuponsDe('p-run')).corpo.itens.map((c: { id: string }) => c.id)).toEqual(['cp-shopping-20'])
+    const balcao = await chamar(atendimento, { url: '/api/loja/atendimento/q-ana', params: { qr: 'q-ana' }, usuario: LOJISTA_A })
+    expect(balcao.corpo.cupons.map((c: { id: string }) => c.id)).not.toContain('cp-a-10')
+    expect(balcao.corpo.reservas[0]).toMatchObject({ tamanho: '42', precoCentavos: 35991, cupom: { id: 'cp-a-10' }, podeRetirar: false })
+
+    // Cancelada, o cupom volta.
+    await chamar(cancelar, { metodo: 'PATCH', url: `/api/reservas/${r.corpo.id}/cancelar`, params: { id: r.corpo.id }, usuario: ANA })
+    expect((await cuponsDe('p-run')).corpo.itens.map((c: { id: string }) => c.id)).toEqual(['cp-a-10', 'cp-shopping-20'])
+  })
+})
+
+describe('avisos do app: GET /api/me/notificacoes', () => {
+  it('TA50: cada mudança da reserva vira um aviso, com o selo do Início e o da Carteira, e marcar como lidos zera', async () => {
+    const r = await novaReserva({ produtoId: 'p-pulse', formaPagamento: 'NA_LOJA' })
+    const id = r.corpo.id
+    await chamar(mudarNaLoja, { metodo: 'PATCH', url: `/api/loja/reservas/${id}`, params: { id }, corpo: { status: 'CONFIRMADA', prontaAs: '23:59' }, usuario: LOJISTA_A })
+    const lista = await chamar(notificacoes, { url: '/api/me/notificacoes', usuario: ANA })
+    expect(lista.status).toBe(200)
+    expect(lista.corpo.naoLidas).toEqual({ total: 2, reservas: 2 })
+    expect(lista.corpo.itens.map((n: { titulo: string }) => n.titulo)).toEqual(['Loja A confirmou sua reserva', 'Reserva enviada para a loja'])
+    expect(lista.corpo.itens[0]).toMatchObject({ tipo: 'RESERVA', lida: false, destino: `/reserva/${id}` })
+    // Outro cliente não vê os avisos da Ana.
+    expect((await chamar(notificacoes, { url: '/api/me/notificacoes', usuario: BRUNO })).corpo.itens).toEqual([])
+
+    const lidas = await chamar(marcarLidas, { metodo: 'POST', url: '/api/me/notificacoes/lidas', corpo: { tipo: 'RESERVA' }, usuario: ANA })
+    expect(lidas.corpo).toEqual({ lidas: 2 })
+    expect((await chamar(notificacoes, { url: '/api/me/notificacoes', usuario: ANA })).corpo.naoLidas).toEqual({ total: 0, reservas: 0 })
+    expect((await chamar(marcarLidas, { metodo: 'POST', url: '/api/me/notificacoes/lidas', corpo: { tipo: 'OUTRO' }, usuario: ANA })).status).toBe(400)
   })
 })

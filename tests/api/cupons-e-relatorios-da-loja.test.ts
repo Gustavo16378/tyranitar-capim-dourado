@@ -30,6 +30,16 @@ async function compra(id: string, valor: number, { loja = 'loja-a', reservaId = 
     comFicha,
     criado,
   )
+  // O item da compra, como o caixa grava: o produto da reserva (com o desconto) ou "Outros".
+  await sql(
+    `INSERT INTO compra_item (id, compra_id, produto_id, reserva_id, descricao, categoria, quantidade, preco_centavos, desconto_centavos)
+     SELECT ?1 || '-1', ?1, r.produto_id, r.id, p.nome, p.categoria, r.quantidade, r.preco_centavos, r.preco_centavos * r.quantidade - ?2
+     FROM reserva r JOIN produto p ON p.id = r.produto_id WHERE r.id = ?3
+     UNION ALL SELECT ?1 || '-1', ?1, NULL, NULL, 'Outros', NULL, 1, ?2, 0 WHERE ?3 IS NULL`,
+    id,
+    valor,
+    reservaId,
+  )
 }
 
 async function busca(termo: string, categoria: string, encontrou: boolean, vezes = 1) {
@@ -107,7 +117,8 @@ describe('GET /api/loja/relatorios', () => {
     expect(r.status).toBe(200)
     expect(r.corpo).toMatchObject({
       periodo: '30d',
-      maisVendidos: [{ produtoId: 'p-pulse', nome: 'Tênis de corrida Pulse', quantidade: 1, valorCentavos: 39990 }],
+      // Os itens das compras: o tênis da reserva retirada, pelo valor depois do cupom.
+      maisVendidos: [{ produtoId: 'p-pulse', nome: 'Tênis de corrida Pulse', quantidade: 1, valorCentavos: 35991 }],
       maisBuscados: [
         { termo: 'tênis de trilha', buscas: 2 },
         { termo: 'tênis de corrida', buscas: 1 },
@@ -118,7 +129,7 @@ describe('GET /api/loja/relatorios', () => {
       ticketMedio: { comFichaCentavos: 35991, semFichaCentavos: 10000 },
       // Só a loja A vende calçados e roupas: nada para comparar (RN13).
       comparativoCategoria: null,
-      reservas: { feitas: 4, retiradas: 1, emAberto: 1, canceladas: 1, expiradas: 1 },
+      reservas: { feitas: 4, retiradas: 1, emAberto: 1, canceladas: 1, recusadas: 0, expiradas: 1 },
     })
     expect(r.corpo.picos.reduce((soma: number, p: { compras: number }) => soma + p.compras, 0)).toBe(2)
     for (const p of r.corpo.picos) {

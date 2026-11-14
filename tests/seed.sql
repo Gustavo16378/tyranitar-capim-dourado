@@ -34,8 +34,8 @@ INSERT INTO ficha (cliente_id, interesses) VALUES
   ('c-ana', '[{"categoria":"calcados","detalhe":"Tênis de corrida, número 42, até R$ 400"},{"categoria":"roupas","detalhe":"Camisetas dry-fit"}]');
 
 INSERT INTO cupom (id, loja_id, titulo, tipo, valor, categoria_alvo, nivel_minimo, limite_por_cliente, validade, ativo) VALUES
-  ('cp-a-10', 'loja-a', '10% em calçados', 'PERCENTUAL', 10, NULL, 'SEMENTE', 1, '2099-12-31', 1),
-  ('cp-a-15', 'loja-a', 'R$ 15 em camisetas', 'VALOR', 1500, NULL, 'SEMENTE', 1, '2099-12-31', 1),
+  ('cp-a-10', 'loja-a', '10% em calçados', 'PERCENTUAL', 10, 'calcados', 'SEMENTE', 1, '2099-12-31', 1),
+  ('cp-a-15', 'loja-a', 'R$ 15 em camisetas', 'VALOR', 1500, 'roupas', 'SEMENTE', 1, '2099-12-31', 1),
   ('cp-shopping-20', NULL, 'R$ 20 em qualquer loja', 'VALOR', 2000, NULL, 'SEMENTE', 1, '2099-12-31', 1),
   ('cp-a-vencido', 'loja-a', 'Cupom vencido', 'PERCENTUAL', 50, NULL, 'SEMENTE', 1, '2020-01-01', 1),
   ('cp-a-dourado', 'loja-a', 'Só para Dourado', 'PERCENTUAL', 30, NULL, 'DOURADO', 1, '2099-12-31', 1),

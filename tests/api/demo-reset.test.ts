@@ -19,8 +19,18 @@ const CONTA = {
 const um = async <T>(sql: string) => (await env.DB.prepare(sql).first<T>())!
 const carteiraDe = async (usuario = ANA) => (await chamar(carteira, { url: '/api/me/carteira', usuario })).corpo
 const titulos = (c: { cupons: { titulo: string }[] }) => c.cupons.map((k) => k.titulo).sort()
-const compraNoBalcao = (qrToken: string, valorCentavos: number, cupons: string[]) =>
-  chamar(compras, { metodo: 'POST', url: '/api/loja/compras', corpo: { qrToken, valorCentavos, cupons }, usuario: LOJISTA_A })
+/** Uma compra no balcão da Loja A: um produto do catálogo (com os cupons) e um valor avulso. */
+const compraNoBalcao = (qrToken: string, produtoId: string, cupons: string[]) =>
+  chamar(compras, {
+    metodo: 'POST',
+    url: '/api/loja/compras',
+    corpo: { qrToken, itens: [{ produtoId, quantidade: 1 }], cupons },
+    usuario: LOJISTA_A,
+  })
+
+/** O que o seed põe de volta depois da limpeza: a ficha da Ana (a carteira mostra os cupons de categoria dela). */
+const FICHA_DO_SEED =
+  "INSERT INTO ficha (cliente_id, interesses) VALUES ('c-ana', '[{\"categoria\":\"calcados\",\"detalhe\":\"Tênis de corrida\"},{\"categoria\":\"roupas\",\"detalhe\":\"Camisetas dry-fit\"}]')"
 
 /** Roda o SQL de cada passo do demo:reset numa transação, como o wrangler d1 execute. */
 async function rodar(comandos: string[]) {
@@ -35,8 +45,8 @@ describe('demo:reset (TA41)', () => {
 
     // O ensaio: a Ana compra no balcão com o cupom da loja e o voucher do shopping, reserva um
     // produto e conversa com a Capi. Outro cliente compra na mesma loja com o voucher.
-    expect((await compraNoBalcao('q-ana', 45980, ['cp-a-10', 'cp-shopping-20'])).status).toBe(201)
-    expect((await compraNoBalcao('q-bruno', 10000, ['cp-shopping-20'])).status).toBe(201)
+    expect((await compraNoBalcao('q-ana', 'p-pulse', ['cp-a-10', 'cp-shopping-20'])).status).toBe(201)
+    expect((await compraNoBalcao('q-bruno', 'p-camiseta', ['cp-shopping-20'])).status).toBe(201)
     expect(
       (await chamar(reservar, { metodo: 'POST', url: '/api/reservas', corpo: { produtoId: 'p-run', formaPagamento: 'NA_LOJA' }, usuario: ANA }))
         .status,
@@ -46,7 +56,8 @@ describe('demo:reset (TA41)', () => {
       "INSERT INTO busca (id, cliente_id, termo, categoria, encontrou) VALUES ('b-ensaio', 'c-ana', 'tênis', 'calcados', 1)",
     ])
     const depois = await carteiraDe()
-    expect(depois.pontos).toBe(2140 + 393)
+    // R$ 399,90 - 10% (R$ 39,99) - R$ 20 = R$ 339,91: 339 pontos.
+    expect(depois.pontos).toBe(2140 + 339)
     expect(titulos(depois)).not.toContain('10% em calçados')
     expect(titulos(depois)).not.toContain('R$ 20 em qualquer loja')
 
@@ -55,15 +66,16 @@ describe('demo:reset (TA41)', () => {
     const [[contagem]] = await rodar([limpeza.contagem, ...limpeza.comandos])
     expect(contagem).toEqual({
       compras: 1,
-      pontos: 393,
+      pontos: 339,
       usos_de_cupom: 2,
       reembolsos: 1,
       reservas: 1,
-      avisos: 1,
+      // A reserva enviada e os pontos da compra.
+      avisos: 2,
       mensagens: 1,
       buscas: 1,
     })
-    await rodar([sqlDoSaldo(CONTA.email)])
+    await rodar([FICHA_DO_SEED, sqlDoSaldo(CONTA.email)])
 
     // A carteira da Ana volta ao seed: os pontos, o nível e os mesmos cupons de antes do ensaio.
     const final = await carteiraDe()
@@ -80,7 +92,7 @@ describe('demo:reset (TA41)', () => {
     expect(r.corpo.reembolsos.pendenteCentavos).toBe(2000)
 
     // A conta do outro cliente não muda: a compra, o cupom usado e os pontos dele.
-    expect(await um("SELECT pontos FROM usuario WHERE id = 'c-bruno'")).toEqual({ pontos: 80 })
+    expect(await um("SELECT pontos FROM usuario WHERE id = 'c-bruno'")).toEqual({ pontos: 59 })
     expect(titulos(await carteiraDe(BRUNO))).not.toContain('R$ 20 em qualquer loja')
 
     // O resumo que o demo:reset mostra é o que a carteira e o extrato mostram.
@@ -99,7 +111,7 @@ describe('demo:reset (TA41)', () => {
     await rodar(["UPDATE cupom SET ativo = 0 WHERE id = 'cp-a-15'"])
     expect(titulos(await carteiraDe())).not.toContain('R$ 15 em camisetas')
     const limpeza = sqlDaLimpeza(CONTA)
-    await rodar([...limpeza.comandos, sqlDoSaldo(CONTA.email)])
+    await rodar([...limpeza.comandos, FICHA_DO_SEED, sqlDoSaldo(CONTA.email)])
     expect(titulos(await carteiraDe())).toContain('R$ 15 em camisetas')
   })
 })
