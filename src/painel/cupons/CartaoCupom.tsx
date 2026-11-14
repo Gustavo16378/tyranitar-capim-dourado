@@ -30,8 +30,8 @@ export function CartaoCupom({ cupom, origem, hoje, acoes }: CartaoCupomProps) {
       : ''
   return (
     <div className="flex flex-col gap-3">
-      {/* Só o cupom fica apagado: os botões embaixo mantêm o contraste. */}
-      <div className={cx('flex flex-col gap-3', !cupomValendo(cupom, hoje) && 'opacity-70')}>
+      {/* Só o cupom fica apagado, em cinza (sem transparência, para o texto manter o contraste); os botões ficam como estão. */}
+      <div className={cx('flex flex-col gap-3', !cupomValendo(cupom, hoje) && 'grayscale')}>
         <CupomTicket
           origem={origem}
           titulo={cupom.titulo}
