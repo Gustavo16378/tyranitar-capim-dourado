@@ -5,9 +5,10 @@ import { buscarNoCatalogo, registrarResultado } from '../catalogo'
 import { ErroApi } from '../erros'
 import { formatarPreco, nomeDoPiso } from '../formatar'
 import { acrescentarInteresses } from '../repo/fichas'
-import { buscarLojaAtiva } from '../repo/lojas'
+import { buscarLojaAtiva, lojasDaCategoria } from '../repo/lojas'
 import { buscarProdutoAtivo, categoriasComProduto, listarProdutosAtivos, type ProdutoLinha } from '../repo/produtos'
 import { criarReserva, type ReservaCriada } from '../repo/reservas'
+import { CATEGORIAS_DO_SHOPPING, ehCategoria } from '../regras/categorias'
 import type { Interesse } from '../regras/ficha'
 import { lerJson, normalizar, termosDaBusca, textosDoJson } from '../texto'
 import { clienteConfirmou } from './confirmacao'
@@ -17,14 +18,17 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
     name: 'buscar_produtos',
     description:
       'Busca produtos ativos nas lojas do shopping por texto, categoria, preço máximo e loja. Devolve até 8 produtos, ' +
-      'os mais relevantes primeiro, com id, nome, preço, estoque, loja e piso. Use antes de falar de qualquer produto.',
+      'os mais relevantes primeiro, com id, nome, preço, estoque, loja e piso. Use antes de falar de qualquer produto. ' +
+      'Sem resultado, devolve as lojas da categoria informada (lojasDaCategoria), onde esse tipo de item costuma ser vendido.',
     input_schema: {
       type: 'object',
       properties: {
         texto: { type: 'string', description: 'O que o cliente procura, em poucas palavras: "tênis de corrida preto 42".' },
         categoria: {
           type: 'string',
-          description: 'Categoria em minúsculas e sem acento, como "calcados", "roupas" ou "perfumaria".',
+          description:
+            'Categoria em minúsculas e sem acento, como "calcados", "roupas" ou "perfumaria". Informe quando souber: ' +
+            'sem resultado, ela diz que lojas costumam vender esse tipo de item.',
         },
         preco_max_centavos: { type: 'integer', description: 'Preço máximo em centavos (R$ 400,00 = 40000).' },
         loja_id: { type: 'string', description: 'Id de uma loja, para buscar só nela.' },
@@ -36,7 +40,8 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
     name: 'buscar_similares',
     description:
       'Lista candidatos da mesma categoria para comparar com um item que o cliente mostrou (foto, print ou link) ou ' +
-      'descreveu. Os que combinam com cor, marca e estilo vêm primeiro; você escolhe os mais parecidos.',
+      'descreveu. Os que combinam com cor, marca e estilo vêm primeiro; você escolhe os mais parecidos. Se a ' +
+      'categoria não tiver produto, devolve as lojas dela (lojasDaCategoria).',
     input_schema: {
       type: 'object',
       properties: {
@@ -74,7 +79,10 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
       'id no mapa. Informe produto_id ou loja_id.',
     input_schema: {
       type: 'object',
-      properties: { produto_id: { type: 'string' }, loja_id: { type: 'string' } },
+      properties: {
+        produto_id: { type: 'string' },
+        loja_id: { type: 'string', description: 'O lojaId de um produto ou de uma das lojasDaCategoria.' },
+      },
       additionalProperties: false,
     },
   },
@@ -170,8 +178,29 @@ export function paraOModelo(p: ProdutoLinha) {
   }
 }
 
-async function nadaEncontrado(db: D1Database, aviso: string) {
-  return { produtos: [], aviso, categoriasDisponiveis: await categoriasComProduto(db) }
+/**
+ * Resultado sem produto. Com a categoria do item, leva as lojas ativas dela (lojasDaCategoria):
+ * a Capi diz onde esse tipo de item costuma ser vendido e oferece a rota, sem afirmar que elas têm
+ * o item (RN14: o catálogo não mostra). Sem categoria, pede para buscar de novo com ela.
+ */
+async function nadaEncontrado(db: D1Database, aviso: string, categoria?: string) {
+  const resultado = { produtos: [], aviso, categoriasDisponiveis: await categoriasComProduto(db) }
+  if (!categoria) {
+    return { ...resultado, aviso: `${aviso} Busque de novo com a categoria do item para eu dizer que lojas costumam vender esse tipo de produto.` }
+  }
+  if (!ehCategoria(categoria)) {
+    const todas = CATEGORIAS_DO_SHOPPING.map((c) => c.id).join(', ')
+    return { ...resultado, aviso: `${aviso} "${categoria}" não é uma categoria do shopping; as categorias são: ${todas}.` }
+  }
+  const lojas = await lojasDaCategoria(db, categoria)
+  if (!lojas.length) return { ...resultado, aviso: `${aviso} Nenhuma loja do shopping é da categoria "${categoria}".` }
+  return {
+    ...resultado,
+    aviso:
+      `${aviso} As lojasDaCategoria são lojas do shopping da categoria "${categoria}": costumam vender esse tipo de ` +
+      'produto, mas o catálogo do app não mostra o item nelas. Não diga que elas têm o item, nem preço ou estoque.',
+    lojasDaCategoria: lojas.map((l) => ({ lojaId: l.id, nome: l.nome, piso: nomeDoPiso(l.piso), mapaId: l.mapa_id })),
+  }
 }
 
 const executores: Record<string, (entrada: Record<string, unknown>, ctx: ContextoDasFerramentas) => Promise<ResultadoDaFerramenta>> = {
@@ -192,7 +221,7 @@ const executores: Record<string, (entrada: Record<string, unknown>, ctx: Context
       })
     }
     if (!encontrados.length) {
-      return { conteudo: await nadaEncontrado(ctx.db, 'Nenhum produto ativo com esses filtros.') }
+      return { conteudo: await nadaEncontrado(ctx.db, 'Nenhum produto ativo com esses filtros.', filtros.categoria) }
     }
     return { conteudo: { produtos: encontrados.map(paraOModelo) }, produtos: encontrados, relevantes: true }
   },
@@ -218,7 +247,7 @@ const executores: Record<string, (entrada: Record<string, unknown>, ctx: Context
       encontrados: candidatos,
     })
     if (!candidatos.length) {
-      return { conteudo: await nadaEncontrado(ctx.db, `Não há produtos ativos na categoria "${categoria}".`) }
+      return { conteudo: await nadaEncontrado(ctx.db, `Não há produtos ativos na categoria "${categoria}".`, categoria) }
     }
     return { conteudo: { candidatos: candidatos.map(paraOModelo) }, produtos: candidatos }
   },

@@ -205,6 +205,7 @@ Resposta `200`:
 ```
 
 - `produtos`: no máximo 3 cartões, no mesmo formato da busca, e só produtos que vieram das ferramentas da Capi (RN14).
+- Busca sem resultado: a resposta vem sem `produtos`. Quando a Capi sabe a categoria do item, as ferramentas `buscar_produtos` e `buscar_similares` devolvem a ela, junto com o aviso, `lojasDaCategoria`: até 3 lojas ativas daquela categoria (`[{ "lojaId", "nome", "piso", "mapaId" }]`, primeiro as que têm produto da categoria, uma por marca). A Capi diz que esse tipo de item costuma ser vendido nelas, sem afirmar que têm o item nem dar preço ou estoque (RN14), e manda uma `ROTA` até a primeira.
 - `acoes`: `RESERVAR` (o primeiro cartão com estoque, para o botão de reservar), `ROTA` (quando a Capi mostrou o caminho; o app desenha no mapa) e `RESERVA_CRIADA` (`{ "tipo": "RESERVA_CRIADA", "reserva": { "id", "produtoId", "lojaId", "quantidade", "precoCentavos", "status", "formaPagamento", "pago", "expiraEm" } }`, quando o cliente confirmou na conversa e a Capi reservou; com `PIX`, o app abre o pagamento).
 
 Erros: `400` (`DADOS_INVALIDOS`: mensagem vazia, texto longo, foto acima de 4 MB ou fora dos formatos, foto e link juntos, link que não é http/https) e `503` (`IA_INDISPONIVEL`, quando o Claude falha ou passa de 15 s; o app usa a busca comum). Com `CAPI_MODO_DEMO=1`, ou quando o Claude falha, mensagens do roteiro da demonstração recebem uma resposta salva, com produtos buscados no banco.
