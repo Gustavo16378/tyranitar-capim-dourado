@@ -37,6 +37,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/auth/demo` | Público (só com `DEMO=1`) | RF01 |
 | `POST /api/auth/demo` | Público (só com `DEMO=1`) | RF01 |
 | `GET /api/lojas` | Público | RF07, RF10 |
+| `GET /api/lojas/{id}` | Público | RF07, RF10 |
 | `GET /api/produtos` | Público | RF05 |
 | `GET /api/produtos/{id}` | Público | RF07 |
 | `GET /api/ofertas` | Público | RF06 |
@@ -51,6 +52,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/me/ficha`, `DELETE /api/me/ficha/{id}` | CLIENTE | RF13, RN04 |
 | `GET /api/me/dados` | CLIENTE | RF13 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
+| `GET /api/me/compras` | CLIENTE | RF11, RF16 |
 | `GET /api/me/historico` | CLIENTE | RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
 | `PUT /api/me/consentimento` | CLIENTE | RF13 |
@@ -170,6 +172,16 @@ Parâmetros: `q` (texto), `categoria`, `loja`, `precoMin` e `precoMax` (centavos
 ### `GET /api/produtos/{id}`
 
 Produto com `atributos`, `fotos`, média e lista de `avaliacoes`, e `outrasLojas` com o mesmo item ou parecidos.
+
+### `GET /api/lojas/{id}`
+
+Uma loja ativa, para a página da loja no app (`/lojas/{id}`), no formato de cada item de `GET /api/lojas`. `categorias` vem na ordem do cadastro: a primeira é a principal, a que a página mostra.
+
+```json
+{ "id": "l1", "nome": "Loja de esportes", "piso": 1, "tipo": "loja", "categorias": ["calcados", "roupas"], "mapaId": "loja-esportes" }
+```
+
+Os produtos da página vêm de `GET /api/produtos?loja={id}`. Erro `404` (`NAO_ENCONTRADO`) para uma unidade vaga ou um id que não existe.
 
 ### `GET /api/ofertas`
 
@@ -422,7 +434,7 @@ Cada cupom traz `tipo` (`PERCENTUAL`, `VALOR` ou `BRINDE`), `valor` (a porcentag
 
 ### `GET /api/me/favoritos`
 
-Os produtos que o cliente salvou, do mais recente para o mais antigo, no formato da busca e com paginação. O Início mostra em "Você salvou".
+Os produtos que o cliente salvou, do mais recente para o mais antigo, no formato da busca e com paginação (até 100 por página). O Início mostra os três mais recentes em "Salvos para provar", e a tela `/salvos` mostra todos, agrupados por loja.
 
 ```json
 {
@@ -440,6 +452,35 @@ Os produtos que o cliente salvou, do mais recente para o mais antigo, no formato
   "total": 1
 }
 ```
+
+### `PUT /api/me/favoritos/{produtoId}` e `DELETE /api/me/favoritos/{produtoId}`
+
+O coração do app. Sem corpo; as duas respondem `204`. O `PUT` salva o produto e o `DELETE` tira dos salvos, só do cliente logado. Repetir não dá erro: salvar de novo não muda a data em que foi salvo, e tirar o que não estava salvo também responde `204`, para o app poder repetir o pedido. Erro `404` no `PUT` quando o produto não existe, está inativo ou é de uma loja que saiu.
+
+### `GET /api/me/compras`
+
+O histórico de compras do cliente (Minhas compras, na Carteira), da mais nova para a mais antiga, com paginação (`?pagina=1&tamanho=20`, até 100). Cada compra traz a loja, o valor pago (depois dos descontos), os cupons usados, com o maior desconto primeiro, e os pontos ganhos.
+
+```json
+{
+  "itens": [
+    {
+      "id": "co1",
+      "criadoEm": "2026-11-12T18:30:00.000Z",
+      "loja": { "id": "l1", "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" },
+      "valorPagoCentavos": 39382,
+      "cupons": [
+        { "titulo": "10% em calçados", "descontoCentavos": 4598 },
+        { "titulo": "R$ 20 em qualquer loja", "descontoCentavos": 2000 }
+      ],
+      "pontosGerados": 393
+    }
+  ],
+  "total": 12
+}
+```
+
+`cupons` vem vazia numa compra sem cupom. A Carteira pede as três últimas (`?tamanho=3`); "Ver tudo" abre a lista inteira, dez por vez.
 
 ### `POST /api/me/notas`
 
