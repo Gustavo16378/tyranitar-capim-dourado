@@ -1,10 +1,10 @@
-// A página da loja no app (TE31): o nome da loja no produto e no mapa abre /lojas/{id}, com o nome,
+// A página da loja no app (TE35): o nome da loja no produto e no mapa abre /lojas/{id}, com o nome,
 // a categoria, o piso, os produtos dela em grade e "Como chegar". (Nos cartões da Capi e nos
-// salvos, o TE29.)
+// salvos, o TE33.)
 import { expect, test } from '@playwright/test'
 import { comSessaoDaAna, dados } from './apoio'
 
-test('TE31: a página da loja pelo nome no produto e no mapa', async ({ page }) => {
+test('TE35: a página da loja pelo nome no produto e no mapa', async ({ page }) => {
   await comSessaoDaAna(page)
   await page.goto('/produto/p-pulse')
   await page.getByRole('link', { name: 'Loja A', exact: true }).click()
@@ -32,14 +32,14 @@ test('TE31: a página da loja pelo nome no produto e no mapa', async ({ page }) 
   await expect(page).toHaveURL(/\/lojas\/loja-a$/)
 })
 
-test('TE31: loja que não está no shopping', async ({ page }) => {
+test('TE35: loja que não está no shopping', async ({ page }) => {
   await comSessaoDaAna(page)
   await page.goto('/lojas/nao-existe')
   await expect(page.getByRole('alert')).toContainText('Essa loja não está no shopping.')
   await expect(page.getByRole('button', { name: 'Tentar de novo' })).toHaveCount(0)
 })
 
-test('TE31: no mapa sem login, o nome da loja não leva ao login', async ({ page }) => {
+test('TE35: no mapa sem login, o nome da loja não leva ao login', async ({ page }) => {
   await page.goto(`/mapa?loja=${dados.mapaDaLojaA}`)
   await expect(page.getByRole('heading', { level: 1, name: 'Loja A' })).toBeVisible()
   await expect(page.getByRole('heading', { level: 1 }).getByRole('link')).toHaveCount(0)

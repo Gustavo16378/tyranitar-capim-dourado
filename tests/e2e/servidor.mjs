@@ -7,7 +7,7 @@
 //   fixo da demonstração (o mesmo do botão "Simular leitura" do painel da loja);
 // - o lojista da Loja A e a administração com senhas de verdade, para entrar pelo login;
 // - a Carla, cliente com seis interesses na ficha, para a Minha conta apagar um (TE14), e doze
-//   compras, uma por dia, para Minhas compras (TE30): passam de uma página da lista inteira;
+//   compras, uma por dia, para Minhas compras (TE34): passam de uma página da lista inteira;
 // - a Loja A numa loja que existe na planta, para o mapa desenhar a rota;
 // - buscas recentes nas categorias da Loja A, para o Desempenho (TX07) ter o que mostrar.
 // Sem ANTHROPIC_API_KEY: a Capi responde com as respostas salvas (CAPI_MODO_DEMO=1) e, fora do
@@ -47,7 +47,7 @@ function rodar(passo, comando, args, extra = {}) {
 
 const aspas = (texto) => `'${String(texto).replaceAll("'", "''")}'`
 
-// As compras da Carla (TE30, TX13): a mais nova, ontem na Loja A, com o cupom da loja e o voucher
+// As compras da Carla (TE34, TX15): a mais nova, ontem na Loja A, com o cupom da loja e o voucher
 // do shopping; as outras, sem cupom, uma por dia antes dela, alternando a Loja A e a Loja B.
 const comprasDaCarla = Array.from({ length: 12 }, (_, i) => {
   const valor = i === 0 ? 12391 : 5000 + i * 1000

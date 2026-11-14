@@ -114,7 +114,7 @@ for (const tema of ['light', 'dark'] as const) {
       await semViolacoesGraves(page)
     })
 
-    test('TX11: salvos para provar, com os corações e o aviso de salvar', async ({ page }) => {
+    test('TX13: salvos para provar, com os corações e o aviso de salvar', async ({ page }) => {
       const { token } = await comSessaoDaAna(page)
       await semSalvos(page.request, token)
       for (const id of ['p-pulse', 'p-perfume']) {
@@ -130,7 +130,7 @@ for (const tema of ['light', 'dark'] as const) {
       await semSalvos(page.request, token)
     })
 
-    test('TX12: página da loja, com os produtos em grade', async ({ page }) => {
+    test('TX14: página da loja, com os produtos em grade', async ({ page }) => {
       await comSessaoDaAna(page)
       await page.goto('/lojas/loja-a')
       await expect(page.getByRole('heading', { level: 1, name: 'Loja A' })).toBeVisible()
@@ -138,7 +138,7 @@ for (const tema of ['light', 'dark'] as const) {
       await semViolacoesGraves(page)
     })
 
-    test('TX13: minhas compras, na carteira e a lista inteira', async ({ page }) => {
+    test('TX15: minhas compras, na carteira e a lista inteira', async ({ page }) => {
       await comSessaoDaCarla(page)
       await page.goto('/carteira')
       await expect(page.getByRole('region', { name: 'Minhas compras' }).getByRole('listitem')).toHaveCount(3)

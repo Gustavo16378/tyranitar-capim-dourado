@@ -214,9 +214,9 @@ Com o Claude simulado:
 | TE26 | Permissão da câmera negada | RF03 | A folha volta só com a galeria, com um aviso, e a foto escolhida fica anexada |
 | TE27 | QR da entrada lido sem sessão | RF10 | O mapa abre sem login já na entrada certa (também com a loja no link); reservar, a Capi e a carteira continuam pedindo login; o convite para entrar volta ao mesmo mapa |
 | TE28 | Cancelar a reserva pelo app | RF08, RF09, RF11, RF20 | Na carteira, "Não, manter a reserva" mantém e "Sim, cancelar" tira a reserva da lista, com o aviso do estorno do Pix; na tela da reserva, cancelar mostra "Reserva cancelada"; a loja vê as duas em Reservas › Encerradas, a do Pix com o estorno |
-| TE29 | Salvar com o coração e Salvos para provar | RF16, RNF08 | O coração muda na hora (`aria-pressed`) no produto e nos cartões do Início e da Capi, e o leitor de tela ouve "está nos seus salvos"; a aba Salvos agrupa por loja (a do salvo mais recente primeiro), com "Reservar" (a folha de sempre) e "Como chegar"; tirar o coração ali deixa o produto na lista; se a API recusa, o coração volta e o aviso aparece na tela |
-| TE30 | Minhas compras | RF11, RF16 | Na carteira, abaixo das reservas, as três últimas compras com loja, dia, valor pago, cupons com o desconto e pontos; "Ver tudo" abre a lista inteira com a Carteira marcada na navegação, dez por vez; "Mostrar mais" traz o resto, diz quantas aparecem e põe o foco na primeira que chegou |
-| TE31 | Página da loja | RF07, RF10 | O nome da loja no produto abre `/lojas/{id}` com nome, categoria, piso e os produtos em grade (com o coração); "Como chegar" abre o mapa na loja, e no mapa o nome dela volta para a página; loja que não existe mostra o erro sem "Tentar de novo"; sem login, o nome no mapa não vira link |
+| TE33 | Salvar com o coração e Salvos para provar | RF16, RNF08 | O coração muda na hora (`aria-pressed`) no produto e nos cartões do Início e da Capi, e o leitor de tela ouve "está nos seus salvos"; a aba Salvos agrupa por loja (a do salvo mais recente primeiro), com "Reservar" (a folha de sempre) e "Como chegar"; tirar o coração ali deixa o produto na lista; se a API recusa, o coração volta e o aviso aparece na tela |
+| TE34 | Minhas compras | RF11, RF16 | Na carteira, abaixo das reservas, as três últimas compras com loja, dia, valor pago, cupons com o desconto e pontos; "Ver tudo" abre a lista inteira com a Carteira marcada na navegação, dez por vez; "Mostrar mais" traz o resto, diz quantas aparecem e põe o foco na primeira que chegou |
+| TE35 | Página da loja | RF07, RF10 | O nome da loja no produto abre `/lojas/{id}` com nome, categoria, piso e os produtos em grade (com o coração); "Como chegar" abre o mapa na loja, e no mapa o nome dela volta para a página; loja que não existe mostra o erro sem "Tentar de novo"; sem login, o nome no mapa não vira link |
 
 ### Acessibilidade (TX)
 
@@ -234,9 +234,9 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX08 | Painel no celular com o Menu aberto |
 | TX09 | Minha conta, com a ficha e a folha de trocar a senha |
 | TX10 | QR das entradas do painel do shopping |
-| TX11 | Salvos para provar, com o coração ligado e desligado |
-| TX12 | Página da loja, com os produtos em grade |
-| TX13 | Minhas compras, na carteira e a lista inteira |
+| TX13 | Salvos para provar, com o coração ligado e desligado |
+| TX14 | Página da loja, com os produtos em grade |
+| TX15 | Minhas compras, na carteira e a lista inteira |
 
 ### Manual (TM)
 
@@ -259,16 +259,16 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF04 Link | TI07 |
 | RF05 Buscar | TA07, TE02, TE04 |
 | RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
-| RF07 Produto | TA09, TA44, TE02, TE31 |
+| RF07 Produto | TA09, TA44, TE02, TE35 |
 | RF08 Reservar na loja | TA11, TA15, TA40, TI03, TE02, TE28 |
 | RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
-| RF10 Mapa e rota | TA44, TE01, TE09, TE31, TM01 |
-| RF11 Carteira | TU05, TA17, TA43, TE01, TE28, TE30 |
+| RF10 Mapa e rota | TA44, TE01, TE09, TE35, TM01 |
+| RF11 Carteira | TU05, TA17, TA43, TE01, TE28, TE34 |
 | RF12 Nota fiscal | TU22, TA18 |
 | RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
 | RF14 Notificações | TE01 (notificação de pontos) |
 | RF15 Avaliar | TA22, TB11 |
-| RF16 Favoritos e histórico | TA42, TA43, TE02, TE29, TE30 |
+| RF16 Favoritos e histórico | TA42, TA43, TE02, TE33, TE34 |
 | RF17 Login do lojista | TA03, TE03 |
 | RF18 Atendimento | TA23, TA24, TE01, TE06, TM03 |
 | RF19 Compra no caixa | TU06, TU07, TA25, TA27, TB08 |
@@ -299,7 +299,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
 | RNF06 LGPD | TA21, TA24 |
 | RNF07 Chave da IA | TA36 |
-| RNF08 Acessibilidade | TX01 a TX13, TE29 |
+| RNF08 Acessibilidade | TX01 a TX15, TE33 |
 | RNF09 Mapa no celular | TM01 |
 | RNF10 IA fora do ar | TI05, TM04 |
 | RNF11 Português e fuso | TU29 |

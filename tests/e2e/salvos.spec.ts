@@ -1,13 +1,15 @@
-// Salvar com o coração e os Salvos para provar (TE29): o coração no produto e nos cartões, com o
+// Salvar com o coração e os Salvos para provar (TE33): o coração no produto e nos cartões, com o
 // estado otimista e o aviso para o leitor de tela; os salvos por loja, com "Reservar" e "Como
 // chegar"; o coração que volta quando a API recusa; e o coração nos cartões da Capi.
 import { expect, test } from '@playwright/test'
 import { aba, comSessaoDaAna, dados, idsSalvos, novaConversa, perguntarPeloTenisDaFoto, semSalvos } from './apoio'
 
 const PULSE = 'Tênis de corrida Pulse'
+// Para reservar: dez unidades, que nenhum outro teste reserva (o Pulse, com duas, esgota na jornada).
+const CAMISETA = 'Camiseta dry-fit'
 const PERFUME = 'Perfume Cerrado 100 ml'
 
-test('TE29: salvar no produto, ver por loja, reservar, ir até a loja e tirar dos salvos', async ({ page }) => {
+test('TE33: salvar no produto, ver por loja, reservar, ir até a loja e tirar dos salvos', async ({ page }) => {
   const { token } = await comSessaoDaAna(page)
   await semSalvos(page.request, token)
 
@@ -18,17 +20,17 @@ test('TE29: salvar no produto, ver por loja, reservar, ir até a loja e tirar do
   await expect(page.getByText('Você ainda não salvou nenhum produto.', { exact: false })).toBeVisible()
 
   // O coração do produto muda na hora, e o leitor de tela ouve o aviso.
-  await page.goto('/produto/p-pulse')
-  const coracao = page.getByRole('button', { name: `Salvar ${PULSE}` })
+  await page.goto('/produto/p-camiseta')
+  const coracao = page.getByRole('button', { name: `Salvar ${CAMISETA}` })
   await expect(coracao).toHaveAttribute('aria-pressed', 'false')
   await coracao.click()
   await expect(coracao).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByRole('status').filter({ hasText: `${PULSE} está nos seus salvos.` })).toBeAttached()
-  await expect.poll(() => idsSalvos(page.request, token)).toEqual(['p-pulse'])
+  await expect(page.getByRole('status').filter({ hasText: `${CAMISETA} está nos seus salvos.` })).toBeAttached()
+  await expect.poll(() => idsSalvos(page.request, token)).toEqual(['p-camiseta'])
 
   await page.goto('/produto/p-perfume')
   await page.getByRole('button', { name: `Salvar ${PERFUME}` }).click()
-  await expect.poll(() => idsSalvos(page.request, token)).toEqual(['p-perfume', 'p-pulse'])
+  await expect.poll(() => idsSalvos(page.request, token)).toEqual(['p-perfume', 'p-camiseta'])
 
   // A aba Salvos: uma seção por loja, a do salvo mais recente primeiro.
   await aba(page, 'Salvos').click()
@@ -37,10 +39,10 @@ test('TE29: salvar no produto, ver por loja, reservar, ir até a loja e tirar do
   await expect(page.getByRole('heading', { level: 2 })).toHaveText(['Loja B', 'Loja A'])
   const lojaA = page.getByRole('region', { name: 'Loja A' })
   await expect(lojaA.getByRole('article')).toHaveCount(1)
-  await expect(lojaA.getByRole('link', { name: PULSE })).toBeVisible()
+  await expect(lojaA.getByRole('link', { name: CAMISETA })).toBeVisible()
 
   // "Reservar" abre a folha de sempre; Esc fecha sem reservar.
-  await lojaA.getByRole('button', { name: `Reservar ${PULSE}` }).click()
+  await lojaA.getByRole('button', { name: `Reservar ${CAMISETA}` }).click()
   await expect(page.getByRole('dialog', { name: 'Como você quer reservar?' })).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: 'Como você quer reservar?' })).toBeHidden()
@@ -54,11 +56,11 @@ test('TE29: salvar no produto, ver por loja, reservar, ir até a loja e tirar do
   await page.goBack()
 
   // Tirar o coração aqui deixa o produto na lista até a próxima visita, para voltar atrás.
-  const nosSalvos = page.getByRole('region', { name: 'Loja A' }).getByRole('button', { name: `Salvar ${PULSE}` })
+  const nosSalvos = page.getByRole('region', { name: 'Loja A' }).getByRole('button', { name: `Salvar ${CAMISETA}` })
   await expect(nosSalvos).toHaveAttribute('aria-pressed', 'true')
   await nosSalvos.click()
   await expect(nosSalvos).toHaveAttribute('aria-pressed', 'false')
-  await expect(page.getByRole('status').filter({ hasText: `${PULSE} saiu dos seus salvos.` })).toBeAttached()
+  await expect(page.getByRole('status').filter({ hasText: `${CAMISETA} saiu dos seus salvos.` })).toBeAttached()
   await expect.poll(() => idsSalvos(page.request, token)).toEqual(['p-perfume'])
 
   // O Início mostra o que ficou salvo, com o coração e "Ver todos".
@@ -70,7 +72,7 @@ test('TE29: salvar no produto, ver por loja, reservar, ir até a loja e tirar do
   await semSalvos(page.request, token)
 })
 
-test('TE29: a API recusa e o coração volta, com o aviso na tela', async ({ page }) => {
+test('TE33: a API recusa e o coração volta, com o aviso na tela', async ({ page }) => {
   const { token } = await comSessaoDaAna(page)
   await semSalvos(page.request, token)
   await page.route('**/api/me/favoritos/p-pulse', (rota) =>
@@ -88,7 +90,7 @@ test('TE29: a API recusa e o coração volta, com o aviso na tela', async ({ pag
   expect(await idsSalvos(page.request, token)).toEqual([])
 })
 
-test('TE29: o coração e o nome da loja nos cartões da Capi', async ({ page }) => {
+test('TE33: o coração e o nome da loja nos cartões da Capi', async ({ page }) => {
   const { token } = await comSessaoDaAna(page)
   await semSalvos(page.request, token)
   await novaConversa(page.request, token)

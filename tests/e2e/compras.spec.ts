@@ -1,10 +1,10 @@
-// Minhas compras (TE30): na Carteira, abaixo das reservas, as três últimas compras com a loja, o
+// Minhas compras (TE34): na Carteira, abaixo das reservas, as três últimas compras com a loja, o
 // dia, o valor pago, os cupons e os pontos; "Ver tudo" abre a lista inteira, dez por vez. A Carla
 // tem doze compras no banco dos testes (tests/e2e/servidor.mjs).
 import { expect, test } from '@playwright/test'
 import { aba, comSessaoDaCarla } from './apoio'
 
-test('TE30: Minhas compras na carteira e a lista inteira, dez por vez', async ({ page }) => {
+test('TE34: Minhas compras na carteira e a lista inteira, dez por vez', async ({ page }) => {
   await comSessaoDaCarla(page)
   await page.goto('/carteira')
   const secao = page.getByRole('region', { name: 'Minhas compras' })
