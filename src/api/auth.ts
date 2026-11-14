@@ -41,11 +41,11 @@ export async function contasDeDemonstracao(): Promise<ContaDeDemonstracao[]> {
   }
 }
 
-/** POST /api/auth/demo: entra com a conta de demonstração do perfil, sem senha. */
-export async function entrarComDemo(perfil: Perfil = 'CLIENTE'): Promise<Usuario> {
+/** POST /api/auth/demo: entra com a conta de demonstração do perfil, sem senha; no lojista, a da loja escolhida. */
+export async function entrarComDemo(perfil: Perfil = 'CLIENTE', lojaId?: string): Promise<Usuario> {
   const sessao = usarMock('auth')
     ? await mock.entrarComDemo(perfil)
-    : await requisitar<RespostaLogin>('POST', '/api/auth/demo', { perfil })
+    : await requisitar<RespostaLogin>('POST', '/api/auth/demo', lojaId ? { perfil, lojaId } : { perfil })
   return guardar(sessao)
 }
 

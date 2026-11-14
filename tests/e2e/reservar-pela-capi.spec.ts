@@ -41,8 +41,9 @@ test('TE38: a Capi mostra o "Reservar" no cartão, a folha abre na conversa, e a
     expect(await reservasEmAberto(page, token)).toEqual(antes)
   })
 
-  const reservar = conversa.getByRole('button', { name: /^Reservar / }).first()
-  const nome = ((await reservar.getAttribute('aria-label')) ?? '').replace(/^Reservar /, '')
+  // O tênis com mais estoque (5): o Pulse tem 2, e o TE01 já usa um.
+  const nome = 'Tênis Run 2 preto'
+  const reservar = conversa.getByRole('button', { name: `Reservar ${nome}` }).first()
   let reservaId = ''
   await test.step('o "Reservar" do cartão abre a folha de reserva na conversa', async () => {
     await reservar.click()

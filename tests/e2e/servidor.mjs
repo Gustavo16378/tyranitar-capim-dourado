@@ -9,7 +9,9 @@
 // - a Carla, cliente com seis interesses na ficha, para a Minha conta apagar um (TE14), e doze
 //   compras, uma por dia, para Minhas compras (TE34): passam de uma página da lista inteira;
 // - a Loja A numa loja que existe na planta, para o mapa desenhar a rota;
-// - buscas recentes nas categorias da Loja A, para o Desempenho (TX07) ter o que mostrar.
+// - buscas recentes nas categorias da Loja A, para o Desempenho (TX07) ter o que mostrar;
+// - os lojistas de demonstração no formato do seed (lojista.<mapa_id>@demo.test): o da Loja A, a
+//   loja da demonstração, e o de uma Cacau Show com um produto, para o "Lojista" do /entrar (TE39).
 // Sem ANTHROPIC_API_KEY: a Capi responde com as respostas salvas (CAPI_MODO_DEMO=1) e, fora do
 // roteiro, como indisponível, e o app cai na busca comum. Nada sai para a internet.
 import { spawn, spawnSync } from 'node:child_process'
@@ -92,6 +94,14 @@ INSERT INTO uso_cupom (compra_id, cupom_id, desconto_centavos) VALUES
   ('co-carla-01', 'cp-a-10', 1599),
   ('co-carla-01', 'cp-shopping-20', 2000);
 UPDATE loja SET mapa_id = ${aspas(dados.mapaDaLojaA)} WHERE id = 'loja-a';
+INSERT INTO loja (id, nome, numero, area_m2, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES
+  ('loja-cacau', 'Cacau Show', '73', 40, '44444444000191', 1, 'loja', '["alimentacao"]', 'loja-73', 1);
+INSERT INTO produto (id, loja_id, nome, descricao, categoria, preco_centavos, estoque, atributos, ativo) VALUES
+  ('p-trufas', 'loja-cacau', 'Caixa de trufas 250 g', 'Trufas sortidas de chocolate', 'alimentacao', 5990, 10, '{}', 1);
+INSERT INTO usuario (id, nome, email, senha_hash, perfil, loja_id) VALUES
+  ('l-demo-a', 'Equipe da Loja A', ${aspas(`lojista.${dados.mapaDaLojaA}@demo.test`)}, 'pbkdf2_sha256$1$AAAA$AAAA', 'LOJISTA', 'loja-a'),
+  ('l-demo-cacau', 'Equipe da Cacau Show', 'lojista.loja-73@demo.test', 'pbkdf2_sha256$1$AAAA$AAAA', 'LOJISTA', 'loja-cacau');
+INSERT OR REPLACE INTO configuracao (chave, valor) VALUES ('conta_demo_lojista', ${aspas(JSON.stringify(`lojista.${dados.mapaDaLojaA}@demo.test`))});
 INSERT INTO busca (id, termo, categoria, encontrou, criado_em) VALUES
   ('b-e2e-1', 'tênis de trilha', 'calcados', 0, datetime('now', '-1 days')),
   ('b-e2e-2', 'tênis de trilha', 'calcados', 0, datetime('now', '-2 days')),

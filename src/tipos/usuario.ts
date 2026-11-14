@@ -26,4 +26,6 @@ export interface ContaDeDemonstracao {
   perfil: Perfil
   nome: string
   loja: string | null
+  /** Só no lojista: as lojas com produto que têm conta de demonstração, a da demonstração primeiro. */
+  lojas?: { id: string; nome: string }[]
 }

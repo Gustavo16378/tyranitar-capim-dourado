@@ -49,7 +49,8 @@ describe('contas de demonstração: GET e POST /api/auth/demo', () => {
     expect(r.corpo).toEqual({
       contas: [
         { perfil: 'CLIENTE', nome: 'Ana Souza', loja: null },
-        { perfil: 'LOJISTA', nome: 'Equipe da Loja A', loja: 'Loja A' },
+        // Os e-mails de tests/seed.sql não são os do seed da demo: nenhuma loja na lista do lojista.
+        { perfil: 'LOJISTA', nome: 'Equipe da Loja A', loja: 'Loja A', lojas: [] },
         { perfil: 'ADMIN_SHOPPING', nome: 'Administração', loja: null },
       ],
     })
@@ -77,7 +78,7 @@ describe('contas de demonstração: GET e POST /api/auth/demo', () => {
     ).run()
     try {
       const r = await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })
-      expect(r.corpo.contas[1]).toEqual({ perfil: 'LOJISTA', nome: 'Equipe da Loja B', loja: 'Loja B' })
+      expect(r.corpo.contas[1]).toEqual({ perfil: 'LOJISTA', nome: 'Equipe da Loja B', loja: 'Loja B', lojas: [] })
       const lojista = await entrarComo({ perfil: 'LOJISTA' })
       expect(lojista.corpo.usuario).toMatchObject({ id: 'l-b', perfil: 'LOJISTA', lojaId: 'loja-b' })
     } finally {
@@ -94,6 +95,65 @@ describe('contas de demonstração: GET e POST /api/auth/demo', () => {
     await env.DB.prepare("UPDATE usuario SET email = 'lojista.loja-pc01a@demo.test' WHERE id = 'c-bruno'").run()
     expect((await entrarComo({ perfil: 'LOJISTA' })).status).toBe(404)
     expect((await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })).corpo).toEqual({ contas: [] })
+  })
+})
+
+describe('TA58: o lojista de demonstração de cada loja', () => {
+  const DEMO = { DEMO: '1' }
+  const entrarComo = (corpo: unknown, ambiente: Record<string, string> | undefined = DEMO) =>
+    chamar(demo, { metodo: 'POST', url: '/api/auth/demo', corpo, ambiente })
+
+  /** Os lojistas com o e-mail do seed da demo (lojista.<mapa_id>@demo.test); a Loja B é a da demonstração. */
+  async function lojistasDoSeed() {
+    await env.DB.batch([
+      env.DB.prepare("UPDATE usuario SET email = 'lojista.mapa-loja-a@demo.test' WHERE id = 'l-a'"),
+      env.DB.prepare("UPDATE usuario SET email = 'lojista.mapa-loja-b@demo.test' WHERE id = 'l-b'"),
+      env.DB.prepare("INSERT INTO configuracao (chave, valor) VALUES ('conta_demo_lojista', '\"lojista.mapa-loja-b@demo.test\"')"),
+    ])
+  }
+  const semConfiguracao = () => env.DB.prepare("DELETE FROM configuracao WHERE chave = 'conta_demo_lojista'").run()
+
+  it('a lista traz as lojas com produto e lojista do seed, a da demonstração primeiro, e entra como o lojista da escolhida', async () => {
+    await lojistasDoSeed()
+    try {
+      const r = await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })
+      expect(r.corpo.contas.find((c: { perfil: string }) => c.perfil === 'LOJISTA').lojas).toEqual([
+        { id: 'loja-b', nome: 'Loja B' },
+        { id: 'loja-a', nome: 'Loja A' },
+      ])
+      const a = await entrarComo({ perfil: 'LOJISTA', lojaId: 'loja-a' })
+      expect(a.status).toBe(200)
+      expect(a.corpo.usuario).toEqual({ id: 'l-a', nome: 'Equipe da Loja A', perfil: 'LOJISTA', lojaId: 'loja-a' })
+      expect(await lerToken(a.corpo.token, env.JWT_SECRET)).toMatchObject({ perfil: 'LOJISTA', lojaId: 'loja-a' })
+      // Sem a loja, o de antes: o lojista da loja da demonstração.
+      expect((await entrarComo({ perfil: 'LOJISTA' })).corpo.usuario).toMatchObject({ lojaId: 'loja-b' })
+    } finally {
+      await semConfiguracao()
+    }
+  })
+
+  it('só os lojistas do seed, de loja ativa com produto, e só com DEMO=1', async () => {
+    await lojistasDoSeed()
+    try {
+      // Desligadas (sem DEMO=1), 404.
+      expect((await entrarComo({ perfil: 'LOJISTA', lojaId: 'loja-a' }, {})).status).toBe(404)
+      // A loja sem lojista do seed (o restaurante) e a que não existe: 404.
+      expect((await entrarComo({ perfil: 'LOJISTA', lojaId: 'restaurante-c' })).status).toBe(404)
+      expect((await entrarComo({ perfil: 'LOJISTA', lojaId: 'nao-existe' })).status).toBe(404)
+      // A loja só vale para o perfil LOJISTA, e é um id.
+      expect((await entrarComo({ perfil: 'CLIENTE', lojaId: 'loja-a' })).status).toBe(400)
+      expect((await entrarComo({ perfil: 'LOJISTA', lojaId: 42 })).status).toBe(400)
+      // O e-mail do seed com outro perfil não vira lojista.
+      await env.DB.prepare("UPDATE usuario SET perfil = 'CLIENTE', loja_id = NULL WHERE id = 'l-b'").run()
+      expect((await entrarComo({ perfil: 'LOJISTA', lojaId: 'loja-b' })).status).toBe(404)
+      // Sem produto ativo, a loja sai da lista e não entra.
+      await env.DB.prepare("UPDATE produto SET ativo = 0 WHERE loja_id = 'loja-a'").run()
+      expect((await entrarComo({ perfil: 'LOJISTA', lojaId: 'loja-a' })).status).toBe(404)
+      const lista = await chamar(contas, { url: '/api/auth/demo', ambiente: DEMO })
+      expect(lista.corpo.contas.find((c: { perfil: string }) => c.perfil === 'LOJISTA')?.lojas ?? []).toEqual([])
+    } finally {
+      await semConfiguracao()
+    }
   })
 })
 

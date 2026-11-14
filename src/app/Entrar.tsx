@@ -8,6 +8,7 @@ import { sessaoDaLoja, sessaoDoShopping } from '../painel/api/sessoes'
 import type { ContaDeDemonstracao, Perfil, Usuario } from '../tipos'
 import { AvisoDemonstracao } from './AvisoDemonstracao'
 import { Campo } from './Campo'
+import { Folha } from './Folha'
 import { destinoDoLogin, lerPedidoDeLogin } from './destinoDoLogin'
 
 /** A frase do topo, pelo perfil que a tela de origem pediu. */
@@ -19,7 +20,8 @@ const CHAMADA: Record<Perfil, string> = {
 
 function rotuloDaConta(conta: ContaDeDemonstracao) {
   if (conta.perfil === 'CLIENTE') return `Cliente (${conta.nome.split(' ')[0]})`
-  if (conta.perfil === 'LOJISTA') return `Lojista (${conta.loja ?? conta.nome})`
+  // Com a lista das lojas, o botão abre a escolha; sem ela, entra na loja da demonstração.
+  if (conta.perfil === 'LOJISTA') return conta.lojas?.length ? 'Lojista' : `Lojista (${conta.loja ?? conta.nome})`
   return 'Shopping (admin)'
 }
 
@@ -38,6 +40,8 @@ export default function Entrar() {
   const contas = useDados(contasDeDemonstracao)
   const [enviando, setEnviando] = useState<'senha' | Perfil | null>(null)
   const [erro, setErro] = useState<ErroApi | null>(null)
+  // "Lojista": a folha com as lojas que têm produto, para entrar como o lojista de qualquer uma.
+  const [escolhendoLoja, setEscolhendoLoja] = useState(false)
   const tela = useEntrada<HTMLElement>()
 
   // Já tem a sessão do perfil que a tela de origem pede: segue direto para ela.
@@ -64,6 +68,7 @@ export default function Entrar() {
   }
 
   const demonstracao = contas.tipo === 'ok' ? contas.dados : []
+  const lojas = demonstracao.find((c) => c.perfil === 'LOJISTA')?.lojas ?? []
 
   return (
     <main ref={tela} className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 py-8">
@@ -113,7 +118,12 @@ export default function Entrar() {
                 key={conta.perfil}
                 block
                 disabled={enviando !== null}
-                onClick={() => tentar(conta.perfil, () => entrarComDemo(conta.perfil))}
+                aria-haspopup={conta.perfil === 'LOJISTA' && lojas.length ? 'dialog' : undefined}
+                onClick={() =>
+                  conta.perfil === 'LOJISTA' && lojas.length
+                    ? setEscolhendoLoja(true)
+                    : tentar(conta.perfil, () => entrarComDemo(conta.perfil))
+                }
               >
                 {enviando === conta.perfil ? 'Entrando…' : rotuloDaConta(conta)}
               </Button>
@@ -125,6 +135,27 @@ export default function Entrar() {
       <footer>
         <AvisoDemonstracao />
       </footer>
+      {lojas.length > 0 && (
+        <Folha aberta={escolhendoLoja} onFechar={() => setEscolhendoLoja(false)} titulo="Entrar como lojista de qual loja?">
+          <p className="text-body-sm text-ink-muted">As lojas com produtos no app. O painel abre com os dados daquela loja.</p>
+          <ul aria-label="Lojas com conta de demonstração" className="flex flex-col gap-2">
+            {lojas.map((loja) => (
+              <li key={loja.id}>
+                <Button
+                  block
+                  disabled={enviando !== null}
+                  onClick={() => {
+                    setEscolhendoLoja(false)
+                    void tentar('LOJISTA', () => entrarComDemo('LOJISTA', loja.id))
+                  }}
+                >
+                  {loja.nome}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </Folha>
+      )}
     </main>
   )
 }
