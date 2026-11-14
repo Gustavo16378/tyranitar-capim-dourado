@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import { useSessao } from '../api'
 import { BottomNav, type AbaId } from '../componentes'
 import { cx } from '../componentes/cx'
+import { CamadaDoTirano } from '../easter-egg/CamadaDoTirano'
 import { comMovimento, DURACAO, EASE, useGSAP } from '../movimento'
 import { BarraLateral } from './BarraLateral'
 
@@ -72,6 +73,7 @@ export default function LayoutApp() {
     if (!TELAS_PUBLICAS.includes(pathname)) return <Navigate to="/entrar" replace state={{ de: pathname + search }} />
     return (
       <div className="flex h-dvh flex-col bg-surface">
+        <CamadaDoTirano />
         <main
           ref={palco}
           tabIndex={0}
@@ -90,6 +92,8 @@ export default function LayoutApp() {
     <div className="flex h-dvh bg-surface">
       <BarraLateral ativo={aba} naConta={pathname.startsWith('/conta')} />
       <div className="mx-auto flex min-w-0 max-w-md flex-1 flex-col md:max-w-none">
+        {/* O modo tirano do easter egg: o apagão e, com as luzes apagadas, a faixa de acender. */}
+        <CamadaDoTirano />
         {/* Focável: a área rola, e uma tela sem botão nem link (a Carteira sem reservas) também
             precisa rolar pelo teclado (WCAG 2.1.1). O anel fica por dentro, para não ser cortado. */}
         <main
