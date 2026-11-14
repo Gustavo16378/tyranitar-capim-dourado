@@ -2,13 +2,14 @@
 // shopping deve à loja pelos vouchers usados aqui (RN11).
 //
 //   TelaExtrato           cabeçalho, filtro de período e GET /api/loja/extrato
-//   └─ ConteudoDoExtrato  os quatro estados, os números do topo e as compras: em tabela a
-//                         partir de 1024 px; abaixo disso, um cartão por compra
+//   └─ ConteudoDoExtrato  os quatro estados, os números do topo e as compras, cada uma com a
+//                         cliente e os itens: em tabela a partir de 1024 px; abaixo disso, um
+//                         cartão por compra
 import { useCallback, useState } from 'react'
 import { Badge, formatarNumero, formatarPreco, StatTile } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
 import { useEntrada } from '../../../movimento'
-import type { Extrato, LancamentoDoExtrato, Periodo } from '../../../tipos/loja'
+import type { Extrato, ItemDoExtrato, LancamentoDoExtrato, Periodo } from '../../../tipos/loja'
 import { buscarExtrato, useConsulta } from '../../api'
 import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'
 import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
@@ -157,7 +158,40 @@ function Desconto({ centavos }: { centavos: number }) {
   return centavos ? <>− {formatarPreco(centavos)}</> : <span className="text-ink-muted">—</span>
 }
 
-/** Abaixo de 1024 px: um cartão por compra, com os valores um embaixo do outro. */
+/** O que é o item, além do nome: saiu de uma reserva, já veio pago com Pix. */
+function marcasDoItem(item: ItemDoExtrato) {
+  return [item.retirada && 'reserva', item.jaPago && 'pago com Pix'].filter(Boolean).join(', ')
+}
+
+/**
+ * Os itens de uma compra: quantidade, nome, o que ele é (reserva, pago com Pix), o valor e o
+ * desconto que os cupons deram nele. Compra de antes dos itens não tem a lista.
+ */
+function ItensDoLancamento({ itens, cliente }: { itens: ItemDoExtrato[]; cliente: string }) {
+  if (!itens?.length) return null
+  return (
+    <ul aria-label={`Itens da compra de ${cliente}`} className="flex flex-col gap-1 text-body-sm">
+      {itens.map((item, i) => {
+        const marcas = marcasDoItem(item)
+        return (
+          <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="min-w-0">
+              {item.quantidade > 1 && <span className="tabular-nums">{item.quantidade} × </span>}
+              {item.descricao}
+              {marcas && <span className="text-ink-muted"> · {marcas}</span>}
+            </span>
+            <span className="whitespace-nowrap tabular-nums text-ink-muted">
+              {formatarPreco(item.brutoCentavos)}
+              {item.descontoCentavos > 0 && <> · − {formatarPreco(item.descontoCentavos)}</>}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/** Abaixo de 1024 px: um cartão por compra, com os itens e os valores um embaixo do outro. */
 function CartoesDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] }) {
   return (
     <ul aria-label="Compras do período, da mais nova para a mais antiga" className="flex flex-col gap-3 lg:hidden">
@@ -170,6 +204,7 @@ function CartoesDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] 
             </p>
             <p className="text-body-sm text-ink-muted">{formatarDataHora(l.criadoEm)}</p>
           </div>
+          <ItensDoLancamento itens={l.itens} cliente={l.cliente} />
           <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 text-body-sm">
             <dt className="text-ink-muted">Valor</dt>
             <dd className="text-right tabular-nums">{formatarPreco(l.brutoCentavos)}</dd>
@@ -205,7 +240,7 @@ function TabelaDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] }
         <thead>
           <tr className="border-b border-line text-label">
             <th scope="col" className="py-2 pr-4">Data</th>
-            <th scope="col" className="py-2 pr-4">Cliente</th>
+            <th scope="col" className="py-2 pr-4">Cliente e itens</th>
             <th scope="col" className="py-2 pl-4 text-right">Valor</th>
             <th scope="col" className="py-2 pl-4 text-right">Cupom da loja</th>
             <th scope="col" className="py-2 pl-4 text-right">Voucher do shopping</th>
@@ -215,11 +250,16 @@ function TabelaDeCompras({ lancamentos }: { lancamentos: LancamentoDoExtrato[] }
         </thead>
         <tbody>
           {lancamentos.map((l) => (
-            <tr key={l.id} className="border-b border-line last:border-b-0">
+            <tr key={l.id} className="border-b border-line align-top last:border-b-0">
               <td className="whitespace-nowrap py-3 pr-4 text-ink-muted">{formatarDataHora(l.criadoEm)}</td>
               <td className="py-3 pr-4">
-                {l.cliente}
-                {l.retirada && <span className="text-ink-muted"> · retirada</span>}
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold">
+                    {l.cliente}
+                    {l.retirada && <span className="font-normal text-ink-muted"> · retirada</span>}
+                  </span>
+                  <ItensDoLancamento itens={l.itens} cliente={l.cliente} />
+                </div>
               </td>
               <td className={DINHEIRO}>{formatarPreco(l.brutoCentavos)}</td>
               <td className={DINHEIRO}>
