@@ -12,13 +12,43 @@
 
 Solução da equipe Tyranitar para o tema 04 do HackaRun 2026: a jornada de compra integrada, digital e física, do Capim Dourado Shopping.
 
-## Primeira entrega
+## Roteiro para a banca
 
-- [Documento da primeira entrega (PDF)](docs/Capi_Tyranitar_Primeira_Entrega.pdf)
-- [Onde está cada item pedido](docs/primeira-entrega.md)
-- [Evidências de testes (Missão 2)](docs/evidencias-testes.md): a bateria, o CI e os bugs corrigidos com o teste de cada um
-- [Design system publicado](https://tyranitar-capim-dourado.pages.dev/design-system)
-- [App no ar](https://tyranitar-capim-dourado.pages.dev)
+O app está no ar e não precisa de cadastro: a tela de entrar tem um botão para cada conta de demonstração.
+
+| Link | Botão | O que é |
+| --- | --- | --- |
+| [tyranitar-capim-dourado.pages.dev](https://tyranitar-capim-dourado.pages.dev) | **Cliente (Ana)** | O app do cliente, feito para o celular (no computador, com a barra lateral) |
+| [tyranitar-capim-dourado.pages.dev/loja](https://tyranitar-capim-dourado.pages.dev/loja) | **Lojista (Centauro)** | O painel da loja |
+| [tyranitar-capim-dourado.pages.dev/shopping](https://tyranitar-capim-dourado.pages.dev/shopping) | **Shopping (admin)** | O painel da administração do shopping |
+
+**O fluxo principal em 2 minutos.** Abra o app numa aba e o painel da loja em outra.
+
+| # | Onde | Faça | O que aparece |
+| :---: | --- | --- | --- |
+| 1 | App | **Começar** e **Cliente (Ana)** | O Início da Ana, nível Capim, com as ofertas |
+| 2 | App › Capi | Toque na sugestão com a foto do tênis e em enviar | A Capi entende a foto e acha o tênis em duas lojas, a Centauro primeiro |
+| 3 | App › reserva | **Sim, separar**, **Reservar**, **Pagar agora com Pix** e **Já paguei** | A reserva paga, com o prazo para retirar |
+| 4 | App › mapa | **Como chegar** e a entrada por onde chegou (ou toque numa entrada no mapa) | A rota 3D da entrada até a loja, com os minutos a pé |
+| 5 | Painel da loja | **Lojista (Centauro)**, Atendimento e **Simular leitura** | O QR da Ana lido: o que ela procura (a ficha) e a reserva paga |
+| 6 | Painel da loja | Em **Entregar reserva**, a do tênis, e **Registrar compra** | O recibo com os pontos |
+| 7 | App › Carteira | Abra a carteira | Os pontos somando e a reserva retirada |
+
+No painel do shopping, veja Demanda (o que os clientes procuram e não acham), Lojas vagas e demanda e QR das entradas. A equipe volta a demonstração ao começo com `npm run demo:reset`, entre um ensaio e outro.
+
+O easter egg tem um [roteiro de 30 segundos](docs/easter-egg.md#roteiro-de-demonstração-em-30-segundos) (com spoiler).
+
+## Missões do HackaRun
+
+| Entrega | Onde está |
+| --- | --- |
+| Problema e requisitos | [Requisitos](docs/requisitos.md) e o [documento da primeira entrega (PDF)](docs/Capi_Tyranitar_Primeira_Entrega.pdf), com [onde está cada item pedido](docs/primeira-entrega.md) |
+| Protótipo funcional | [O app no ar](https://tyranitar-capim-dourado.pages.dev), as [telas](docs/telas.md) e o [design system publicado](https://tyranitar-capim-dourado.pages.dev/design-system) |
+| Evidências de testes | [Evidências de testes](docs/evidencias-testes.md): a bateria, o CI e cada bug corrigido com o teste que o cobre; o [plano de testes](docs/testes.md) e o [CI](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml) |
+| Versão final | A branch `main`, publicada em [tyranitar-capim-dourado.pages.dev](https://tyranitar-capim-dourado.pages.dev) |
+| Instruções de execução | [Como rodar](#como-rodar), neste README |
+| Documentação | A pasta [`docs/`](docs/) (lista em [Documentação](#documentação)) |
+| Easter egg | [O tirano da sexta-feira 13](docs/easter-egg.md) (com spoiler) e as dicas recolhidas em [Easter egg](#easter-egg), no fim deste README |
 
 ## A solução
 
