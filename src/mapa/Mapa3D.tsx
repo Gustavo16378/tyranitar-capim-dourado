@@ -546,7 +546,7 @@ function Cena({
 
 /** O mapa 3D de um piso. Ocupa o pai: dê a altura pelo contêiner. */
 export function Mapa3D(props: Mapa3DProps) {
-  const { piso, destino, nomes, origem, onSelecionarEntrada, escuro } = props
+  const { piso, destino, nomes, origem, onSelecionarEntrada, escuro, onLoja13 } = props
   const caixa = CAIXAS[piso]
   const inicial = enquadrar(caixa, [], 1)
   const [sobre, setSobre] = useState<string | null>(null)
@@ -587,9 +587,15 @@ export function Mapa3D(props: Mapa3DProps) {
       </Canvas>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         {etiquetas.map((etiqueta) => {
-          // A etiqueta de uma entrada escolhe a entrada. Pelo teclado e pelo leitor de tela, o
-          // mesmo se faz no "Trocar a entrada" da tela, por isso ela fica fora do foco.
+          // A etiqueta de uma entrada escolhe a entrada, e a da Loja 13 (no escuro) entra nela.
+          // Pelo teclado e pelo leitor de tela, o mesmo se faz nos botões da tela ("Trocar a
+          // entrada", "Entrar na Loja 13"), por isso elas ficam fora do foco.
           const entrada = etiqueta.estilo === 'entrada' && onSelecionarEntrada ? etiqueta.entrada : undefined
+          const aoTocar = entrada
+            ? () => onSelecionarEntrada?.(entrada)
+            : etiqueta.id === LOJA_13.mapaId
+              ? onLoja13
+              : undefined
           return (
             <span
               key={etiqueta.id}
@@ -597,11 +603,11 @@ export function Mapa3D(props: Mapa3DProps) {
                 if (el) elementos.current.set(etiqueta.id, el)
                 else elementos.current.delete(etiqueta.id)
               }}
-              onClick={entrada ? () => onSelecionarEntrada?.(entrada) : undefined}
+              onClick={aoTocar}
               className={cx(
                 ETIQUETA,
                 ESTILO_DA_ETIQUETA[etiqueta.estilo],
-                entrada ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none',
+                aoTocar ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none',
               )}
             >
               {etiqueta.texto}

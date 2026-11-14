@@ -43,7 +43,8 @@ test('TE30: de "tyranitar" na Capi ao nível Tirano, e "Acender as luzes" volta 
   })
 
   await test.step('a Loja 13 tem o letreiro e os créditos da equipe', async () => {
-    await page.getByRole('button', { name: 'Entrar na Loja 13' }).click()
+    // A etiqueta "Loja 13", no fim da trilha, entra na loja (o botão embaixo do mapa faz o mesmo).
+    await page.locator('[aria-hidden="true"] span', { hasText: /^Loja 13$/ }).click()
     await expect(page).toHaveURL(/\/loja-13$/)
     await expect(page.getByRole('heading', { name: 'Tyranitar', level: 1 })).toBeVisible()
     for (const nome of LOJISTAS) await expect(page.getByRole('heading', { name: nome, level: 3 })).toBeVisible()
