@@ -53,6 +53,42 @@ A cliente toca na sugestão com a foto do tênis (ela só anexa a foto e põe a 
 | :---: | :---: | :---: | :---: | :---: |
 | <img src="docs/img/tela-reserva.png" width="150" alt="Reserva separada, com o andamento"> | <img src="docs/img/tela-mapa.png" width="150" alt="Mapa 3D perguntando por qual entrada a cliente chegou, com a rota até a loja"> | <img src="docs/img/tela-carteira.png" width="150" alt="Carteira com o QR e os pontos"> | <img src="docs/img/tela-carteira-reservas.png" width="150" alt="Reservas e cupons na carteira"> | <img src="docs/img/painel-atendimento.png" width="150" alt="Painel da loja atendendo pelo QR"> |
 
+## Funcionalidades
+
+**Cliente** (o app, no celular):
+
+- **Capi:** pergunta por texto, foto (câmera ou galeria) ou link de um produto de outra loja. Ela acha o item nas lojas do shopping, compara os preços e reserva na conversa. Quando o catálogo não tem o item, indica as lojas da categoria e o caminho até elas, sem inventar produto, preço ou estoque. A conversa fica salva.
+- **Reserva** com Pix (separada por 48 h) ou para pagar na loja (4 h), com o andamento; cancelar devolve o produto à loja e pede o estorno do Pix.
+- **Mapa 3D** dos dois pisos, com a rota da entrada até a loja. A pessoa diz por onde chegou, toca numa entrada do mapa ou lê o QR da entrada. O mapa abre sem login.
+- **Carteira:** o QR para o balcão, os pontos, o nível (Semente, Broto, Capim e Dourado), os cupons e as reservas.
+- **Minha conta:** nome e senha, a ficha que a Capi anotou (com o consentimento e um botão para apagar cada interesse), baixar os dados em JSON (LGPD), aparência Automático, Claro ou Escuro, e excluir a conta.
+- App instalável (PWA).
+
+**Loja** (`/loja`):
+
+- **Atendimento:** lê o QR do cliente (câmera ou "Simular leitura"), mostra a ficha filtrada pelas categorias da loja e as reservas dele, e registra a compra com os cupons e os pontos.
+- **Reservas** (confirmar, separar, entregar e cancelar), **Produtos** (cadastro e importação de planilha), **Cupons**, **Desempenho** (mais vendidos, mais buscados, buscados e não encontrados, picos de movimento) e **Extrato** (descontos e reembolsos a receber).
+
+**Shopping** (`/shopping`):
+
+- **Lojas e lojistas**, **Fidelidade e campanhas** (níveis e vouchers), **Demanda** (o que os clientes buscam e não acham), **Lojas vagas e demanda** (a sugestão de loja para cada unidade vaga), **Reembolsos** dos vouchers e **QR das entradas**, prontos para imprimir.
+
+Nos três: aparência clara ou escura no rodapé da barra lateral (ou na Minha conta), WCAG 2.1 AA (axe em todas as telas principais) e os quatro movimentos da marca, que viram um fade com `prefers-reduced-motion`.
+
+## O que é simulado
+
+| O quê | Na demonstração | Numa versão real |
+| --- | --- | --- |
+| Pagamento por Pix | O QR e o botão "Já paguei" são simulados, e o estorno do cancelamento também | Um provedor de Pix (PSP) |
+| Produtos, preços e estoque | 124 produtos fictícios, nas lojas reais da planta do shopping, com 20 unidades cada | O estoque de cada loja, integrado |
+| Buscas da Demanda | 90 dias de buscas inventadas, para os gráficos terem o que mostrar | As buscas de verdade, que o app já grava |
+| Clientes e compras | A Ana, com 6 compras e 2.140 pontos; o lojista e o admin do seed | Os cadastros |
+| Onde o cliente está | Sem GPS dentro do shopping: a pessoa diz por qual entrada chegou, toca na entrada do mapa ou lê o QR da entrada | Beacons ou QR também nos corredores |
+| Leitura do QR no balcão | Funciona com a câmera; "Simular leitura" lê a carteira da Ana sem câmera | A câmera do balcão |
+| Capi | O Claude de verdade. Sem internet (ou sem a chave, na máquina), as perguntas do roteiro têm respostas salvas e as outras viram a busca comum do app | O mesmo |
+
+Com o modo demonstração, o app avisa em letra pequena que os produtos, os preços e as buscas são fictícios (veja [Modo demonstração](#modo-demonstração)).
+
 ## Arquitetura
 
 ```mermaid
