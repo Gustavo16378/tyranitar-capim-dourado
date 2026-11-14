@@ -25,7 +25,7 @@ flowchart TB
   produto --> reservar["Escolher como reservar"]
   produto --> mapa
   reservar --> pix["Pix simulado"]
-  reservar --> reserva["Reserva confirmada"]
+  reservar --> reserva["Reserva"]
   pix --> reserva
   reserva --> mapa
   reserva --> carteira
@@ -33,6 +33,9 @@ flowchart TB
   carteira --> mapa
   carteira --> compras["Minhas compras"]
   carteira --> balcao(["Vendedor lê o QR no balcão"])
+  inicio --> avisos["Avisos"]
+  avisos --> reserva
+  avisos --> carteira
 ```
 
 A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a página) e depois segue para a tela que a pessoa abriu, inclusive num link direto. Um toque pula; com movimento reduzido ela é curta. A barra de navegação fixa no rodapé leva a Início, Salvos, Capi, Mapa e Carteira de qualquer tela.
@@ -43,16 +46,16 @@ A Abertura aparece a cada carregamento do app (abrir o link ou recarregar a pág
 | --- | --- | --- | --- |
 | Abertura | Apresentar a Capi a cada carregamento do app; a trança se desenha e um toque pula | CapiMark, Button | RF01 |
 | Entrar e Criar conta | Login com e-mail e senha ou com a conta de demonstração; o cadastro pede nome, e-mail, senha e o consentimento da ficha (desmarcado por padrão) e já entra no Início, com 0 pontos, no nível Semente | Button | RF01, RF13 |
-| Início | Ofertas para o cliente (no celular, a faixa de cupons desliza com o dedo; no computador, anda pelas setas, arrastando com o mouse ou pela roda), Salvos para provar (os três mais recentes, com o coração, e "Ver todos"; vazio, o link para os salvos explicando o coração) e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
+| Início | O sino dos avisos no topo, com o selo de quantos são novos: cada mudança da reserva (enviada, confirmada com a hora, separada, recusada com o motivo, expirada, retirada) e os pontos de uma compra. Tocar abre a lista, marca todos como lidos e cada aviso leva à tela dele. Ofertas para o cliente (no celular, a faixa de cupons desliza com o dedo; no computador, anda pelas setas, arrastando com o mouse ou pela roda), Salvos para provar (os três mais recentes, com o coração, e "Ver todos"; vazio, o link para os salvos explicando o coração) e atalho para a Capi | NivelBadge, CupomTicket, ProdutoCard, BottomNav | RF06, RF16 |
 | Capi | Conversa com texto, foto ou link; respostas com produtos das lojas. Abre a conversa salva; vazia, mostra sugestões que só preenchem o campo (a do print do tênis anexa a foto). O botão da câmera abre uma folha com "Tirar foto" (no celular, a câmera traseira direto; no computador, a webcam com o botão de capturar) e "Escolher da galeria"; sem câmera, ou com a permissão negada, só a galeria. A foto fica anexada no campo, com prévia e um X para tirar, e só vai quando a pessoa toca em enviar (com texto junto, se quiser). "Nova conversa" apaga. Os cartões de produto têm o coração de salvar, e o nome da loja abre a página dela. Esperando, avisa "A Capi está procurando nas lojas…" depois de 2 s e desiste em 25 s com "Tentar de novo". Quando o catálogo não tem o item, indica as lojas da categoria e oferece o caminho no mapa, sem inventar produto, preço ou estoque | ChatBubble, ChatComposer, ProdutoCard | RF02, RF03, RF04 |
 | Produto | Loja, piso, preço, estoque, outras lojas com o item e o botão de reservar. O coração ao lado do nome salva o produto; o nome da loja abre a página dela | Badge, ProdutoCard, Button | RF05, RF07, RF16 |
-| Escolher como reservar | Folha que sobe do rodapé: pagar agora com Pix ou pagar na loja | Button, Badge | RF08, RF09, RF13 |
-| Pix simulado | QR do Pix e confirmação do pagamento | Button | RF09 |
-| Reserva confirmada | Status da reserva e próximos passos; em aberto, "Cancelar reserva" com confirmação | ReservaStatus, Button | RF08, RF09 |
+| Escolher como reservar | Folha que sobe do rodapé: o tamanho (ou a numeração) e a cor, das opções do produto; o cupom, só entre os que valem para ele ("Sem cupom" ou, por exemplo, "10% em calçados", "Calçados na Loja de esportes", com o desconto); o total já com o desconto; e pagar agora com Pix ou pagar na loja. Avisa que a loja confirma e diz a partir de que horas fica pronto | Button, Badge | RF08, RF09, RF13, RN15 |
+| Pix simulado | QR do Pix, no valor já com o desconto do cupom, e confirmação do pagamento | Button | RF09 |
+| Reserva | O andamento com a loja: "Reserva enviada" (esperando a loja), "Reserva confirmada" (pronta para retirar a partir das HH:MM), "Separado para você", "Reserva retirada" e "Reserva recusada", com o motivo que a loja escreveu. Mostra o tamanho, a cor, o valor e o cupom, e os passos (feita, confirmada pela loja com a hora, separada, retirada). Em aberto, "Cancelar reserva" com confirmação; o cupom volta para a carteira | ReservaStatus, Button | RF08, RF09, RF14, RF20 |
 | Salvos para provar | Os produtos salvos com o coração (`/salvos`, aba Salvos), agrupados por loja, a do salvo mais recente primeiro. Cada produto tem "Reservar" (a folha de reservar) e cada loja, "Como chegar" e o nome que abre a página dela. Tirar o coração ali deixa o produto na lista até a próxima visita, para dar para voltar atrás | ProdutoCard, Button | RF08, RF10, RF16 |
 | Página da loja | `/lojas/{id}` (no plural: `/loja` é o painel do lojista). Nome, categoria principal, piso, os produtos da loja em grade (com o coração) e "Como chegar". Abre pelo nome da loja no produto, nos cartões da Capi e do Início, nos salvos e no mapa | Badge, ProdutoCard, Button | RF07, RF10 |
 | Mapa | Mapa 3D, um piso por vez (térreo e praça de alimentação), com a loja destacada e a rota até ela. Na primeira rota, pergunta "Por qual entrada você chegou?" e lembra a resposta por 6 h; `?origem=<entrada>` (o QR de cada entrada, ids em `src/mapa/entradas.ts`) já responde. Sem resposta, a rota sai da entrada mais próxima e nenhuma vira "Você está aqui". "Trocar a entrada" é um botão ao lado de "Saindo da Entrada A", e tocar numa entrada no próprio mapa (o marco ou a etiqueta) escolhe ela e refaz a rota na hora. Abre sem login, para qualquer visitante (sem a barra de navegação, com o convite "Entrar para reservar e falar com a Capi", que volta ao mesmo mapa). Para quem entrou, o nome da loja de destino abre a página dela | Badge, Button | RF10 |
-| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas (status, prazo, "Como chegar" e "Cancelar reserva"), Minhas compras (as três últimas, com loja, dia, valor pago, cupons usados e pontos ganhos, e "Ver tudo") e cupons | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12, RF16 |
+| Carteira | QR do cliente, pontos, progresso de nível, Minhas reservas ("Esperando a loja" ou "Confirmada · pronta às HH:MM", o tamanho, a cor, o valor e o cupom, o prazo, "Como chegar" e "Cancelar reserva"; o ícone da Carteira na barra tem o selo das mudanças de reserva ainda não vistas, que some ao abrir), Minhas compras (as três últimas, com loja, dia, valor pago, cupons usados e pontos ganhos, e "Ver tudo") e cupons, cada um dizendo para que vale ("Calçados na Centauro"; o cupom preso numa reserva em aberto sai da lista até ela sair) | CarteiraQR, ProgressoNivel, Badge, Button, CupomTicket | RF08, RF10, RF11, RF12, RF16 |
 | Minhas compras | A lista inteira das compras (`/carteira/compras`), da mais nova para a mais antiga, dez por vez: "Mostrar mais" traz as próximas, diz quantas aparecem e põe o foco na primeira que chegou | Badge, Button | RF11, RF16 |
 | Minha conta | Nome (editável), e-mail, nível e pontos; trocar a senha pedindo a atual; a ficha que a Capi anotou, com o consentimento e um botão de apagar em cada interesse; baixar os dados em JSON (LGPD); a aparência (Automático, que segue o aparelho, Claro ou Escuro), salva no aparelho e aplicada antes da primeira pintura; sair e excluir a conta | NivelBadge, Button | RF01, RF13 |
 
