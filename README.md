@@ -89,11 +89,12 @@ A cliente toca na sugestão com a foto do tênis (ela só anexa a foto e põe a 
 
 - **Capi:** pergunta por texto, foto (câmera ou galeria) ou link de um produto de outra loja. Ela acha o item nas lojas do shopping, compara os preços e reserva na conversa. Quando o catálogo não tem o item, indica as lojas da categoria e o caminho até elas, sem inventar produto, preço ou estoque. A conversa fica salva.
 - **Produto:** loja, piso, preço, estoque, o mesmo item em outras lojas e reservar com Pix (simulado) ou pagando na loja.
-- **Reserva** com Pix (separada por 48 h) ou para pagar na loja (4 h), com o andamento; cancelar devolve o produto à loja e pede o estorno do Pix.
+- **Reserva** com o tamanho, a cor e um cupom que vale para o produto (o preço e o Pix já saem com o desconto), paga por Pix (simulado) ou para pagar na loja. A loja confirma dizendo a partir de que horas fica pronta, e o prazo para retirar conta daí: 48 h com o Pix pago, 4 h para pagar na loja. Cancelar, a loja recusar (com o motivo) ou o prazo vencer devolvem o produto à loja, o cupom à carteira e pedem o estorno do Pix.
+- **Avisos:** cada mudança da reserva (enviada, confirmada com a hora, separada, recusada, retirada) e os pontos de uma compra aparecem no sino do Início, com o selo também na Carteira.
 - **Salvos para provar:** o coração salva o produto (na tela do produto e nos cartões da Capi, do Início e da loja). A aba Salvos junta os salvos por loja, com "Reservar" em cada um e "Como chegar" em cada loja.
 - **Página da loja:** tocar no nome de uma loja (no produto, nos cartões, nos salvos e no mapa) abre a loja no app, com a categoria, o piso, os produtos dela e "Como chegar".
 - **Mapa 3D** dos dois pisos, com a rota da entrada até a loja. A pessoa diz por onde chegou, toca numa entrada do mapa ou lê o QR da entrada. O mapa abre sem login.
-- **Carteira:** o QR para o balcão, os pontos, o nível (Semente, Broto, Capim e Dourado), Minhas reservas (com "Como chegar" e cancelar), Minhas compras (loja, dia, valor pago, cupons usados e pontos ganhos, com "Ver tudo" para a lista inteira) e os cupons.
+- **Carteira:** o QR para o balcão, os pontos, o nível (Semente, Broto, Capim e Dourado), Minhas reservas (esperando a loja ou "pronta às 15:30", com "Como chegar" e cancelar), Minhas compras (loja, dia, valor pago, cupons usados e pontos ganhos, com "Ver tudo" para a lista inteira) e os cupons, cada um dizendo para que vale ("Calçados na Centauro").
 - **Minha conta:** nome e senha, a ficha que a Capi anotou (com o consentimento e um botão para apagar cada interesse), baixar os dados em JSON (LGPD), aparência Automático, Claro ou Escuro, e excluir a conta.
 - App instalável (PWA).
 
@@ -230,8 +231,7 @@ O que faríamos numa versão real, com o shopping:
 - **Pix de verdade**, por um provedor de pagamento, com o estorno automático do cancelamento.
 - **Integração com o estoque das lojas** (o sistema de caixa ou o ERP de cada uma), para o produto e a quantidade virem da loja e a reserva baixar o estoque lá (RF26).
 - **Localização dentro do shopping** com beacons ou QR também nos corredores e nas escadas, para a rota sair de onde a pessoa está, e não só da entrada.
-- **App nativo** (ou o PWA nas lojas de apps), com notificação push, a câmera direto na Capi e a carteira no Wallet do celular.
-- **Avisos para o cliente:** o app já grava os avisos (pontos ganhos, reserva separada), mas ainda não há a tela deles nem a notificação push.
+- **App nativo** (ou o PWA nas lojas de apps), com notificação push (hoje os avisos aparecem quando o app está aberto), a câmera direto na Capi e a carteira no Wallet do celular.
 - **Pontos pela nota fiscal** (RF12): ler o QR da NFC-e de uma compra feita fora do app e consultar a nota na SEFAZ. Hoje os pontos entram pela compra registrada no balcão.
 - **Busca por semelhança com vetores** (Cloudflare Vectorize), quando o catálogo das lojas passar de algumas centenas de produtos.
 - **O nome do app**, definido junto com o shopping.
