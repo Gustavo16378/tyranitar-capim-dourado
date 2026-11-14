@@ -215,3 +215,27 @@ for (const movimento of ['reduce', 'no-preference'] as const) {
     })
   }
 }
+
+// A aparência escolhida no seletor (TX12): com o aparelho num tema, a pessoa escolhe o outro, e a
+// Minha conta e o painel (com o seletor no rodapé da barra lateral) continuam sem violação grave.
+for (const aparelho of ['light', 'dark'] as const) {
+  const escolhido = aparelho === 'light' ? 'Escuro' : 'Claro'
+  test.describe(`aparência ${escolhido} com o aparelho no ${aparelho === 'light' ? 'claro' : 'escuro'}`, () => {
+    test.use({ colorScheme: aparelho })
+
+    test('TX12: Minha conta e painel com a aparência escolhida', async ({ page }) => {
+      await comSessaoDaAna(page)
+      await page.goto('/conta')
+      await expect(page.getByRole('heading', { name: 'Aparência' })).toBeVisible()
+      await page.getByRole('group', { name: 'Aparência' }).getByText(escolhido, { exact: true }).click()
+      await expect(page.locator('html')).toHaveAttribute('data-theme', aparelho === 'light' ? 'dark' : 'light')
+      await expect(page.locator('.animate-pulse')).toHaveCount(0)
+      await semViolacoesGraves(page)
+
+      await entrarNoPainelDaLoja(page, '/loja/extrato')
+      await page.getByRole('button', { name: 'Menu' }).click()
+      await expect(page.getByRole('group', { name: 'Aparência' }).getByRole('radio', { name: escolhido })).toBeChecked()
+      await semViolacoesGraves(page)
+    })
+  })
+}
