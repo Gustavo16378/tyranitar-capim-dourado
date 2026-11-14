@@ -19,16 +19,16 @@ O app está no ar e não precisa de cadastro: a tela de entrar tem um botão par
 | Link | Botão | O que é |
 | --- | --- | --- |
 | [tyranitar-capim-dourado.pages.dev](https://tyranitar-capim-dourado.pages.dev) | **Cliente (Ana)** | O app do cliente, feito para o celular (no computador, com a barra lateral) |
-| [tyranitar-capim-dourado.pages.dev/loja](https://tyranitar-capim-dourado.pages.dev/loja) | **Lojista (Centauro)** | O painel da loja |
+| [tyranitar-capim-dourado.pages.dev/loja](https://tyranitar-capim-dourado.pages.dev/loja) | **Lojista** e a loja (a **Centauro** é a primeira) | O painel da loja escolhida |
 | [tyranitar-capim-dourado.pages.dev/shopping](https://tyranitar-capim-dourado.pages.dev/shopping) | **Shopping (admin)** | O painel da administração do shopping |
 
-**O fluxo principal em 3 minutos.** Abra o app numa aba (ou no celular) e o painel da loja em outra, com **Lojista (Centauro)** e a tela Reservas aberta: ela avisa a reserva nova sozinha.
+**O fluxo principal em 3 minutos.** Abra o app numa aba (ou no celular) e o painel da loja em outra, com **Lojista** › **Centauro** e a tela Reservas aberta: ela avisa a reserva nova sozinha.
 
 | # | Onde | Faça | O que aparece |
 | :---: | --- | --- | --- |
 | 1 | App | **Começar** e **Cliente (Ana)** | O Início da Ana, nível Capim, com as ofertas |
 | 2 | App › Capi | Toque na sugestão com a foto do tênis e em enviar | A Capi entende a foto e acha o tênis em duas lojas, a Centauro primeiro |
-| 3 | App › reserva | **Sim, separar**, **Reservar**, o tamanho **42**, o cupom **10% em calçados**, **Pagar agora com Pix** e **Já paguei** | O Pix de R$ 359,91 (com o desconto) e a "Reserva enviada", esperando a loja |
+| 3 | App › Capi | **Reservar** no cartão do tênis da Centauro (abre a folha ali mesmo), o tamanho **42**, o cupom **10% em calçados**, **Pagar agora com Pix** e **Já paguei** | O Pix de R$ 359,91 (com o desconto) e a "Reserva enviada", esperando a loja |
 | 4 | Painel da loja › Reservas | Espere até 20 s | O selo de reserva nova no menu e um som curto; o cartão com o tamanho, o cupom e "Pago com Pix" |
 | 5 | Painel da loja › Reservas | **Confirmar**, a hora em que fica pronta e **Confirmar reserva** | A reserva confirmada, com "Pronta a partir de" e "Retirar até" |
 | 6 | App › Início | Toque no sino | O aviso "Centauro confirmou sua reserva", com a hora; na Carteira, "Confirmada · pronta às 15:30" |
@@ -89,7 +89,7 @@ A cliente toca na sugestão com a foto do tênis (ela só anexa a foto e põe a 
 
 **Cliente** (o app, no celular):
 
-- **Capi:** pergunta por texto, foto (câmera ou galeria) ou link de um produto de outra loja. Ela acha o item nas lojas do shopping, compara os preços e reserva na conversa. Quando o catálogo não tem o item, indica as lojas da categoria e o caminho até elas, sem inventar produto, preço ou estoque. A conversa fica salva.
+- **Capi:** pergunta por texto, foto (câmera ou galeria) ou link de um produto de outra loja. Ela acha o item nas lojas do shopping e compara os preços; o "Reservar" de cada cartão abre a folha de reserva ali mesmo (a Capi não reserva sozinha, e a mesma reserva em aberto não sai duas vezes). Quando o catálogo não tem o item, indica as lojas da categoria e o caminho até elas, sem inventar produto, preço ou estoque. A conversa fica salva.
 - **Produto:** loja, piso, preço, estoque, o mesmo item em outras lojas e reservar com Pix (simulado) ou pagando na loja.
 - **Reserva** com o tamanho, a cor e um cupom que vale para o produto (o preço e o Pix já saem com o desconto), paga por Pix (simulado) ou para pagar na loja. A loja confirma dizendo a partir de que horas fica pronta, e o prazo para retirar conta daí: 48 h com o Pix pago, 4 h para pagar na loja. Cancelar, a loja recusar (com o motivo) ou o prazo vencer devolvem o produto à loja, o cupom à carteira e pedem o estorno do Pix.
 - **Avisos:** cada mudança da reserva (enviada, confirmada com a hora, separada, recusada, retirada) e os pontos de uma compra aparecem no sino do Início, com o selo também na Carteira.

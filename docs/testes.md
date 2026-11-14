@@ -186,6 +186,8 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA54 | Excluir (`DELETE /api/loja/cupons/{id}`) | RF23 | O nunca usado sai (204); o usado e o preso numa reserva (mesmo cancelada) são 409, sugerindo desativar |
 | TA55 | A reserva com um cupom desativado | RN15 | A reserva feita com o cupom guarda o desconto: retirada depois de ele ser desativado, a compra sai com o mesmo desconto |
 | TA56 | Isolamento dos cupons | RF23, RF28, RNF05 | A loja não edita nem exclui cupom de outra loja nem voucher (403); o shopping não mexe em cupom de loja (403) e edita os vouchers; o lojista nas rotas do shopping, 403 |
+| TA57 | A mesma reserva duas vezes (`POST /api/reservas`) | RF08, RN03 | A segunda reserva em aberto do mesmo produto, tamanho e cor é 409 `RESERVA_REPETIDA`, com "Você já tem uma reserva deste produto." e o link para a primeira, e o estoque baixa uma vez só; outro tamanho, outra pessoa, depois de cancelar ou com a primeira vencida, passa |
+| TA58 | O lojista de demonstração de cada loja (`GET` e `POST /api/auth/demo`) | RF01, RF17 | A lista traz as lojas com produto e lojista do seed, a da demonstração primeiro, e `lojaId` entra como o lojista dela; loja sem lojista do seed, sem produto ou que não existe, 404; `lojaId` em outro perfil, 400; sem `DEMO=1`, 404 |
 
 ### Capi (TI)
 
@@ -195,7 +197,7 @@ Com o Claude simulado:
 | --- | --- | --- | --- |
 | TI01 | O modelo pede `buscar_produtos` | RF02 | O servidor consulta o banco e devolve o resultado ao modelo |
 | TI02 | O modelo cita um produto que não veio das ferramentas | RN14 | O card do produto inventado é descartado |
-| TI03 | O modelo pede `reservar` sem confirmação do cliente na conversa | RF08 | A reserva não é criada |
+| TI03 | A Capi nunca cria reserva | RF08 | A Capi não tem a ferramenta reservar: com o "sim" do cliente e o modelo chamando reservar, nenhuma reserva é criada e o estoque não muda; a conversa antiga com uma chamada a reservar não manda essa chamada de volta ao modelo |
 | TI04 | O modelo pede `gerar_ficha` para cliente sem consentimento | RN04 | Nada é gravado |
 | TI05 | O Claude falha ou passa de 15 s | RNF10 | 503 `IA_INDISPONIVEL` e mensagem amigável |
 | TI06 | Imagem maior que 4 MB | RF03 | 400 |
@@ -216,8 +218,8 @@ Com o Claude simulado:
 
 | ID | Jornada | Cobre | Resultado esperado |
 | --- | --- | --- | --- |
-| TE01 | Cadastro, chat com foto, reserva com Pix, pagamento, mapa, a loja confirma com a hora e separa, atendimento pelo QR, compra e carteira | RF01, RF03, RF09, RF10, RF14, RF18, RF19, RF20, RF11 | A reserva mostra "Reserva confirmada" e "Pronta para retirar a partir das 23:59"; ao final, a carteira mostra os pontos novos |
-| TE02 | Busca, produto, reserva para pagar na loja | RF05, RF07, RF08 | "Reserva enviada", e a reserva aparece na carteira esperando a loja |
+| TE01 | Cadastro, chat com foto, reserva com Pix pelo "Reservar" do cartão da Capi, pagamento, mapa, a loja confirma com a hora e separa, atendimento pelo QR, compra e carteira | RF01, RF03, RF09, RF10, RF14, RF18, RF19, RF20, RF11 | A reserva mostra "Reserva confirmada" e "Pronta para retirar a partir das 23:59"; ao final, a carteira mostra os pontos novos |
+| TE02 | Pergunta à Capi e reserva para pagar na loja pelo "Reservar" do cartão | RF05, RF07, RF08 | "Reserva enviada", e a reserva aparece na carteira esperando a loja |
 | TE03 | Lojista cria cupom | RF23, RF06 | O cupom aparece na vitrine do cliente |
 | TE04 | Lojista importa CSV | RF22, RF05 | Os produtos aparecem na busca |
 | TE05 | Shopping altera os níveis | RF28 | A carteira do cliente muda de nível |
@@ -253,6 +255,8 @@ Com o Claude simulado:
 | TE35 | Página da loja | RF07, RF10 | O nome da loja no produto abre `/lojas/{id}` com nome, categoria, piso e os produtos em grade (com o coração); "Como chegar" abre o mapa na loja, e no mapa o nome dela volta para a página; loja que não existe mostra o erro sem "Tentar de novo"; sem login, o nome no mapa não vira link |
 | TE36 | A reserva com a loja de ponta a ponta, com o app e o painel lado a lado | RF08, RF14, RF18, RF19, RF20, RN01, RN15 | A Ana reserva com tamanho e cupom (o preço sai com o desconto); sem recarregar, o selo de Reservas no painel sobe e o leitor de tela ouve "Reserva nova"; a loja confirma com a hora (a próxima meia hora já vem no campo) e a Ana vê a hora na reserva, o aviso no sino do Início e o selo na Carteira; a loja separa e a Ana vê "Separado para você"; no Atendimento, "Retirar" põe a reserva na compra junto com um produto do catálogo, e os pontos do recibo chegam na carteira. Roda uma vez, com a Ana num contexto de celular e o painel noutro de computador (o cupom dela vale uma vez, e o banco é o mesmo para os dois projetos) |
 | TE37 | Editar, desativar, reativar e excluir cupons nos painéis | RF23, RF28 | Criar com 60% pergunta antes; revisar volta ao formulário; "Editar" abre o formulário preenchido e salva; "Desativar" apaga o cupom com o selo "Desativado" e o foco fica no "Reativar"; "Excluir" pede confirmação e o foco vai para o aviso; o cupom já usado não tem "Excluir" e o formulário trava o desconto; o shopping faz o mesmo com um voucher |
+| TE38 | Reservar pela Capi | RF02, RF08 | O "sim" do cliente não cria reserva; o "Reservar" do cartão abre a folha de reserva na conversa, com o tamanho e o cupom; reservar de novo o mesmo item mostra "Você já tem uma reserva deste produto" e "Ver a reserva" leva até ela |
+| TE39 | O lojista de demonstração de cada loja | RF01, RF17, RF20 | Em `/entrar`, "Lojista" abre a lista das lojas (a da demonstração primeiro); a Ana reserva na Cacau Show e a reserva aparece no painel da Cacau Show, e a da Loja A não |
 
 ### Acessibilidade (TX)
 
@@ -301,7 +305,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF05 Buscar | TA07, TE02, TE04 |
 | RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
 | RF07 Produto | TA09, TA44, TE02, TE35 |
-| RF08 Reservar na loja | TA11, TA15, TA40, TA49, TI03, TE02, TE28, TE36 |
+| RF08 Reservar na loja | TA11, TA15, TA40, TA49, TA57, TI03, TE02, TE28, TE36, TE38 |
 | RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
 | RF10 Mapa e rota | TA44, TE01, TE09, TE20, TE27, TE29, TE35, TM01 |
 | RF11 Carteira | TU05, TA17, TA43, TE01, TE28, TE34 |
@@ -310,7 +314,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF14 Notificações | TA45, TA47, TA48, TA50, TE01, TE36 |
 | RF15 Avaliar | TA22, TB11 |
 | RF16 Favoritos e histórico | TA42, TA43, TE02, TE33, TE34 |
-| RF17 Login do lojista | TA03, TE03 |
+| RF17 Login do lojista | TA03, TA58, TE03, TE39 |
 | RF18 Atendimento | TA23, TA24, TE01, TE06, TE36, TX17, TM03 |
 | RF19 Compra no caixa | TU06, TU07, TU39 a TU41, TU45, TA25, TA27, TA46, TA47, TB08, TE36, TX17 |
 | RF20 Gerir reservas | TU18, TU19, TU42 a TU44, TA28, TA45, TA48, TB05, TE01, TE28, TE36, TX16 |

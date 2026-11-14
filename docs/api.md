@@ -22,7 +22,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | 401 | Sem token, token inválido ou vencido (`NAO_AUTENTICADO`) |
 | 403 | Perfil sem permissão ou recurso de outra loja (`SEM_PERMISSAO`) |
 | 404 | Recurso não existe (`NAO_ENCONTRADO`) |
-| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada, e-mail ou CNPJ já cadastrado, cupom já usado que não pode mudar ou sair (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`, `EMAIL_EM_USO`, `CNPJ_EM_USO`, `CUPOM_EM_USO`) |
+| 409 | Conflito com o estado atual: sem estoque, nota repetida, reserva já retirada, e-mail ou CNPJ já cadastrado, cupom já usado que não pode mudar ou sair, a mesma reserva em aberto duas vezes (`SEM_ESTOQUE`, `NOTA_REPETIDA`, `TRANSICAO_INVALIDA`, `EMAIL_EM_USO`, `CNPJ_EM_USO`, `CUPOM_EM_USO`, `RESERVA_REPETIDA`) |
 | 422 | Regra de negócio violada: cupom inválido, combinação proibida, loja fora do shopping, lojista numa unidade vaga (`CUPOM_INVALIDO`, `CUPONS_INCOMPATIVEIS`, `LOJA_NAO_CADASTRADA`, `LOJA_VAGA`) |
 | 503 | A IA não respondeu (`IA_INDISPONIVEL`); o app mostra a busca comum |
 
@@ -114,7 +114,7 @@ Erro `401` com a mesma mensagem para e-mail inexistente e senha errada, para nã
 
 ### `GET /api/auth/demo` e `POST /api/auth/demo`
 
-As contas de demonstração, para a banca testar o app e os dois painéis sem cadastro: são os botões da tela de login (`/entrar`). São três usuários do seed, um por perfil, e nenhum outro entra por aqui:
+As contas de demonstração, para a banca testar o app e os dois painéis sem cadastro: são os botões da tela de login (`/entrar`). São usuários do seed, um por perfil, e o lojista de cada loja com produto; nenhum outro entra por aqui:
 
 | Perfil | Conta | Abre |
 | --- | --- | --- |
@@ -130,19 +130,26 @@ O `GET` diz quais contas estão no banco, para a tela mostrar um botão por cont
 {
   "contas": [
     { "perfil": "CLIENTE", "nome": "Ana Souza", "loja": null },
-    { "perfil": "LOJISTA", "nome": "Equipe da Centauro", "loja": "Centauro" },
+    {
+      "perfil": "LOJISTA",
+      "nome": "Equipe da Centauro",
+      "loja": "Centauro",
+      "lojas": [ { "id": "l-centauro", "nome": "Centauro" }, { "id": "l-cacau", "nome": "Cacau Show" } ]
+    },
     { "perfil": "ADMIN_SHOPPING", "nome": "Administração do shopping", "loja": null }
   ]
 }
 ```
 
-O `POST` entra com a conta do perfil pedido, sem senha:
+`lojas` são as lojas ativas com produto ativo que têm o lojista do seed (e-mail `lojista.<mapa_id>@demo.test`), a da demonstração primeiro e as outras por nome: o botão "Lojista" da tela abre essa lista.
+
+O `POST` entra com a conta do perfil pedido, sem senha. No lojista, `lojaId` escolhe a loja; sem ele, entra na loja da demonstração:
 
 ```json
-{ "perfil": "LOJISTA" }
+{ "perfil": "LOJISTA", "lojaId": "l-cacau" }
 ```
 
-Sem corpo, entra como a Ana (`CLIENTE`). Resposta `200`: o mesmo formato do login, com o token do perfil da conta (vale 12 horas como qualquer outro). Erros: `400` (`DADOS_INVALIDOS`, perfil que não é um dos três) e `404` (`DEMO` desligado, ou a conta não está no banco com esse perfil).
+Sem corpo, entra como a Ana (`CLIENTE`). Resposta `200`: o mesmo formato do login, com o token do perfil da conta (vale 12 horas como qualquer outro). Erros: `400` (`DADOS_INVALIDOS`: perfil que não é um dos três, ou `lojaId` em outro perfil) e `404` (`DEMO` desligado, a conta não está no banco com esse perfil, ou a loja não está na lista de `lojas`).
 
 **Login único.** O app e os painéis entram pela mesma tela, `/entrar`. Depois do login (com senha ou pelos botões), ela segue pelo perfil do token: `CLIENTE` para o Início (ou a tela que pediu o login), `LOJISTA` para `/loja` e `ADMIN_SHOPPING` para `/shopping`. Cada perfil guarda a sessão dele no navegador, então dá para ter o app numa aba e um painel em outra. `/loja` e `/shopping` sem a sessão do perfil certo mandam para `/entrar` e voltam para a mesma tela depois do login.
 
@@ -218,7 +225,7 @@ Resposta `200`:
 
 - `produtos`: no máximo 3 cartões, no mesmo formato da busca, e só produtos que vieram das ferramentas da Capi (RN14).
 - Busca sem resultado: a resposta vem sem `produtos`. Quando a Capi sabe a categoria do item, as ferramentas `buscar_produtos` e `buscar_similares` devolvem a ela, junto com o aviso, `lojasDaCategoria`: até 3 lojas ativas daquela categoria (`[{ "lojaId", "nome", "piso", "mapaId" }]`, primeiro as que têm produto da categoria, uma por marca). A Capi diz que esse tipo de item costuma ser vendido nelas, sem afirmar que têm o item nem dar preço ou estoque (RN14), e manda uma `ROTA` até a primeira.
-- `acoes`: `RESERVAR` (o primeiro cartão com estoque, para o botão de reservar), `ROTA` (quando a Capi mostrou o caminho; o app desenha no mapa) e `RESERVA_CRIADA` (`{ "tipo": "RESERVA_CRIADA", "reserva": { "id", "produtoId", "lojaId", "quantidade", "precoCentavos", "status", "formaPagamento", "pago", "expiraEm" } }`, quando o cliente confirmou na conversa e a Capi reservou; com `PIX`, o app abre o pagamento).
+- `acoes`: `RESERVAR` (o primeiro cartão com estoque) e `ROTA` (quando a Capi mostrou o caminho; o app desenha no mapa). A Capi não reserva: ela não tem ferramenta para isso. Quem reserva é o cliente, no botão "Reservar" de cada cartão com estoque, que abre na conversa a mesma folha de reserva da tela do produto (tamanho, cor, cupom e pagamento). As conversas de antes dessa mudança podem trazer `RESERVA_CRIADA` no histórico, e o app ainda mostra.
 
 Erros: `400` (`DADOS_INVALIDOS`: mensagem vazia, texto longo, foto acima de 4 MB ou fora dos formatos, foto e link juntos, link que não é http/https) e `503` (`IA_INDISPONIVEL`, quando o Claude falha ou passa de 15 s; o app usa a busca comum). Com `CAPI_MODO_DEMO=1`, ou quando o Claude falha, mensagens do roteiro da demonstração recebem uma resposta salva, com produtos buscados no banco.
 
@@ -294,6 +301,12 @@ Resposta `201`:
 A reserva nasce `PENDENTE`: ela vai para a loja, que confirma dizendo a partir de que horas o produto fica pronto (`PATCH /api/loja/reservas/{id}`). Enquanto isso, `expiraEm` é o prazo da loja para confirmar: 4 horas desde a criação (RN01). Depois da confirmação, `prontaEm` traz a hora informada e `expiraEm` passa a contar dela. `precoCentavos` é o total já com o desconto (`brutoCentavos` menos `descontoCentavos`), e é o valor do Pix. `cupom` e `motivoRecusa` vêm `null` quando não há. O cliente recebe o aviso "Reserva enviada para a loja" (`GET /api/me/notificacoes`).
 
 Erros: `404` (produto não existe ou inativo), `409` (`SEM_ESTOQUE`), `400` (tamanho ou cor que o produto não tem), `422` (`CUPOM_INVALIDO`: o cupom não vale para este produto agora).
+
+Uma segunda reserva em aberto (`PENDENTE`, `CONFIRMADA` ou `SEPARADA`) do mesmo cliente para o mesmo produto, tamanho e cor é recusada, com o link para a que já existe. Outro tamanho ou outra cor é outra reserva; depois de a primeira ser retirada, cancelada, recusada ou vencer, dá para reservar de novo. A conferência fica na mesma transação do estoque, então dois toques seguidos não viram duas reservas:
+
+```json
+{ "status": 409, "erro": "RESERVA_REPETIDA", "mensagem": "Você já tem uma reserva deste produto.", "reserva": { "id": "r1", "link": "/reserva/r1" } }
+```
 
 ### `GET /api/reservas/{id}`
 
