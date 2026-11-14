@@ -1,0 +1,24 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "thinking", "thinking": "", "signature": "assinatura-simulada" },
+      { "type": "tool_use", "id": "toolu_garrafa", "name": "buscar_produtos", "input": { "texto": "garrafa térmica", "categoria": "casa" } }
+    ]
+  },
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "tool_use", "id": "toolu_rota_garrafa", "name": "rota_na_loja", "input": { "loja_id": "loja-d" } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      {
+        "type": "text",
+        "text": "Não achei garrafa térmica no app agora. Esse tipo de produto costuma ser vendido na Loja D, na Loja E e na Loja F, todas no térreo. Deixei o caminho até a Loja D no mapa."
+      }
+    ]
+  }
+]

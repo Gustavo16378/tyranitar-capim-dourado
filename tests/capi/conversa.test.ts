@@ -1,16 +1,19 @@
-// A Capi com o Claude simulado (docs/testes.md, TI01 a TI08): loop de ferramentas, limites e falhas.
+// A Capi com o Claude simulado (docs/testes.md, TI01 a TI08, TI12 e TI13): loop de ferramentas, limites e falhas.
 import { env } from 'cloudflare:test'
 import { describe, expect, it } from 'vitest'
 import { conversar } from '../../functions/_lib/capi/conversa'
 import { RESPOSTA_SALVA_SEM_PRODUTO, sha256DaImagem } from '../../functions/_lib/capi/demonstracao'
+import { executarFerramenta } from '../../functions/_lib/capi/ferramentas'
 import { RESPOSTA_RECUSA, SISTEMA } from '../../functions/_lib/capi/prompt'
 import { onRequestDelete as apagarConversa, onRequestGet as lerConversa } from '../../functions/api/chat'
 import { ANA, chamar } from '../workers/rotas'
 import { modeloQueFalha, modeloQueNaoResponde, modeloSimulado, type RespostaGravada } from './modelo-simulado'
 import buscaTenis from './respostas/busca-tenis.json'
 import contextoTenis from './respostas/contexto-tenis.json'
+import fotoGarrafaTermica from './respostas/foto-garrafa-termica.json'
 import fotoTenis from './respostas/foto-tenis.json'
 import ficha from './respostas/ficha.json'
+import garrafaTermica from './respostas/garrafa-termica.json'
 import produtoInventado from './respostas/produto-inventado.json'
 import recusa from './respostas/recusa.json'
 import reservar from './respostas/reservar.json'
@@ -293,6 +296,93 @@ describe('Capi com o Claude simulado', () => {
     const historico = await chamar(lerConversa, { url: '/api/chat', usuario: ANA })
     expect(historico.corpo.itens[0]).toMatchObject({ papel: 'CLIENTE', conteudo: 'Tem esse tênis aí?', foto: true })
     expect(historico.corpo.itens[2]).toMatchObject({ papel: 'CLIENTE', conteudo: 'não gostei', foto: false })
+  })
+
+  describe('TI13: busca sem resultado', () => {
+    // Garrafa térmica não existe no tests/seed.sql nem, de propósito, no seed/produtos.csv da demo
+    // (nenhum produto tem "térmica" no nome, na descrição ou nos atributos): é o pedido do roteiro
+    // para a Capi sem resultado. As lojas de casa e de esportes entram só nestes testes.
+    // Casa: D (com produto de casa), E (principal) e a segunda unidade dela, F e H (secundária),
+    // G (casa, mas vaga). Esportes: F e H, sem produto.
+    async function lojasDeCasaEEsportes() {
+      await env.DB.batch([
+        env.DB.prepare(
+          `INSERT INTO loja (id, nome, numero, cnpj, piso, tipo, categorias, mapa_id, ativa) VALUES
+            ('loja-d', 'Loja D', '20', '44444444000191', 1, 'loja', '["casa"]', 'mapa-loja-d', 1),
+            ('loja-e', 'Loja E', '21', '55555555000191', 1, 'loja', '["casa"]', 'mapa-loja-e', 1),
+            ('loja-e2', 'Loja E', '22', '66666666000191', 1, 'loja', '["casa"]', 'mapa-loja-e2', 1),
+            ('loja-f', 'Loja F', '23', '77777777000191', 1, 'loja', '["esportes","casa"]', 'mapa-loja-f', 1),
+            ('loja-g', 'Loja G', '24', NULL, 1, 'loja', '["casa"]', 'mapa-loja-g', 0),
+            ('loja-h', 'Loja H', '25', '88888888000191', 1, 'loja', '["esportes","casa"]', 'mapa-loja-h', 1)`,
+        ),
+        env.DB.prepare(
+          `INSERT INTO produto (id, loja_id, nome, descricao, categoria, preco_centavos, estoque, atributos, ativo)
+           VALUES ('p-caneca', 'loja-d', 'Caneca de cerâmica', 'Branca, 350 ml', 'casa', 3990, 6, '{"cor":"branco"}', 1)`,
+        ),
+      ])
+    }
+    const resultadoDaFerramenta = (parametros: { messages: { content?: unknown }[] }) =>
+      JSON.parse((parametros.messages.at(-1)!.content as { content: string }[])[0].content)
+
+    it('TI13: por texto, o resultado traz as lojas da categoria e a Capi oferece a rota, sem produto inventado', async () => {
+      await lojasDeCasaEEsportes()
+      const { modelo, chamadas } = modeloSimulado(gravada(garrafaTermica))
+      const r = await conversar({ clienteId: 'c-ana', texto: 'Vocês têm garrafa térmica?' }, { db: env.DB, modelo })
+
+      // A busca não acha nada (a caneca é de casa, mas não é garrafa térmica) e o resultado leva até
+      // 3 lojas ativas da categoria: a que tem produto de casa, a de casa como principal (uma por
+      // marca) e a de casa como secundária. A vaga fica de fora.
+      const resultado = resultadoDaFerramenta(chamadas[1])
+      expect(resultado.produtos).toEqual([])
+      expect(resultado.lojasDaCategoria).toEqual([
+        { lojaId: 'loja-d', nome: 'Loja D', piso: 'Térreo', mapaId: 'mapa-loja-d' },
+        { lojaId: 'loja-e', nome: 'Loja E', piso: 'Térreo', mapaId: 'mapa-loja-e' },
+        { lojaId: 'loja-f', nome: 'Loja F', piso: 'Térreo', mapaId: 'mapa-loja-f' },
+      ])
+      expect(resultado.aviso).toContain('Não diga que elas têm o item, nem preço ou estoque')
+      expect(SISTEMA).toContain('Nunca diga que essas lojas têm o item, nem dê preço ou estoque dele')
+
+      // A resposta indica as lojas com a rota até a primeira, sem cartão de produto nem botão de reservar.
+      expect(r.resposta).toBe(
+        'Não achei garrafa térmica no app agora. Esse tipo de produto costuma ser vendido na Loja D, na Loja E e na Loja F, todas no térreo. Deixei o caminho até a Loja D no mapa.',
+      )
+      expect(r.produtos).toEqual([])
+      expect(r.acoes).toEqual([{ tipo: 'ROTA', lojaId: 'loja-d', mapaId: 'mapa-loja-d', piso: 1 }])
+      // A busca entra como não encontrada na demanda (RN12).
+      expect(await umValor('SELECT termo, categoria, encontrou FROM busca')).toEqual({
+        termo: 'garrafa térmica',
+        categoria: 'casa',
+        encontrou: 0,
+      })
+    })
+
+    it('TI13: por foto, buscar_similares numa categoria sem produto também traz as lojas e a rota', async () => {
+      await lojasDeCasaEEsportes()
+      const { modelo, chamadas } = modeloSimulado(gravada(fotoGarrafaTermica))
+      const foto = { tipo: 'image/jpeg' as const, base64: 'iVBORw0KGgo=' }
+      const r = await conversar({ clienteId: 'c-ana', texto: 'Tem essa garrafa aí?', imagem: foto }, { db: env.DB, modelo })
+
+      const resultado = resultadoDaFerramenta(chamadas[1])
+      expect(resultado.produtos).toEqual([])
+      expect(resultado.lojasDaCategoria.map((l: { nome: string }) => l.nome)).toEqual(['Loja F', 'Loja H'])
+      expect(r.produtos).toEqual([])
+      expect(r.acoes).toEqual([{ tipo: 'ROTA', lojaId: 'loja-f', mapaId: 'mapa-loja-f', piso: 1 }])
+    })
+
+    it('sem categoria, com uma que não existe ou sem loja dela, o resultado não traz lojas e diz por quê', async () => {
+      const ctx = { db: env.DB, clienteId: 'c-ana', mensagemDoCliente: '', agora: new Date(), reservasFeitas: 0 }
+      const semCategoria = await executarFerramenta('buscar_produtos', { texto: 'garrafa térmica' }, ctx)
+      expect(semCategoria.conteudo).toMatchObject({ produtos: [], aviso: expect.stringContaining('Busque de novo com a categoria') })
+      expect(semCategoria.conteudo).not.toHaveProperty('lojasDaCategoria')
+
+      const inventada = await executarFerramenta('buscar_produtos', { texto: 'garrafa térmica', categoria: 'utilidades' }, ctx)
+      expect(inventada.conteudo).toMatchObject({ aviso: expect.stringContaining('"utilidades" não é uma categoria do shopping') })
+      expect(inventada.conteudo).not.toHaveProperty('lojasDaCategoria')
+
+      const semLoja = await executarFerramenta('buscar_similares', { categoria: 'pet', descricao: 'coleira' }, ctx)
+      expect(semLoja.conteudo).toMatchObject({ aviso: expect.stringContaining('Nenhuma loja do shopping é da categoria "pet"') })
+      expect(semLoja.conteudo).not.toHaveProperty('lojasDaCategoria')
+    })
   })
 
   it('a foto do roteiro, respondida pela resposta salva, entra no histórico com a descrição do print', async () => {

@@ -1,0 +1,28 @@
+[
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_foto_garrafa",
+        "name": "buscar_similares",
+        "input": { "categoria": "esportes", "descricao": "garrafa térmica de inox", "cor": "prata", "estilo": "esportivo" }
+      }
+    ]
+  },
+  {
+    "stop_reason": "tool_use",
+    "content": [
+      { "type": "tool_use", "id": "toolu_rota_foto_garrafa", "name": "rota_na_loja", "input": { "loja_id": "loja-f" } }
+    ]
+  },
+  {
+    "stop_reason": "end_turn",
+    "content": [
+      {
+        "type": "text",
+        "text": "Não achei essa garrafa térmica no app agora. Esse tipo de produto costuma ser vendido na Loja F e na Loja H, no térreo. Deixei o caminho até a Loja F no mapa."
+      }
+    ]
+  }
+]

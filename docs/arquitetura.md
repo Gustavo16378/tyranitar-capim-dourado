@@ -97,15 +97,15 @@ flowchart TB
 
 | Ferramenta | O que faz |
 | --- | --- |
-| `buscar_produtos` | Busca por texto, categoria, faixa de preço e loja |
-| `buscar_similares` | Recebe atributos (categoria, cor, marca, estilo) e devolve candidatos da mesma categoria; o modelo escolhe os mais parecidos |
+| `buscar_produtos` | Busca por texto, categoria, faixa de preço e loja. Sem resultado, devolve até 3 lojas da categoria, onde esse tipo de item costuma ser vendido |
+| `buscar_similares` | Recebe atributos (categoria, cor, marca, estilo) e devolve candidatos da mesma categoria; o modelo escolhe os mais parecidos. Categoria sem produto: as lojas dela, como na busca |
 | `reservar` | Cria a reserva para o cliente logado, depois da confirmação dele na conversa |
 | `rota_na_loja` | Devolve a loja, o piso e o id no mapa; o app desenha a rota |
 | `gerar_ficha` | Atualiza a ficha de interesses do cliente, só se houver consentimento |
 
 **Foto:** vai em base64 junto da mensagem; o modelo descreve o item e chama `buscar_similares`. **Link:** o servidor busca a página, lê `og:title`, `og:image` e o preço, e segue o fluxo da foto.
 
-**Regras do prompt de sistema:** a Capi só oferece produtos que vieram das ferramentas (RN14), pede confirmação antes de reservar, responde em português e de forma curta, e nunca mostra a ficha ao cliente como "dados coletados".
+**Regras do prompt de sistema:** a Capi só oferece produtos que vieram das ferramentas (RN14); sem resultado, indica as lojas da categoria do item como lugares onde ele costuma ser vendido, com a rota até a primeira, sem dizer que elas têm o item; pede confirmação antes de reservar, responde em português e de forma curta, e nunca mostra a ficha ao cliente como "dados coletados".
 
 **Parecidos sem banco vetorial:** com cerca de 100 produtos, filtrar por categoria no SQL e deixar o modelo escolher é suficiente e mais simples. Com um catálogo maior, a evolução é o Cloudflare Vectorize.
 

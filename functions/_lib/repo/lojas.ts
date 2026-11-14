@@ -22,6 +22,31 @@ export function buscarLojaAtiva(db: D1Database, id: string) {
     .first<LojaLinha>()
 }
 
+/**
+ * Até `limite` lojas ativas da categoria (a da marca ou a de produtos delas): onde esse tipo de
+ * item costuma ser vendido, para a Capi indicar quando a busca não acha nada. Vêm primeiro as que
+ * têm produto ativo da categoria, depois as que têm a categoria como principal. A mesma marca em
+ * duas unidades conta uma vez.
+ */
+export async function lojasDaCategoria(db: D1Database, categoria: string, limite = 3) {
+  const { results } = await db
+    .prepare(
+      `SELECT l.id, l.nome, l.piso, l.tipo, l.categorias, l.mapa_id FROM loja l
+       WHERE l.ativa = 1 AND EXISTS (SELECT 1 FROM json_each(l.categorias) c WHERE c.value = ?1)
+       ORDER BY EXISTS (SELECT 1 FROM produto p WHERE p.loja_id = l.id AND p.ativo = 1 AND p.categoria = ?1) DESC,
+                json_extract(l.categorias, '$[0]') = ?1 DESC, l.nome, l.id`,
+    )
+    .bind(categoria)
+    .all<LojaLinha>()
+  const nomes = new Set<string>()
+  const umaPorMarca = results.filter((l) => {
+    if (nomes.has(l.nome)) return false
+    nomes.add(l.nome)
+    return true
+  })
+  return umaPorMarca.slice(0, limite)
+}
+
 /** Lojas ativas (as vagas ficam de fora), com filtro opcional por piso e categoria. */
 export async function listarLojas(
   db: D1Database,
