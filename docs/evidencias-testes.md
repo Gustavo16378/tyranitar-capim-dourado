@@ -1,23 +1,23 @@
 # Evidências de testes · Missão 2
 
-Este documento reúne a bateria de testes da solução, o resultado do CI, como rodar os testes e os bugs achados no teste como usuário real, cada um com o teste que o cobre e o commit da correção. O plano completo, com o que cada código de teste verifica, está em [testes.md](testes.md).
+Este documento reúne a bateria de testes da solução, o resultado do CI, como rodar os testes e os bugs achados no teste como usuário real, cada um com o teste que o cobre e o commit da correção. A última parte mostra o que entrou na versão final (o easter egg, o catálogo maior, a aparência) e o teste de cada coisa. O plano completo, com o que cada código de teste verifica, está em [testes.md](testes.md).
 
 ## Resumo da bateria
 
 | Camada | Onde | O que verifica | Testes |
 | --- | --- | --- | ---: |
-| Unidade | `tests/unidade` | Regras de negócio (pontos, níveis, cupons, prazos, vagas, ficha), formatos, mapa (rotas, entradas e o link do QR), carrossel de cupons, categorias e mocks | 256 |
-| API | `tests/api` | Rotas das Functions com JWT de verdade e o banco D1 do Miniflare, recriado a cada teste | 108 |
+| Unidade | `tests/unidade` | Regras de negócio (pontos, níveis, cupons, prazos, vagas, ficha), formatos, mapa (rotas, entradas e o link do QR), carrossel de cupons, categorias, mocks, os ids do seed, a aparência e o easter egg (a palavra, os 13 toques, o modo tirano, o limite de piscadas, a Loja 13, o console e os créditos no HTML) | 294 |
+| API | `tests/api` | Rotas das Functions com JWT de verdade e o banco D1 do Miniflare, recriado a cada teste; o SQL do `demo:reset` (TA41), os favoritos, Minhas compras e a página da loja (TA42 a TA44), e o `X-Tyranitar` e a `/api/loja-13` do easter egg | 128 |
 | Banco | `tests/banco` | Esquema e restrições do D1 (TB01 a TB12, TB15 e TB16) | 18 |
-| Capi (integração) | `tests/capi` | A Capi com o Claude simulado: ferramentas, limites, prazos, histórico e fotos (TI01 a TI09 e TI12) | 24 |
-| E2E | `tests/e2e` | Jornadas completas no Chromium, no celular (390 × 844) e no computador: 25 cenários, 39 execuções e 11 puladas de propósito (as que só valem numa das telas, como a câmera traseira no celular e a webcam no computador) | 39 |
-| Acessibilidade | `tests/a11y` | axe-core, WCAG 2.1 A e AA, sem violação séria ou crítica: 11 telas nos temas claro e escuro | 22 |
+| Capi (integração) | `tests/capi` | A Capi com o Claude simulado: ferramentas, limites, prazos, histórico, fotos e a busca sem resultado que indica as lojas (TI01 a TI09, TI12 e TI13) | 27 |
+| E2E | `tests/e2e` | Jornadas completas no Chromium, no celular (390 × 844) e no computador: 39 cenários, 65 execuções e 13 puladas de propósito (as que só valem numa das telas, como a câmera traseira no celular, a webcam e o console no computador e o roteiro do easter egg no celular) | 65 |
+| Acessibilidade | `tests/a11y` | axe-core, WCAG 2.1 A e AA, sem violação séria ou crítica: as telas principais nos temas claro e escuro, as do easter egg com e sem movimento reduzido a aparência escolhida contra a do aparelho, e Salvos para provar, a página da loja e Minhas compras | 34 |
 
-São 406 testes no Vitest (unidade, API, banco e Capi) e 61 execuções no navegador (Playwright). Os testes nunca chamam o Claude de verdade: a Capi usa respostas gravadas ou o modo demonstração.
+São 467 testes no Vitest (unidade, API, banco e Capi) e 99 execuções no navegador (Playwright), todos passando na versão publicada em 14/11/2026. Os testes nunca chamam o Claude de verdade: a Capi usa respostas gravadas ou o modo demonstração.
 
 ## CI
 
-O [workflow do GitHub Actions](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml) roda tudo a cada push na `main`: lint, tipos, os 406 testes do Vitest, o build e, num servidor com banco limpo, o E2E e a acessibilidade. O selo do CI fica no topo do README.
+O [workflow do GitHub Actions](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/workflows/ci.yml) roda tudo a cada push na `main`: lint, tipos, os 467 testes do Vitest, o build e, num servidor com banco limpo, o E2E e a acessibilidade. O selo do CI fica no topo do README.
 
 Cada correção passou no CI. Quando dois pushes saem em seguida, o GitHub cancela a execução do primeiro e roda só a do mais novo, que já contém o anterior:
 
@@ -28,13 +28,16 @@ Cada correção passou no CI. Quando dois pushes saem em seguida, o GitHub cance
 | [`4b283a2`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/4b283a2) mapa pergunta a entrada | [verde](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/runs/43478146104) |
 | [`53fe816`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/53fe816) QR das entradas, com a merge da `telas` e a câmera anexada no campo antes dele | [verde](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/runs/43483699633) |
 | [`e10bbcd`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/e10bbcd) prints novos, com a folha da câmera antes dele | [verde](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/runs/43486445258) |
+| [`85de34d`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/85de34d) `demo:reset` desfaz as compras de ensaio, com o teste TA41 | [verde](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/runs/43540889220) |
+| [`9ce230a`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/9ce230a) easter egg no app, a merge da `egg-codigo` e o `tyranitar()` do console ligado ao modo tirano; antes dele, trocar a entrada no mapa | [verde](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/runs/43544366049) |
+| [`ef58e55`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/ef58e55) aparência Automático, Claro ou Escuro | [verde](https://github.com/Gustavo16378/tyranitar-capim-dourado/actions/runs/43545611915) |
 
 ## Como rodar os testes
 
-Requisito: Node 22.12 ou mais novo. Na primeira vez, `npm install` e `npx playwright install chromium`.
+Requisito: Node 22 (22.12 ou mais novo). Na primeira vez, `npm install` e `npx playwright install chromium`. No Node 26, o Vitest quebra nos testes de unidade com o pool padrão; ali, rode-os com `npx vitest run --project unidade --pool=vmThreads` (o CI usa o Node 22).
 
 ```bash
-npm test               # Vitest: unidade, API, banco e Capi (406 testes)
+npm test               # Vitest: unidade, API, banco e Capi (467 testes)
 npm run test:unidade   # só os de unidade
 npm run test:api       # só API, banco e Capi (runtime do Workers)
 npm run test:e2e       # jornadas no navegador, celular e computador
@@ -47,7 +50,7 @@ O `test:e2e` e o `test:a11y` sobem sozinhos o site com o modo demonstração e u
 
 ## Bugs encontrados e corrigidos
 
-Achados no teste do app como usuário real, em 13/11/2026; o 7 veio como sugestão da equipe nos testes. Cada um tem um teste automatizado que verifica o comportamento corrigido.
+Achados no teste do app como usuário real, em 13/11/2026; o 7 e o 9 vieram como sugestão da equipe nos testes, o 8 nos ensaios da demonstração e o 10 na bateria inteira antes de publicar. Cada um tem um teste automatizado que verifica o comportamento corrigido.
 
 | # | Bug | Correção | Teste que cobre | Commit |
 | --- | --- | --- | --- | --- |
@@ -58,6 +61,9 @@ Achados no teste do app como usuário real, em 13/11/2026; o 7 veio como sugest�
 | 5 | O mapa marcava sozinho a entrada mais próxima como "Você está aqui", e o nome da loja de destino aparecia duas vezes | Na primeira rota, o mapa pergunta "Por qual entrada você chegou?" (as entradas do piso, nomeadas no mapa), lembra a resposta por 6 h e aceita `?origem=<entrada>` no link, para o QR de cada entrada abrir o mapa já no lugar certo. Sem resposta, "Saindo da entrada mais próxima", sem "Você está aqui". O nome da loja de destino aparece uma vez | TE20 ([`tests/e2e/mapa.spec.ts`](../tests/e2e/mapa.spec.ts)) e [`tests/unidade/mapa-entradas.test.ts`](../tests/unidade/mapa-entradas.test.ts) (5 testes) | [`4b283a2`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/4b283a2) |
 | 6 | A foto da câmera ia na hora: não dava para escrever junto nem desistir, e não havia como tirar foto no computador | O botão da câmera abre uma folha com "Tirar foto" e "Escolher da galeria". No celular, "Tirar foto" é o seletor com `capture="environment"` (a câmera traseira direto); no computador, abre a webcam com o botão de capturar; sem câmera, ou com a permissão negada, só a galeria. A foto fica anexada no campo, com prévia e um X, e só vai no enviar. Testando, achamos também que a folha não reabria quando a permissão era negada na hora (um evento de fechar atrasado): corrigido no componente `Folha` | TE21 ([`tests/e2e/capi.spec.ts`](../tests/e2e/capi.spec.ts)) e TE23 a TE26 ([`tests/e2e/camera.spec.ts`](../tests/e2e/camera.spec.ts)) | [`ab8cb30`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/ab8cb30), [`6fd393e`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/6fd393e) |
 | 7 | Sugestão da equipe nos testes: o cliente não tinha como desistir de uma reserva, e o produto ficava preso até o prazo vencer (4 h, ou 48 h se pago por Pix) | "Cancelar reserva" na carteira (Minhas reservas) e na tela da reserva, com confirmação: "O produto volta para a loja. Quer cancelar?". Vale para a reserva em aberto (pendente, confirmada ou separada), nunca para a retirada. A rota nova `PATCH /api/reservas/{id}/cancelar` aceita só o dono: a reserva fica `CANCELADA`, o estoque volta na hora e, se estava paga por Pix, o estorno fica pedido (simulado, como o Pix). A loja vê a reserva cancelada na tela Reservas, com "Estorno do Pix solicitado" | TA40 ([`tests/api/cliente.test.ts`](../tests/api/cliente.test.ts): o dono cancela e o estoque volta; outro cliente recebe 404; já retirada, 409), TB16 (estorno só em reserva paga) e TE28 ([`tests/e2e/cancelar-reserva.spec.ts`](../tests/e2e/cancelar-reserva.spec.ts)) | [`cae6000`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/cae6000) (API), [`f0977b7`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/f0977b7) (telas) |
+| 8 | Depois do `npm run demo:reset`, a Ana ficava com 3.376 pontos (em vez de 2.140) e sem nenhum cupom: as compras registradas no balcão nos ensaios não eram desfeitas, e com elas os usos de cupom, o reembolso do voucher e o aviso dos pontos. O Extrato e os relatórios da Centauro guardavam os ensaios | O reset apaga as compras da Ana que não são das 6 do seed e o que depende delas (usos de cupom, reembolsos, avaliações), as reservas, os avisos e as buscas dela; reativa os 4 cupons do seed; recalcula o saldo pelas compras que sobram; e mostra pontos, nível, cupons e o extrato da loja da demo. Só mexe na conta da Ana. Os ids do seed foram para `scripts/lib/ids-do-seed.mjs`, presos aos de produção por teste. Conferido no D1 local: uma compra com cupom subiu a Ana para 2.533 pontos e 2 cupons; o reset voltou a 2.140, nível Capim, 4 cupons e o extrato da Centauro vazio | TA41 ([`tests/api/demo-reset.test.ts`](../tests/api/demo-reset.test.ts): compra com cupom e voucher, reserva, conversa e busca; outro cliente não muda) e [`tests/unidade/ids-do-seed.test.ts`](../tests/unidade/ids-do-seed.test.ts) | [`86456f2`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/86456f2), [`17565d1`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/17565d1) (teste) |
+| 9 | Sugestão da equipe nos testes: "Trocar a entrada" era um link discreto embaixo do mapa, e não dava para escolher a entrada no próprio mapa | "Trocar a entrada" vira um botão ao lado de "Saindo da Entrada A", e tocar numa entrada no mapa (o marco 3D, com área de toque maior, ou a etiqueta com o nome) escolhe ela e refaz a rota na hora, lembrando a escolha | TE29 ([`tests/e2e/mapa.spec.ts`](../tests/e2e/mapa.spec.ts)), com TE20 e TE27 | [`c07164e`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/c07164e), [`0fe793c`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/0fe793c) (teste) |
+| 10 | Na carteira, no computador, depois de cancelar uma reserva o foco não ficava no título "Minhas reservas": ia para lugar nenhum, e quem usa teclado ou leitor de tela se perdia | O foco ia num `requestAnimationFrame`, antes de o `<dialog>` da folha fechar; ao fechar, o navegador devolvia o foco ao botão que abriu a folha, que já tinha saído com a reserva. Agora o foco vai num efeito da lista, que roda depois de a folha fechar | TE28 ([`tests/e2e/cancelar-reserva.spec.ts`](../tests/e2e/cancelar-reserva.spec.ts)), que pegou o bug, repetido duas vezes no celular e no computador | [`e2c4332`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/e2c4332) |
 
 ### Verificação com o Claude real (bug 3)
 
@@ -69,6 +75,17 @@ Os testes automáticos usam o Claude simulado e conferem o que vai para o modelo
    > Sem problema. O que você quer mudar: a cor, o modelo ou o preço? Se o que importa é o solado branco grosso e o detalhe verde limão, posso procurar com mais foco nisso. Também posso buscar outras marcas, no número 42.
 
 No banco, a primeira mensagem ficou como `[foto: tênis esportivo preto com solado branco grosso e detalhe verde limão no calcanhar, cor preto, estilo esportivo, categoria calcados] Tem esse tênis aí no shopping? Uso 42.` A imagem não é guardada.
+
+## Versão final: o que entrou e o teste de cada coisa
+
+| O que entrou | Teste que cobre | Commits |
+| --- | --- | --- |
+| **Missão Easter Egg, "O tirano da sexta-feira 13"** ([easter-egg.md](easter-egg.md)): "tyranitar" na Capi (sem chamar a IA), o apagão com no máximo 3 piscadas por segundo, o mapa no escuro com lanterna e a trilha até a Loja 13, os créditos da equipe, o nível secreto Tirano com o cupom TYRANITAR13, "Acender as luzes", o gato preto e o Piso 13 nos 13 toques, e os rastros no console, no HTML, nos cabeçalhos e na API | TU31 a TU37 ([`tests/unidade/easter-egg.test.ts`](../tests/unidade/easter-egg.test.ts)), [`tests/unidade/tirano.test.ts`](../tests/unidade/tirano.test.ts), [`tests/api/tirano.test.ts`](../tests/api/tirano.test.ts), TE30 e TE31 ([`tests/e2e/easter-egg.spec.ts`](../tests/e2e/easter-egg.spec.ts)), [`tests/e2e/tirano.spec.ts`](../tests/e2e/tirano.spec.ts) e TX11 (as telas novas nos dois temas, com e sem movimento reduzido) | [`f08d74d`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/f08d74d) a [`20ae5ef`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/20ae5ef), com a merge [`6e0e8a6`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/6e0e8a6) da `egg-codigo` |
+| **Catálogo da demonstração** com 124 produtos (112 novos, com 40 fotos livres do Unsplash por tipo, creditadas em [creditos.md](creditos.md)) e pelo menos dois parecidos em lojas diferentes nas categorias principais, para a Capi comparar preço. A Centauro continua a primeira na busca do tênis do roteiro | Conferido em produção depois do seed, em 14/11/2026: 124 produtos, e a busca do tênis do roteiro (`tênis`, calçados) traz a Centauro primeiro, depois a Authentic Feet | [`477713c`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/477713c), [`6eb8f74`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/6eb8f74) |
+| **Capi sem resultado:** quando a busca não acha nada, ela indica as lojas da categoria (as que têm produtos dela primeiro, uma por marca, sem as vagas) e oferece o caminho no mapa, sem inventar produto, preço ou estoque | TI13 ([`tests/capi/conversa.test.ts`](../tests/capi/conversa.test.ts)): "garrafa térmica" por texto e por foto, sem o item no catálogo | [`87d86dc`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/87d86dc), [`2761478`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/2761478) |
+| **Aparência** Automático, Claro ou Escuro na Minha conta e no rodapé da barra lateral dos painéis, salva no aparelho e aplicada antes da primeira pintura (sem piscar o tema errado ao carregar) | TU38 (o script do `index.html` roda no teste e dá o mesmo tema que o app, em toda combinação), TE32 (trocar e recarregar mantém o tema, no app e no painel; sem o JavaScript do app, a página já vem no tema escolhido) e TX12 | [`a2a363a`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/a2a363a), [`e3942f8`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/e3942f8), [`ef58e55`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/ef58e55) |
+| **Favoritos, Salvos para provar, Minhas compras e a página da loja** (a branch `cliente`): o coração de salvar no produto e nos cartões, os salvos agrupados por loja, as compras na carteira com a lista inteira e a página de cada loja em `/lojas/{id}` | TA42 a TA44 (API), TE33 a TE35 (navegador) e TX13 a TX15 (acessibilidade) | merge [`905de7d`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/905de7d) |
+| **"Como rodar" num clone limpo:** do `git clone` ao app em `http://localhost:8788`, seguindo só o README, com o `.dev.vars` de senhas aleatórias e sem a chave da Anthropic. A conta da Ana entrou com 2.140 pontos e 4 cupons, a Capi respondeu o roteiro com as respostas salvas, e lint, tipos e os testes de unidade passaram | Manual, em 13/11/2026 | [`feb2e0b`](https://github.com/Gustavo16378/tyranitar-capim-dourado/commit/feb2e0b) |
 
 ## Correções da branch `telas`
 
