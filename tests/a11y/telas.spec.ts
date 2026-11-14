@@ -312,6 +312,12 @@ for (const tema of ['light', 'dark'] as const) {
       await expect(page.locator('.animate-pulse')).toHaveCount(0)
       await semViolacoesGraves(page)
 
+      // Com o Menu aberto, o selo fica ao lado de Reservas, com o número no nome do link.
+      await page.getByRole('button', { name: /^Menu/ }).click()
+      await expect(page.getByRole('link', { name: /^Reservas, \d+ reservas? novas?$/ })).toBeVisible()
+      await semViolacoesGraves(page)
+      await page.keyboard.press('Escape')
+
       await cartao.getByRole('button', { name: 'Confirmar' }).click()
       await expect(cartao.getByLabel('Pronta para retirar a partir de')).toBeFocused()
       await semViolacoesGraves(page)
