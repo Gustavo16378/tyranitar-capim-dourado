@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useNavigate } from 'react-router'
 import { gsap } from 'gsap'
 import {
   apagarConversa,
@@ -11,7 +11,7 @@ import {
   separarLink,
   termosDoLink,
 } from '../api'
-import { Button, CapiMark, CapiTirana, ChatBubble, ChatComposer, Icon, ProdutoCard } from '../componentes'
+import { Button, CapiMark, CapiTirana, ChatBubble, ChatComposer, Icon } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
 import { BOTAO_ACORDAR, RESPOSTA_DO_TIRANO, TIRANO_JA_ACORDADO } from '../easter-egg/falas'
@@ -22,9 +22,10 @@ import { useModoTirano } from '../easter-egg/useModoTirano'
 import { cascata, comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
 import type { AcaoChat, MensagemChat, MensagemDoHistorico, ProdutoResumo, RespostaChat } from '../tipos'
 import { acoesNaConversa } from './acoesDoChat'
+import { CartaoDoProduto } from './CartaoDoProduto'
 import { FolhaFoto } from './FolhaFoto'
 import { FolhaLink } from './FolhaLink'
-import { nomeDoPiso, partesDoLink } from './formatos'
+import { partesDoLink } from './formatos'
 import { reduzirFoto } from './foto'
 
 type Item =
@@ -443,17 +444,7 @@ export default function Capi() {
               <ul key={item.id} className="flex flex-col gap-2 pl-10 md:grid md:grid-cols-2">
                 {item.produtos.map((p) => (
                   <li key={p.id}>
-                    <Link to={`/produto/${p.id}`} className="block rounded-md">
-                      <ProdutoCard
-                        horizontal
-                        nome={p.nome}
-                        loja={p.loja.nome}
-                        piso={nomeDoPiso(p.loja.piso)}
-                        precoCentavos={p.precoCentavos}
-                        estoque={p.estoque}
-                        foto={p.foto ?? undefined}
-                      />
-                    </Link>
+                    <CartaoDoProduto produto={p} />
                   </li>
                 ))}
               </ul>

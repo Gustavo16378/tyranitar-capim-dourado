@@ -88,9 +88,12 @@ A cliente toca na sugestão com a foto do tênis (ela só anexa a foto e põe a 
 **Cliente** (o app, no celular):
 
 - **Capi:** pergunta por texto, foto (câmera ou galeria) ou link de um produto de outra loja. Ela acha o item nas lojas do shopping, compara os preços e reserva na conversa. Quando o catálogo não tem o item, indica as lojas da categoria e o caminho até elas, sem inventar produto, preço ou estoque. A conversa fica salva.
+- **Produto:** loja, piso, preço, estoque, o mesmo item em outras lojas e reservar com Pix (simulado) ou pagando na loja.
 - **Reserva** com Pix (separada por 48 h) ou para pagar na loja (4 h), com o andamento; cancelar devolve o produto à loja e pede o estorno do Pix.
+- **Salvos para provar:** o coração salva o produto (na tela do produto e nos cartões da Capi, do Início e da loja). A aba Salvos junta os salvos por loja, com "Reservar" em cada um e "Como chegar" em cada loja.
+- **Página da loja:** tocar no nome de uma loja (no produto, nos cartões, nos salvos e no mapa) abre a loja no app, com a categoria, o piso, os produtos dela e "Como chegar".
 - **Mapa 3D** dos dois pisos, com a rota da entrada até a loja. A pessoa diz por onde chegou, toca numa entrada do mapa ou lê o QR da entrada. O mapa abre sem login.
-- **Carteira:** o QR para o balcão, os pontos, o nível (Semente, Broto, Capim e Dourado), os cupons e as reservas.
+- **Carteira:** o QR para o balcão, os pontos, o nível (Semente, Broto, Capim e Dourado), Minhas reservas (com "Como chegar" e cancelar), Minhas compras (loja, dia, valor pago, cupons usados e pontos ganhos, com "Ver tudo" para a lista inteira) e os cupons.
 - **Minha conta:** nome e senha, a ficha que a Capi anotou (com o consentimento e um botão para apagar cada interesse), baixar os dados em JSON (LGPD), aparência Automático, Claro ou Escuro, e excluir a conta.
 - App instalável (PWA).
 

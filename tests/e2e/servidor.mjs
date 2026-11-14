@@ -6,7 +6,8 @@
 // - a Ana com o e-mail da conta de demonstração (POST /api/auth/demo procura por ele) e o QR
 //   fixo da demonstração (o mesmo do botão "Simular leitura" do painel da loja);
 // - o lojista da Loja A e a administração com senhas de verdade, para entrar pelo login;
-// - a Carla, cliente com seis interesses na ficha, para a Minha conta apagar um (TE14);
+// - a Carla, cliente com seis interesses na ficha, para a Minha conta apagar um (TE14), e doze
+//   compras, uma por dia, para Minhas compras (TE34): passam de uma página da lista inteira;
 // - a Loja A numa loja que existe na planta, para o mapa desenhar a rota;
 // - buscas recentes nas categorias da Loja A, para o Desempenho (TX07) ter o que mostrar.
 // Sem ANTHROPIC_API_KEY: a Capi responde com as respostas salvas (CAPI_MODO_DEMO=1) e, fora do
@@ -46,6 +47,14 @@ function rodar(passo, comando, args, extra = {}) {
 
 const aspas = (texto) => `'${String(texto).replaceAll("'", "''")}'`
 
+// As compras da Carla (TE34, TX15): a mais nova, ontem na Loja A, com o cupom da loja e o voucher
+// do shopping; as outras, sem cupom, uma por dia antes dela, alternando a Loja A e a Loja B.
+const comprasDaCarla = Array.from({ length: 12 }, (_, i) => {
+  const valor = i === 0 ? 12391 : 5000 + i * 1000
+  const loja = i % 2 === 0 ? 'loja-a' : 'loja-b'
+  return `('co-carla-${String(i + 1).padStart(2, '0')}', 'c-carla', '${loja}', ${valor}, 'CAIXA', ${Math.floor(valor / 100)}, datetime('now', '-${i + 1} days'))`
+}).join(',\n  ')
+
 // 1. O front com o modo demonstração (a Capi abre tocando o roteiro), numa pasta só dos testes.
 rodar('tokens do design system', 'scripts/gerar-tokens.mjs', [])
 rodar('build do front com VITE_MODO_DEMO=1', vite, ['build', '--outDir', SITE, '--emptyOutDir'], {
@@ -77,6 +86,11 @@ INSERT INTO ficha (cliente_id, interesses) VALUES ('c-carla', ${aspas(JSON.strin
   { categoria: 'perfumaria', detalhe: 'Perfume floral suave' },
   { categoria: 'calcados', detalhe: 'Meia de compressão' },
 ]))});
+INSERT INTO compra (id, cliente_id, loja_id, valor_centavos, origem, pontos_gerados, criado_em) VALUES
+  ${comprasDaCarla};
+INSERT INTO uso_cupom (compra_id, cupom_id, desconto_centavos) VALUES
+  ('co-carla-01', 'cp-a-10', 1599),
+  ('co-carla-01', 'cp-shopping-20', 2000);
 UPDATE loja SET mapa_id = ${aspas(dados.mapaDaLojaA)} WHERE id = 'loja-a';
 INSERT INTO busca (id, termo, categoria, encontrou, criado_em) VALUES
   ('b-e2e-1', 'tênis de trilha', 'calcados', 0, datetime('now', '-1 days')),

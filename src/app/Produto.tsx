@@ -6,6 +6,8 @@ import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
 import type { ProdutoDetalhe } from '../tipos'
 import { AvisoDemonstracao } from './AvisoDemonstracao'
+import { BotaoSalvar } from './BotaoSalvar'
+import { caminhoDaLoja } from './caminhos'
 import { Carregando, ErroTela, Esqueleto } from './Estados'
 import { FolhaReserva } from './FolhaReserva'
 import { nomeDoPiso } from './formatos'
@@ -105,10 +107,21 @@ export default function Produto() {
 
           <div data-anim className="flex flex-col items-start gap-2">
             <SeloEstoque estoque={produto.dados.estoque} />
-            <h1 className="text-title-md">{produto.dados.nome}</h1>
+            <div className="flex w-full items-start justify-between gap-3">
+              <h1 className="text-title-md">{produto.dados.nome}</h1>
+              <BotaoSalvar produto={produto.dados} />
+            </div>
             <p className="flex items-center gap-1 text-body-sm text-ink-muted">
               <Icon name="pin" className="size-4" />
-              {produto.dados.loja.nome} · {nomeDoPiso(produto.dados.loja.piso)}
+              <span>
+                <Link
+                  to={caminhoDaLoja(produto.dados.loja.id)}
+                  className="text-marrom-ink underline underline-offset-2"
+                >
+                  {produto.dados.loja.nome}
+                </Link>{' '}
+                · {nomeDoPiso(produto.dados.loja.piso)}
+              </span>
             </p>
             <p className="text-price">{formatarPreco(produto.dados.precoCentavos)}</p>
           </div>

@@ -3,19 +3,20 @@ import { cx } from './cx'
 import { Icon } from './Icon'
 import type { IconName } from './icones'
 
-export type AbaId = 'inicio' | 'busca' | 'capi' | 'mapa' | 'carteira'
+export type AbaId = 'inicio' | 'busca' | 'salvos' | 'capi' | 'mapa' | 'carteira'
 
 export interface BottomNavProps {
   ativo: AbaId
   /** Chamado com a aba tocada. */
   onSelect?: (aba: AbaId) => void
-  /** Quais abas mostrar, na ordem padrão. Padrão: as cinco do design system. */
+  /** Quais abas mostrar, na ordem padrão. Padrão: todas as do design system. */
   abas?: AbaId[]
 }
 
 const ABAS: { id: AbaId; rotulo: string; icone?: IconName }[] = [
   { id: 'inicio', rotulo: 'Início', icone: 'casa' },
   { id: 'busca', rotulo: 'Buscar', icone: 'busca' },
+  { id: 'salvos', rotulo: 'Salvos', icone: 'coracao' },
   { id: 'capi', rotulo: 'Capi' },
   { id: 'mapa', rotulo: 'Mapa', icone: 'mapa' },
   { id: 'carteira', rotulo: 'Carteira', icone: 'carteira' },

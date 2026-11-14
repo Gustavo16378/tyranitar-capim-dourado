@@ -9,6 +9,7 @@ import { comMovimento, DURACAO, EASE, encherBarra, somarPontos, subirDeNivel, us
 import { desdeAUltimaVista, guardarVista, lerVista } from './carteiraVista'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
 import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel } from './formatos'
+import { MinhasCompras } from './MinhasCompras'
 import { MinhasReservas } from './MinhasReservas'
 
 /** O cupom que só o modo tirano mostra: de demonstração, não vale no caixa e some ao acender as luzes. */
@@ -167,6 +168,10 @@ export default function Carteira() {
 
             <div data-anim>
               <MinhasReservas reservas={carteira.dados.reservasAtivas} />
+            </div>
+
+            <div data-anim>
+              <MinhasCompras />
             </div>
 
             <section data-anim aria-labelledby="titulo-cupons" className="flex flex-col gap-3">

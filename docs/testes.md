@@ -163,6 +163,9 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA39 | Baixar meus dados | RF13 (LGPD) | JSON com conta, ficha, reservas, compras, favoritos, conversa e buscas, só do cliente, sem senha nem QR |
 | TA40 | O cliente cancela a própria reserva (`PATCH /api/reservas/{id}/cancelar`) | RF08, RF09, RN03 | O dono cancela: `CANCELADA` e o estoque volta na hora; paga por Pix, `estornoSolicitado: true`, e a loja vê cancelada; de outro cliente, 404 e nada muda; já retirada, cancelada ou expirada, 409 sem mexer no estoque |
 | TA41 | `demo:reset` depois de um ensaio no balcão | Modo demonstração | Depois de uma compra com cupom e voucher, reserva, conversa e busca, o SQL do reset volta a Ana aos 2.140 pontos e aos mesmos cupons, deixa o extrato da loja só com o seed e não muda a conta de outro cliente; um cupom do seed desligado volta a valer |
+| TA42 | Salvar e tirar dos favoritos (`PUT` e `DELETE /api/me/favoritos/{produtoId}`) | RF16 | O produto salvo aparece primeiro em `GET /api/me/favoritos`; salvar de novo é 204 sem mudar a data; produto inativo ou inexistente é 404 sem salvar; tirar só mexe nos do cliente logado e repetir é 204; sem login 401, lojista 403 |
+| TA43 | Minhas compras (`GET /api/me/compras`) | RF11, RF16 | As compras do cliente, da mais nova para a mais antiga, com loja, data, valor pago, cupons (o maior desconto primeiro) e pontos; paginação como as outras listas; outro cliente não vê; sem login 401, lojista 403 |
+| TA44 | Página da loja (`GET /api/lojas/{id}`) | RF07, RF10 | A loja ativa no formato da lista, também sem login; unidade vaga ou id que não existe, 404; os produtos dela por `GET /api/produtos?loja=` |
 
 ### Capi (TI)
 
@@ -225,6 +228,9 @@ Com o Claude simulado:
 | TE30 | Easter egg no celular, de "tyranitar" ao nível Tirano | [Easter egg](easter-egg.md) | Nenhum `POST /api/chat`; o apagão abre o mapa no escuro com a trilha até a Loja 13; a Loja 13 mostra os créditos; a carteira sobe para o nível Tirano com o TYRANITAR13; recarregar continua no escuro sem repetir a subida; "Acender as luzes" volta o tema, o nível, os cupons, o mapa e a Capi |
 | TE31 | Easter egg: `tyranitar()` no console do computador | Easter egg | O apagão acontece e o mapa abre no escuro; "Acender as luzes" volta ao normal |
 | TE32 | Aparência no app e nos painéis | RNF08 | Escuro na Minha conta fica salvo ao recarregar; sem o JavaScript do app, a página já vem escura (aplicada antes da primeira pintura); Claro vale com o aparelho no escuro e Automático volta a segui-lo; o mesmo seletor no rodapé da barra lateral do painel da loja |
+| TE33 | Salvar com o coração e Salvos para provar | RF16, RNF08 | O coração muda na hora (`aria-pressed`) no produto e nos cartões do Início e da Capi, e o leitor de tela ouve "está nos seus salvos"; a aba Salvos agrupa por loja (a do salvo mais recente primeiro), com "Reservar" (a folha de sempre) e "Como chegar"; tirar o coração ali deixa o produto na lista; se a API recusa, o coração volta e o aviso aparece na tela |
+| TE34 | Minhas compras | RF11, RF16 | Na carteira, abaixo das reservas, as três últimas compras com loja, dia, valor pago, cupons com o desconto e pontos; "Ver tudo" abre a lista inteira com a Carteira marcada na navegação, dez por vez; "Mostrar mais" traz o resto, diz quantas aparecem e põe o foco na primeira que chegou |
+| TE35 | Página da loja | RF07, RF10 | O nome da loja no produto abre `/lojas/{id}` com nome, categoria, piso e os produtos em grade (com o coração); "Como chegar" abre o mapa na loja, e no mapa o nome dela volta para a página; loja que não existe mostra o erro sem "Tentar de novo"; sem login, o nome no mapa não vira link |
 
 ### Acessibilidade (TX)
 
@@ -244,6 +250,9 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX10 | QR das entradas do painel do shopping |
 | TX11 | Telas do easter egg (Capi Tirana, mapa no escuro, Loja 13, nível Tirano e Piso 13), com e sem movimento reduzido |
 | TX12 | Minha conta e painel com a aparência oposta à do aparelho |
+| TX13 | Salvos para provar, com o coração ligado e desligado |
+| TX14 | Página da loja, com os produtos em grade |
+| TX15 | Minhas compras, na carteira e a lista inteira |
 
 ### Manual (TM)
 
@@ -266,16 +275,16 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF04 Link | TI07 |
 | RF05 Buscar | TA07, TE02, TE04 |
 | RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
-| RF07 Produto | TA09, TE02 |
+| RF07 Produto | TA09, TA44, TE02, TE35 |
 | RF08 Reservar na loja | TA11, TA15, TA40, TI03, TE02, TE28 |
 | RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
-| RF10 Mapa e rota | TE01, TE09, TE20, TE27, TE29, TM01 |
-| RF11 Carteira | TU05, TA17, TE01, TE28 |
+| RF10 Mapa e rota | TA44, TE01, TE09, TE20, TE27, TE29, TE35, TM01 |
+| RF11 Carteira | TU05, TA17, TA43, TE01, TE28, TE34 |
 | RF12 Nota fiscal | TU22, TA18 |
 | RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
 | RF14 Notificações | TE01 (notificação de pontos) |
 | RF15 Avaliar | TA22, TB11 |
-| RF16 Favoritos e histórico | TE02 |
+| RF16 Favoritos e histórico | TA42, TA43, TE02, TE33, TE34 |
 | RF17 Login do lojista | TA03, TE03 |
 | RF18 Atendimento | TA23, TA24, TE01, TE06, TM03 |
 | RF19 Compra no caixa | TU06, TU07, TA25, TA27, TB08 |
@@ -306,7 +315,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
 | RNF06 LGPD | TA21, TA24 |
 | RNF07 Chave da IA | TA36 |
-| RNF08 Acessibilidade | TU34, TU38, TE32, TX01 a TX12 |
+| RNF08 Acessibilidade | TU34, TU38, TE32, TE33, TX01 a TX15 |
 | RNF09 Mapa no celular | TM01 |
 | RNF10 IA fora do ar | TI05, TM04 |
 | RNF11 Português e fuso | TU29 |

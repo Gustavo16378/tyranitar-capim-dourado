@@ -189,6 +189,9 @@ function Vitrine({ tema }: { tema: Tema }) {
         <Largura px={360}>
           <ProdutoCard horizontal nome="Tênis Run 2 preto" loja="Calçados" piso="Térreo" precoCentavos={34990} estoque={5} />
         </Largura>
+        <Largura px={360}>
+          <DemoSalvar />
+        </Largura>
       </Bloco>
 
       <Bloco titulo="ChatBubble">
@@ -263,7 +266,7 @@ function Vitrine({ tema }: { tema: Tema }) {
           <DemoNav />
         </Largura>
         <Largura px={360}>
-          <DemoNav abas={['inicio', 'capi', 'mapa', 'carteira']} />
+          <DemoNav abas={['inicio', 'salvos', 'capi', 'mapa', 'carteira']} />
         </Largura>
       </Bloco>
     </section>
@@ -286,6 +289,23 @@ function Bloco({ titulo, nota, children }: { titulo: string; nota?: string; chil
 function Largura({ px, children }: { px: 248 | 340 | 360 | 380; children: ReactNode }) {
   const classe = { 248: 'w-[248px]', 340: 'w-[340px]', 360: 'w-[360px]', 380: 'w-[380px]' }[px]
   return <div className={`${classe} max-w-full`}>{children}</div>
+}
+
+/** O coração de salvar do ProdutoCard: toque para ligar e desligar (aria-pressed). */
+function DemoSalvar() {
+  const [salvo, setSalvo] = useState(true)
+  return (
+    <ProdutoCard
+      horizontal
+      nome="Sandália de couro"
+      loja="Calçados"
+      piso="Térreo"
+      precoCentavos={15990}
+      estoque={4}
+      salvo={salvo}
+      onSalvar={() => setSalvo((atual) => !atual)}
+    />
+  )
 }
 
 function DemoNav({ abas }: { abas?: AbaId[] }) {
