@@ -54,9 +54,9 @@ export interface ReservaDoCliente {
   descontoCentavos: number
   /** O total da reserva, já com o desconto. */
   precoCentavos: number
-  /** O cupom escolhido na reserva: entra sozinho na compra, com o desconto prometido. A API pode
-   *  ainda não mandar a origem; sem ela, a tela não sabe qual dos dois lados ele ocupa. */
-  cupom: { id: string; titulo: string; origem?: OrigemCupom } | null
+  /** O cupom escolhido na reserva: entra sozinho na compra, com o desconto prometido, e ocupa o
+   *  lado dele (o cupom da loja ou o voucher do shopping). */
+  cupom: { id: string; titulo: string; origem: OrigemCupom } | null
   status: StatusReserva
   /** Paga com Pix: o caixa não cobra de novo. */
   pago: boolean

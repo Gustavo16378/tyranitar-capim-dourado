@@ -2,14 +2,11 @@ import { useCallback, useState } from 'react'
 import { Button, FichaCliente } from '../../../componentes'
 import { useEntrada } from '../../../movimento'
 import type { Atendimento } from '../../../tipos/loja'
-import { buscarAtendimento, listarReservas, useConsulta } from '../../api'
+import { buscarAtendimento, useConsulta } from '../../api'
 import { Carregando, Erro, Esqueleto } from '../../../painel/comum/Estados'
 import { paraNivel } from '../../../painel/comum/formatos'
-import { STATUS_ATIVOS } from '../../comum/reserva'
 import {
   chaveDoItem,
-  completarOrigens,
-  faltaOrigem,
   comProduto,
   comReserva,
   descricaoDoItem,
@@ -34,15 +31,6 @@ interface ClienteLidoProps {
 export function ClienteLido({ leitura, aoRegistrar, aoTerminar }: ClienteLidoProps) {
   const buscar = useCallback((sinal: AbortSignal) => buscarAtendimento(leitura.qr, sinal), [leitura.qr])
   const consulta = useConsulta(buscar)
-  // A origem do cupom de cada reserva (loja ou shopping) vem da lista de reservas da loja quando o
-  // atendimento não manda; com ela no atendimento, esta busca nem acontece.
-  const semOrigem = consulta.estado === 'pronto' && faltaOrigem(consulta.dados.reservas)
-  const buscarOrigens = useCallback(
-    (sinal: AbortSignal) =>
-      semOrigem ? listarReservas({ status: [...STATUS_ATIVOS], tamanho: 100 }, sinal) : Promise.resolve(null),
-    [semOrigem],
-  )
-  const origens = useConsulta(buscarOrigens)
 
   if (consulta.estado === 'carregando') return <EsqueletoDoAtendimento />
 
@@ -59,10 +47,7 @@ export function ClienteLido({ leitura, aoRegistrar, aoTerminar }: ClienteLidoPro
 
   return (
     <AtendimentoDoCliente
-      atendimento={{
-        ...consulta.dados,
-        reservas: completarOrigens(consulta.dados.reservas, origens.estado === 'pronto' ? origens.dados?.itens : null),
-      }}
+      atendimento={consulta.dados}
       atualizando={consulta.atualizando}
       leitura={leitura}
       aoRecarregar={consulta.recarregar}

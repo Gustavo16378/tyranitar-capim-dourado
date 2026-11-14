@@ -69,7 +69,7 @@ export async function montarAtendimento(db: D1Database, lojaId: string, qr: stri
       tamanho: r.tamanho,
       cor: r.cor,
       ...valoresDaReserva(r),
-      cupom: r.cupom_id ? { id: r.cupom_id, titulo: r.cupom_titulo ?? '' } : null,
+      cupom: r.cupom_id ? { id: r.cupom_id, titulo: r.cupom_titulo ?? '', origem: r.cupom_loja_id === null ? 'SHOPPING' : 'LOJA' } : null,
       status: r.status,
       pago: r.pago === 1,
       /** Confirmada pela loja: pode sair no balcão ("Retirar"). Pendente, a loja confirma antes. */

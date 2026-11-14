@@ -49,9 +49,9 @@ export function RegistrarCompra({ atendimento, leitura, carrinho, aoRegistrar, a
   const [retiradaNoRecibo, setRetiradaNoRecibo] = useState(false)
   const compra = useAcao(registrarCompra)
 
-  // A reserva como o atendimento tem agora (depois de buscar de novo, ou com a origem do cupom).
+  // A reserva como o atendimento tem agora (depois de buscar de novo).
   const itensParaCupom = carrinho.itens.map((i) =>
-    paraCupom(i.tipo === 'reserva' ? { ...i, reserva: reservas.find((r) => r.id === i.reserva.id) ?? i.reserva } : i, cupons),
+    paraCupom(i.tipo === 'reserva' ? { ...i, reserva: reservas.find((r) => r.id === i.reserva.id) ?? i.reserva } : i),
   )
   const validos = cuponsQueValem(cupons, itensParaCupom)
   const pedido = montarPedido(leitura.qr, carrinho.itens, cuponsEscolhidos(escolha, validos))

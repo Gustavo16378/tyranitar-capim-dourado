@@ -599,7 +599,7 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
       "brutoCentavos": 39990,
       "descontoCentavos": 3999,
       "precoCentavos": 35991,
-      "cupom": { "id": "cp1", "titulo": "10% em calçados" },
+      "cupom": { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" },
       "status": "SEPARADA",
       "pago": true,
       "podeRetirar": true
@@ -612,7 +612,7 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 }
 ```
 
-`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `reservas` são as em aberto do cliente nesta loja, com o tamanho, a cor, o valor já com o cupom e se já foi paga; `foto` é a primeira foto do produto (a miniatura no balcão), ou `null`. `podeRetirar` é `true` nas confirmadas pela loja (`CONFIRMADA` ou `SEPARADA`): o caixa mostra "Retirar"; a pendente a loja confirma antes. `cupons` traz os da loja primeiro e depois os vouchers do shopping; em cada grupo, os que dão desconto antes dos brindes. `categoria` é a categoria em que o cupom da loja desconta e `paraQueVale` o nome dela, para o caixa oferecer o cupom só quando a compra tem um item da categoria (RN15). O cupom preso numa reserva não aparece aqui: ele entra sozinho quando a reserva sai na compra.
+`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `reservas` são as em aberto do cliente nesta loja, com o tamanho, a cor, o valor já com o cupom e se já foi paga; `foto` é a primeira foto do produto (a miniatura no balcão), ou `null`. `podeRetirar` é `true` nas confirmadas pela loja (`CONFIRMADA` ou `SEPARADA`): o caixa mostra "Retirar"; a pendente a loja confirma antes. `cupons` traz os da loja primeiro e depois os vouchers do shopping; em cada grupo, os que dão desconto antes dos brindes. `categoria` é a categoria em que o cupom da loja desconta e `paraQueVale` o nome dela, para o caixa oferecer o cupom só quando a compra tem um item da categoria (RN15). O cupom preso numa reserva não aparece aqui: ele entra sozinho quando a reserva sai na compra, e a `origem` dele diz qual lado da compra ele ocupa (o cupom da loja ou o voucher do shopping, RN05).
 
 ### `POST /api/loja/compras/previa`
 

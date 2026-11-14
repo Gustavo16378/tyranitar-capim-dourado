@@ -368,7 +368,7 @@ describe('cupom na reserva (RN15)', () => {
     expect((await cuponsDe('p-run')).corpo.itens.map((c: { id: string }) => c.id)).toEqual(['cp-shopping-20'])
     const balcao = await chamar(atendimento, { url: '/api/loja/atendimento/q-ana', params: { qr: 'q-ana' }, usuario: LOJISTA_A })
     expect(balcao.corpo.cupons.map((c: { id: string }) => c.id)).not.toContain('cp-a-10')
-    expect(balcao.corpo.reservas[0]).toMatchObject({ tamanho: '42', precoCentavos: 35991, cupom: { id: 'cp-a-10' }, podeRetirar: false })
+    expect(balcao.corpo.reservas[0]).toMatchObject({ tamanho: '42', precoCentavos: 35991, cupom: { id: 'cp-a-10', origem: 'LOJA' }, podeRetirar: false })
 
     // Cancelada, o cupom volta.
     await chamar(cancelar, { metodo: 'PATCH', url: `/api/reservas/${r.corpo.id}/cancelar`, params: { id: r.corpo.id }, usuario: ANA })

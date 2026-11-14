@@ -11,7 +11,6 @@ import type {
   PedidoCompra,
   PreviaCompra,
   ProdutoDaLoja,
-  ReservaDaLoja,
   ReservaDoCliente,
 } from '../../../tipos/loja'
 
@@ -115,19 +114,15 @@ export interface ItemParaCupom {
   categoria: string | null
   /** Pago com Pix antes do balcão: os cupons do caixa não descontam nele. */
   jaPago: boolean
-  /** O item já tem o cupom da reserva (com a origem, quando se sabe). */
-  cupomDaReserva: { id: string; origem?: OrigemCupom } | null
+  /** O item já tem o cupom da reserva. */
+  cupomDaReserva: { id: string; origem: OrigemCupom } | null
 }
 
-/**
- * O item como a regra dos cupons vê. O cupom da reserva vem às vezes sem a origem; se o mesmo cupom
- * está entre os do cliente, a origem sai de lá.
- */
-export function paraCupom(item: ItemNoCarrinho, cupons: readonly CupomDoCliente[] = []): ItemParaCupom {
+/** O item como a regra dos cupons vê. */
+export function paraCupom(item: ItemNoCarrinho): ItemParaCupom {
   if (item.tipo === 'reserva') {
     const { categoria, pago, cupom } = item.reserva
-    const origem = cupom?.origem ?? cupons.find((c) => c.id === cupom?.id)?.origem
-    return { categoria, jaPago: pago, cupomDaReserva: cupom ? { id: cupom.id, ...(origem && { origem }) } : null }
+    return { categoria, jaPago: pago, cupomDaReserva: cupom ? { id: cupom.id, origem: cupom.origem } : null }
   }
   if (item.tipo === 'produto') return { categoria: item.produto.categoria, jaPago: false, cupomDaReserva: null }
   return { categoria: null, jaPago: false, cupomDaReserva: null }
@@ -156,28 +151,6 @@ export function origensOcupadas(itens: readonly ItemParaCupom[]) {
 export function cuponsQueValem(cupons: readonly CupomDoCliente[], itens: readonly ItemParaCupom[]) {
   const ocupadas = origensOcupadas(itens)
   return cupons.filter((c) => !ocupadas.has(c.origem) && itens.some((i) => itemAceitaCupom(i, c)))
-}
-
-/** Alguma reserva tem cupom sem a origem (o atendimento da API ainda não manda). */
-export function faltaOrigem(reservas: readonly ReservaDoCliente[]) {
-  return reservas.some((r) => r.cupom && !r.cupom.origem)
-}
-
-/**
- * O cupom de cada reserva com a origem. Sem ela, o caixa não sabe se o cupom da reserva já é o
- * cupom da loja da compra (e ofereceria outro, que a API recusa): ela sai da lista de reservas da
- * loja (GET /api/loja/reservas), que já traz a origem.
- */
-export function completarOrigens(
-  reservas: readonly ReservaDoCliente[],
-  daLoja: readonly Pick<ReservaDaLoja, 'id' | 'cupom'>[] | null | undefined,
-): ReservaDoCliente[] {
-  if (!daLoja) return [...reservas]
-  return reservas.map((r) => {
-    if (!r.cupom || r.cupom.origem) return r
-    const origem = daLoja.find((d) => d.id === r.id)?.cupom?.origem
-    return origem ? { ...r, cupom: { ...r.cupom, origem } } : r
-  })
 }
 
 /** O cupom escolhido de cada lado; null é "sem cupom". */

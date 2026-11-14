@@ -4,14 +4,12 @@
 import { describe, expect, it } from 'vitest'
 import { aplicarCuponsNosItens, type Cupom, type ItemDaCompra } from '../../functions/_lib/regras/cupons'
 import {
-  completarOrigens,
   comOutros,
   comProduto,
   comQuantidade,
   comReserva,
   cuponsEscolhidos,
   cuponsQueValem,
-  faltaOrigem,
   itemAceitaCupom,
   montarPedido,
   nomesDosCupons,
@@ -112,24 +110,10 @@ describe('TU45: o carrinho do caixa', () => {
     const camiseta = paraCupom({ tipo: 'produto', produto: CAMISETA, quantidade: 1 })
     // A reserva já usa o cupom da loja: na camiseta, só o voucher.
     expect(cuponsQueValem(CUPONS, [comCupom, camiseta])).toEqual([VOUCHER])
-    // Sem a origem na resposta, ela sai dos cupons do cliente, se o mesmo estiver lá.
-    const semOrigem = { tipo: 'reserva', reserva: reserva('r3', { cupom: { id: VOUCHER.id, titulo: VOUCHER.titulo } }) } as const
-    expect(paraCupom(semOrigem, CUPONS).cupomDaReserva).toEqual({ id: VOUCHER.id, origem: 'SHOPPING' })
-    expect(paraCupom(semOrigem).cupomDaReserva).toEqual({ id: VOUCHER.id })
-  })
-
-  it('a origem do cupom da reserva sai da lista de reservas da loja quando o atendimento não manda', () => {
-    const semOrigem = reserva('r1', { cupom: { id: 'cp-a-10', titulo: '10% em calçados' } })
-    const comOrigem = reserva('r2', { cupom: { id: 'cp-s', titulo: 'R$ 20', origem: 'SHOPPING' } })
-    expect(faltaOrigem([semOrigem, comOrigem])).toBe(true)
-    expect(faltaOrigem([comOrigem, reserva('r3')])).toBe(false)
-    const daLoja = [{ id: 'r1', cupom: { id: 'cp-a-10', titulo: '10% em calçados', origem: 'LOJA' as const } }]
-    const completas = completarOrigens([semOrigem, comOrigem], daLoja)
-    expect(completas.map((r) => r.cupom?.origem)).toEqual(['LOJA', 'SHOPPING'])
-    expect(completarOrigens([semOrigem], null)[0].cupom).toEqual({ id: 'cp-a-10', titulo: '10% em calçados' })
-    // Com a origem, a reserva ocupa o lado da loja: o caixa só oferece o voucher na camiseta.
-    const itens = [{ tipo: 'reserva', reserva: completas[0] } as const, { tipo: 'produto', produto: CAMISETA, quantidade: 1 } as const]
-    expect(cuponsQueValem(CUPONS, itens.map((i) => paraCupom(i)))).toEqual([VOUCHER])
+    // O voucher na reserva ocupa o lado do shopping: o caixa não oferece outro voucher.
+    const comVoucher = paraCupom({ tipo: 'reserva', reserva: reserva('r3', { cupom: { id: VOUCHER.id, titulo: VOUCHER.titulo, origem: 'SHOPPING' } }) })
+    expect(comVoucher.cupomDaReserva).toEqual({ id: VOUCHER.id, origem: 'SHOPPING' })
+    expect(cuponsQueValem(CUPONS, [comVoucher, camiseta])).not.toContainEqual(VOUCHER)
   })
 
   it('o cupom escolhido sai do pedido quando o item dele sai', () => {
@@ -230,7 +214,7 @@ describe('TU45: o carrinho do caixa', () => {
   })
 
   it('os nomes dos cupons: os do cliente e os presos às reservas', () => {
-    const nomes = nomesDosCupons([VOUCHER], [reserva('r1', { cupom: { id: 'cp-r', titulo: 'R$ 30 no tênis' } })])
+    const nomes = nomesDosCupons([VOUCHER], [reserva('r1', { cupom: { id: 'cp-r', titulo: 'R$ 30 no tênis', origem: 'LOJA' } })])
     expect(nomes.get('cp-r')).toBe('R$ 30 no tênis')
     expect(nomes.get(VOUCHER.id)).toBe(VOUCHER.titulo)
   })
