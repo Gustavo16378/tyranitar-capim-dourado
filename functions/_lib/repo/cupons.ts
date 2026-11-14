@@ -41,6 +41,7 @@ export function paraRegra(c: CupomLinha): Cupom {
     limitePorCliente: c.limite_por_cliente,
     validade: c.validade,
     ativo: c.ativo === 1,
+    categoria: c.categoria_alvo,
   }
 }
 
@@ -83,14 +84,27 @@ export async function cuponsPorIds(db: D1Database, ids: string[]) {
   return ids.flatMap((id) => results.filter((c) => c.id === id))
 }
 
-/** Quantas vezes o cliente já usou cada cupom (RN06). */
-export async function usosDoCliente(db: D1Database, clienteId: string): Promise<Record<string, number>> {
+/**
+ * Quantas vezes o cliente já usou cada cupom (RN06): as compras com ele e as reservas em aberto que
+ * o prendem (o cupom escolhido ao reservar fica bloqueado até a retirada, e volta se a reserva for
+ * cancelada, recusada ou expirar). As reservas de `exceto` (as que saem na compra agora) não contam.
+ */
+export async function usosDoCliente(
+  db: D1Database,
+  clienteId: string,
+  { exceto = [] as string[] } = {},
+): Promise<Record<string, number>> {
   const { results } = await db
     .prepare(
-      `SELECT u.cupom_id, count(*) AS usos FROM uso_cupom u JOIN compra c ON c.id = u.compra_id
-       WHERE c.cliente_id = ?1 GROUP BY u.cupom_id`,
+      `SELECT cupom_id, count(*) AS usos FROM (
+         SELECT u.cupom_id FROM uso_cupom u JOIN compra c ON c.id = u.compra_id WHERE c.cliente_id = ?1
+         UNION ALL
+         SELECT r.cupom_id FROM reserva r
+         WHERE r.cliente_id = ?1 AND r.cupom_id IS NOT NULL AND r.status IN ('PENDENTE', 'CONFIRMADA', 'SEPARADA')
+           AND r.id NOT IN (SELECT value FROM json_each(?2))
+       ) GROUP BY cupom_id`,
     )
-    .bind(clienteId)
+    .bind(clienteId, JSON.stringify(exceto))
     .all<{ cupom_id: string; usos: number }>()
   return Object.fromEntries(results.map((r) => [r.cupom_id, r.usos]))
 }
