@@ -22,17 +22,19 @@ O app está no ar e não precisa de cadastro: a tela de entrar tem um botão par
 | [tyranitar-capim-dourado.pages.dev/loja](https://tyranitar-capim-dourado.pages.dev/loja) | **Lojista (Centauro)** | O painel da loja |
 | [tyranitar-capim-dourado.pages.dev/shopping](https://tyranitar-capim-dourado.pages.dev/shopping) | **Shopping (admin)** | O painel da administração do shopping |
 
-**O fluxo principal em 2 minutos.** Abra o app numa aba e o painel da loja em outra.
+**O fluxo principal em 3 minutos.** Abra o app numa aba (ou no celular) e o painel da loja em outra, com **Lojista (Centauro)** e a tela Reservas aberta: ela avisa a reserva nova sozinha.
 
 | # | Onde | Faça | O que aparece |
 | :---: | --- | --- | --- |
 | 1 | App | **Começar** e **Cliente (Ana)** | O Início da Ana, nível Capim, com as ofertas |
 | 2 | App › Capi | Toque na sugestão com a foto do tênis e em enviar | A Capi entende a foto e acha o tênis em duas lojas, a Centauro primeiro |
-| 3 | App › reserva | **Sim, separar**, **Reservar**, **Pagar agora com Pix** e **Já paguei** | A reserva paga, com o prazo para retirar |
-| 4 | App › mapa | **Como chegar** e a entrada por onde chegou (ou toque numa entrada no mapa) | A rota 3D da entrada até a loja, com os minutos a pé |
-| 5 | Painel da loja | **Lojista (Centauro)**, Atendimento e **Simular leitura** | O QR da Ana lido: o que ela procura (a ficha) e a reserva paga |
-| 6 | Painel da loja | Em **Entregar reserva**, a do tênis, e **Registrar compra** | O recibo com os pontos |
-| 7 | App › Carteira | Abra a carteira | Os pontos somando e a reserva retirada |
+| 3 | App › reserva | **Sim, separar**, **Reservar**, o tamanho **42**, o cupom **10% em calçados**, **Pagar agora com Pix** e **Já paguei** | O Pix de R$ 359,91 (com o desconto) e a "Reserva enviada", esperando a loja |
+| 4 | Painel da loja › Reservas | Espere até 20 s | O selo de reserva nova no menu e um som curto; o cartão com o tamanho, o cupom e "Pago com Pix" |
+| 5 | Painel da loja › Reservas | **Confirmar**, a hora em que fica pronta e **Confirmar reserva** | A reserva confirmada, com "Pronta a partir de" e "Retirar até" |
+| 6 | App › Início | Toque no sino | O aviso "Centauro confirmou sua reserva", com a hora; na Carteira, "Confirmada · pronta às 15:30" |
+| 7 | App › mapa | **Como chegar** e a entrada por onde chegou (ou toque numa entrada no mapa) | A rota 3D da entrada até a loja, com os minutos a pé |
+| 8 | Painel da loja › Atendimento | **Simular leitura**, **Retirar** o tênis e, se quiser, um produto da busca no catálogo; **Registrar compra** | O QR da Ana lido (a ficha e a reserva paga) e o recibo com os itens e os pontos |
+| 9 | App › Carteira | Abra a carteira | Os pontos somando e a reserva fora de Minhas reservas |
 
 No painel do shopping, veja Demanda (o que os clientes procuram e não acham), Lojas vagas e demanda e QR das entradas. A equipe volta a demonstração ao começo com `npm run demo:reset`, entre um ensaio e outro.
 
@@ -100,8 +102,9 @@ A cliente toca na sugestão com a foto do tênis (ela só anexa a foto e põe a 
 
 **Loja** (`/loja`):
 
-- **Atendimento:** lê o QR do cliente (câmera ou "Simular leitura"), mostra a ficha filtrada pelas categorias da loja e as reservas dele, e registra a compra com os cupons e os pontos.
-- **Reservas** (confirmar, separar, entregar e cancelar), **Produtos** (cadastro e importação de planilha), **Cupons**, **Desempenho** (mais vendidos, mais buscados, buscados e não encontrados, picos de movimento) e **Extrato** (descontos e reembolsos a receber).
+- **Reservas:** a reserva nova chega sozinha (o painel pergunta a cada 20 s), com o selo no menu, um som curto que dá para desligar e o aviso para o leitor de tela. A loja confirma dizendo a partir de que horas fica pronta, separa, ou recusa com o motivo, que o cliente vê.
+- **Atendimento:** lê o QR do cliente (câmera ou "Simular leitura"), mostra a ficha filtrada pelas categorias da loja e as reservas dele nesta loja, e registra a compra com itens: a reserva ("Retirar"), produtos da busca no catálogo e "Outros". Os cupons valem item por item ("10% em calçados" só desconta no calçado), com os pontos na hora.
+- **Produtos** (cadastro e importação de planilha), **Cupons**, **Desempenho** (mais vendidos, mais buscados, buscados e não encontrados, picos de movimento e as reservas, com as recusadas à parte) e **Extrato** (cada compra com a cliente e os itens, os descontos e os reembolsos a receber).
 
 **Shopping** (`/shopping`):
 
