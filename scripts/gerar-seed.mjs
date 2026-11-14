@@ -248,9 +248,10 @@ const lojaDaDemo = lojas.find((l) => l.mapaId === produtos[0]?.mapaId)
 const primeiroCalcado = produtos.find((p) => p.categoria === 'calcados')
 const lojaCalcados = lojas.find((l) => l.mapaId === primeiroCalcado?.mapaId) ?? lojasComProduto[0]
 const cupons = [
-  lojaCalcados && { id: idDoCupom('10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
+  // categoria: o cupom da loja só desconta nos itens dela (RN15); null, na loja toda.
+  lojaCalcados && { id: idDoCupom('10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, categoria: 'calcados', nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
   // Segundo cupom da mesma loja: não combina com o de 10% na mesma compra (RN05).
-  lojaCalcados && { id: idDoCupom('15-camisetas'), mapaId: lojaCalcados.mapaId, titulo: 'R$ 15 em camisetas', tipo: 'VALOR', valor: 1500, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
+  lojaCalcados && { id: idDoCupom('15-camisetas'), mapaId: lojaCalcados.mapaId, titulo: 'R$ 15 em camisetas', tipo: 'VALOR', valor: 1500, categoria: 'roupas', nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
   { id: idDoCupom('20-reais-shopping'), mapaId: null, titulo: 'R$ 20 em qualquer loja', tipo: 'VALOR', valor: 2000, nivel: 'SEMENTE', limite: 1, validade: '2026-12-15' },
   { id: idDoCupom('estacionamento'), mapaId: null, titulo: 'Estacionamento grátis por 2 h', tipo: 'BRINDE', valor: 0, nivel: 'CAPIM', limite: 2, validade: '2026-11-30' },
 ].filter(Boolean)
@@ -363,12 +364,13 @@ SELECT id, ${v(
 FROM usuario WHERE email = ${v(ANA)} AND consentimento_ficha = 1;`,
 
   ...cupons.map(
-    (c) => `INSERT INTO cupom (id, loja_id, titulo, tipo, valor, nivel_minimo, limite_por_cliente, validade)
-SELECT ${lista([c.id])}, ${c.mapaId ? 'l.id' : 'NULL'}, ${lista([c.titulo, c.tipo, c.valor, c.nivel, c.limite, c.validade])}
+    (c) => `INSERT INTO cupom (id, loja_id, titulo, tipo, valor, categoria_alvo, nivel_minimo, limite_por_cliente, validade)
+SELECT ${lista([c.id])}, ${c.mapaId ? 'l.id' : 'NULL'}, ${lista([c.titulo, c.tipo, c.valor])}, ${c.categoria ? v(c.categoria) : 'NULL'}, ${lista([c.nivel, c.limite, c.validade])}
 FROM ${c.mapaId ? `loja l WHERE l.mapa_id = ${v(c.mapaId)}` : '(SELECT 1) WHERE true'}
 ON CONFLICT (id) DO UPDATE SET
   loja_id = excluded.loja_id, titulo = excluded.titulo, tipo = excluded.tipo, valor = excluded.valor,
-  nivel_minimo = excluded.nivel_minimo, limite_por_cliente = excluded.limite_por_cliente, validade = excluded.validade;`,
+  categoria_alvo = excluded.categoria_alvo, nivel_minimo = excluded.nivel_minimo,
+  limite_por_cliente = excluded.limite_por_cliente, validade = excluded.validade;`,
   ),
 
   // Favoritos da Ana ("Você salvou" no Início): os produtos da demo, se ainda não estiverem.
@@ -382,6 +384,11 @@ SELECT u.id, ${v(p.id)}, datetime('now', ${v(`-${i} hours`)}) FROM usuario u WHE
     (c) => `INSERT OR IGNORE INTO compra (id, cliente_id, loja_id, valor_centavos, origem, pontos_gerados, com_ficha, criado_em)
 SELECT ${v(c.id)}, u.id, ${idDaLoja(c.mapaId)}, ${c.valor}, 'CAIXA', ${c.pontos}, ${c.comFicha}, datetime('now', ${v(`-${c.dias} days`)})
 FROM usuario u WHERE u.email = ${v(ANA)};`,
+  ),
+  // Cada compra do histórico com o item dela ("Outros": o histórico não diz o produto).
+  ...compras.map(
+    (c) => `INSERT OR IGNORE INTO compra_item (id, compra_id, descricao, quantidade, preco_centavos)
+SELECT ${v(`${c.id}-1`)}, ${v(c.id)}, 'Outros', 1, ${c.valor} WHERE EXISTS (SELECT 1 FROM compra WHERE id = ${v(c.id)});`,
   ),
 
   // Buscas da demonstração: entram uma vez, com id fixo, espalhadas pelos 90 dias (3 × as de 30).

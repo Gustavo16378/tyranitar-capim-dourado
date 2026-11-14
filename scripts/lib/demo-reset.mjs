@@ -3,9 +3,9 @@
 // D1 de teste. Só mexe na cliente da demonstração; as contas de outras pessoas ficam como estão.
 //
 // O que os ensaios deixam e o reset desfaz:
-// - compras no balcão que não são do seed, com o que a compra grava junto: os usos de cupom (que
-//   tiravam os cupons da carteira), o reembolso do voucher do shopping, as avaliações e o aviso
-//   "Você ganhou N pontos";
+// - compras no balcão que não são do seed, com o que a compra grava junto: os itens, os usos de
+//   cupom (que tiravam os cupons da carteira), o reembolso do voucher do shopping, as avaliações e
+//   o aviso "Você ganhou N pontos";
 // - reservas (as abertas prendiam o estoque; todas contavam nos relatórios da loja);
 // - a conversa com a Capi, as buscas que ela fez e a ficha que ela anotou;
 // - o saldo, recalculado pelas compras que sobram (as do seed). O nível sai das compras dos
@@ -22,7 +22,9 @@ export function sqlDaLimpeza({ email, comprasDoSeed, cuponsDoSeed }) {
   const cliente = `(SELECT id FROM usuario WHERE email = ${texto(email)})`
   const deTeste = `(SELECT id FROM compra WHERE cliente_id = ${cliente} AND id NOT IN ${ids(comprasDoSeed)})`
   // Uma reserva ligada a uma compra que fica (nenhuma do seed tem) não pode sair.
-  const reservas = `reserva WHERE cliente_id = ${cliente} AND id NOT IN (SELECT reserva_id FROM compra WHERE reserva_id IS NOT NULL AND id NOT IN ${deTeste})`
+  const reservas = `reserva WHERE cliente_id = ${cliente}
+    AND id NOT IN (SELECT reserva_id FROM compra WHERE reserva_id IS NOT NULL AND id NOT IN ${deTeste})
+    AND id NOT IN (SELECT reserva_id FROM compra_item WHERE reserva_id IS NOT NULL AND compra_id NOT IN ${deTeste})`
   return {
     contagem: `SELECT
   (SELECT count(*) FROM compra WHERE id IN ${deTeste}) AS compras,
@@ -37,6 +39,7 @@ export function sqlDaLimpeza({ email, comprasDoSeed, cuponsDoSeed }) {
       `DELETE FROM reembolso WHERE compra_id IN ${deTeste}`,
       `DELETE FROM uso_cupom WHERE compra_id IN ${deTeste}`,
       `DELETE FROM avaliacao WHERE compra_id IN ${deTeste}`,
+      `DELETE FROM compra_item WHERE compra_id IN ${deTeste}`,
       `DELETE FROM compra WHERE id IN ${deTeste}`,
       `DELETE FROM ${reservas}`,
       // "Você ganhou N pontos" e os avisos das reservas: o seed não cria nenhum.
