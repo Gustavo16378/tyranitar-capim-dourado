@@ -2,7 +2,7 @@
 // sessão. Cada painel monta a sua configuração (src/loja/RotasLoja.tsx) e o RotasDoPainel faz
 // o resto: guarda de perfil, barra lateral e rotas das telas. O login é o único do app
 // (/entrar), que grava a sessão do perfil (src/painel/api/sessoes.ts).
-import { createContext, useContext, type ComponentType } from 'react'
+import { createContext, useContext, type ComponentType, type ReactNode } from 'react'
 import type { Perfil } from '../tipos'
 import type { ArmazemDeSessao } from './api/sessao'
 
@@ -29,6 +29,12 @@ export interface ConfigDoPainel {
   /** Na ordem da barra lateral; a primeira é a tela inicial. */
   telas: readonly TelaDoPainel[]
   sessao: ArmazemDeSessao
+  /**
+   * Fica por volta das telas enquanto o painel está aberto (já com a sessão), para o que não é de
+   * uma tela só: no da loja, o aviso de reserva nova, que pergunta à API a cada 20 s e põe o selo
+   * no item Reservas (src/painel/contadores.ts). Sem ele, o painel funciona igual, sem selos.
+   */
+  Vigia?: ComponentType<{ children: ReactNode }>
 }
 
 export const ContextoDoPainel = createContext<ConfigDoPainel | null>(null)

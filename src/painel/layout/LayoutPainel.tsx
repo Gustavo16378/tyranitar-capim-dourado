@@ -1,17 +1,23 @@
 import { Suspense, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { NavLink, Outlet } from 'react-router'
+import { gsap } from 'gsap'
 import { cx } from '../../componentes/cx'
+import { comMovimento, DURACAO, EASE, useGSAP } from '../../movimento'
 import { SeletorDeAparencia } from '../../tema/SeletorDeAparencia'
 import { Carregando, Esqueleto } from '../comum/Estados'
+import { numeroDoSelo, useContadores, type Contador } from '../contadores'
 import { urlNoPainel, usePainel } from '../painel'
 
 // Itens da barra lateral, sobre terra. A aba ativa ganha fundo claro translúcido e negrito;
 // o foco usa on-terra, porque o focus-ring some sobre o terra.
-const ITEM =
+const BASE_DO_ITEM =
   'flex min-h-11 items-center whitespace-nowrap rounded-sm px-3 text-body-sm font-medium text-on-terra ' +
-  'opacity-80 transition-[background-color,opacity] duration-instante ease-saida hover:opacity-100 ' +
-  'focus-visible:outline-on-terra'
+  'transition-[background-color,opacity] duration-instante ease-saida focus-visible:outline-on-terra'
+const ITEM = `${BASE_DO_ITEM} opacity-80 hover:opacity-100`
 const ATIVO = 'bg-[color-mix(in_srgb,var(--on-terra)_12%,transparent)] font-semibold opacity-100'
+// Nas telas, o texto fica mais claro e o selo não: com opacidade no item todo, o número do selo
+// perderia contraste.
+const TEXTO_DO_ITEM = 'opacity-80 transition-opacity duration-instante group-hover:opacity-100'
 
 /** As três barras do botão de menu; viram um X com o menu aberto. */
 function IconeMenu({ aberto }: { aberto: boolean }) {
@@ -33,6 +39,19 @@ function IconeMenu({ aberto }: { aberto: boolean }) {
 export function LayoutPainel() {
   const painel = usePainel()
   const atual = painel.sessao.useSessao()
+  const contadores = useContadores()
+  // No botão Menu, a soma dos selos: no celular, a lista das telas fica escondida.
+  const comSelo = painel.telas.flatMap(({ caminho }) => {
+    const contador = contadores[caminho]
+    return contador && contador.quantidade > 0 ? [contador] : []
+  })
+  const seloDoMenu: Contador | undefined = comSelo.length
+    ? {
+        quantidade: comSelo.reduce((soma, c) => soma + c.quantidade, 0),
+        rotulo: comSelo.map((c) => c.rotulo).join(', '),
+        chegadas: comSelo.reduce((soma, c) => soma + (c.chegadas ?? 0), 0),
+      }
+    : undefined
   const [aberto, setAberto] = useState(false)
   const idMenu = useId()
   const botao = useRef<HTMLButtonElement>(null)
@@ -57,11 +76,13 @@ export function LayoutPainel() {
             type="button"
             aria-expanded={aberto}
             aria-controls={idMenu}
+            aria-label={aberto ? undefined : comNumero('Menu', seloDoMenu)}
             onClick={() => setAberto((a) => !a)}
             className={cx(ITEM, 'cursor-pointer gap-2 opacity-100 lg:hidden')}
           >
             <IconeMenu aberto={aberto} />
-            {aberto ? 'Fechar' : 'Menu'}
+            {aberto ? 'Fechar' : comEspaco('Menu', seloDoMenu)}
+            {!aberto && seloDoMenu && <Selo contador={seloDoMenu} />}
           </button>
         </div>
 
@@ -76,17 +97,26 @@ export function LayoutPainel() {
         >
           <nav aria-label="Telas do painel">
             <ul className="flex flex-col gap-1">
-              {painel.telas.map(({ caminho, rotulo }) => (
-                <li key={caminho}>
-                  <NavLink
-                    to={urlNoPainel(painel, caminho)}
-                    onClick={() => setAberto(false)}
-                    className={({ isActive }) => cx(ITEM, 'gap-2', isActive && ATIVO)}
-                  >
-                    {rotulo}
-                  </NavLink>
-                </li>
-              ))}
+              {painel.telas.map(({ caminho, rotulo }) => {
+                const contador = contadores[caminho]
+                return (
+                  <li key={caminho}>
+                    <NavLink
+                      to={urlNoPainel(painel, caminho)}
+                      onClick={() => setAberto(false)}
+                      aria-label={comNumero(rotulo, contador)}
+                      className={({ isActive }) => cx(BASE_DO_ITEM, 'group gap-2', isActive && ATIVO)}
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span className={cx(TEXTO_DO_ITEM, isActive && 'opacity-100')}>{comEspaco(rotulo, contador)}</span>
+                          {contador && contador.quantidade > 0 && <Selo contador={contador} />}
+                        </>
+                      )}
+                    </NavLink>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
 
@@ -116,5 +146,58 @@ export function LayoutPainel() {
         </Suspense>
       </main>
     </div>
+  )
+}
+
+/**
+ * O nome de um item com selo, para o leitor de tela: "Reservas, 2 reservas novas". Vai no aria-label,
+ * e não num texto escondido ao lado: o item é flex, e o navegador poria um espaço antes da vírgula.
+ */
+function comNumero(nome: string, contador: Contador | undefined) {
+  return contador && contador.quantidade > 0 ? `${nome}, ${contador.rotulo}` : undefined
+}
+
+/**
+ * O texto visível do item, com um espaço no fim quando tem selo: quem confere se o nome contém o
+ * texto visível (o axe, e quem fala o que vê para o leitor de voz) lê "Reservas 2", não "Reservas2".
+ */
+function comEspaco(nome: string, contador: Contador | undefined) {
+  return contador && contador.quantidade > 0 ? `${nome} ` : nome
+}
+
+/**
+ * O número ao lado de uma tela (as reservas novas da loja), em ouro sobre o terra. Quando chega
+ * algo novo, o selo dá um pulo curto; com movimento reduzido, só o número muda.
+ */
+function Selo({ contador }: { contador: Contador }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const chegadasVistas = useRef(contador.chegadas ?? 0)
+
+  useGSAP(
+    () => {
+      const chegadas = contador.chegadas ?? 0
+      if (!ref.current || chegadas === chegadasVistas.current) return
+      chegadasVistas.current = chegadas
+      const selo = ref.current
+      const mm = comMovimento(
+        () => {
+          gsap.fromTo(selo, { scale: 0.6 }, { scale: 1, duration: DURACAO.media, ease: EASE.mola })
+        },
+        () => {},
+      )
+      return () => mm.revert()
+    },
+    { dependencies: [contador.chegadas] },
+  )
+
+  // O leitor de tela ouve o rótulo pelo nome do item (comNumero); o número desenhado fica escondido dele.
+  return (
+    <span
+      ref={ref}
+      aria-hidden="true"
+      className="ml-auto inline-grid h-6 min-w-6 place-items-center rounded-pill bg-ouro px-1.5 text-caption font-semibold tabular-nums text-on-ouro"
+    >
+      {numeroDoSelo(contador.quantidade)}
+    </span>
   )
 }
