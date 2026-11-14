@@ -184,9 +184,24 @@ Fica em [`docs/`](docs/):
 - [Banco de dados](docs/banco.md)
 - [API](docs/api.md)
 - [UML](docs/uml.md)
-- [Plano de testes](docs/testes.md)
+- [Plano de testes](docs/testes.md) e [evidências de testes](docs/evidencias-testes.md)
+- [Como fazer uma tela de painel](docs/como-fazer-uma-tela.md)
+- [Easter egg](docs/easter-egg.md) (com spoiler)
 - [Créditos das imagens](docs/creditos.md)
 - [Primeira entrega](docs/primeira-entrega.md)
+
+## Próximos passos
+
+O que faríamos numa versão real, com o shopping:
+
+- **Pix de verdade**, por um provedor de pagamento, com o estorno automático do cancelamento.
+- **Integração com o estoque das lojas** (o sistema de caixa ou o ERP de cada uma), para o produto e a quantidade virem da loja e a reserva baixar o estoque lá (RF26).
+- **Localização dentro do shopping** com beacons ou QR também nos corredores e nas escadas, para a rota sair de onde a pessoa está, e não só da entrada.
+- **App nativo** (ou o PWA nas lojas de apps), com notificação push, a câmera direto na Capi e a carteira no Wallet do celular.
+- **Avisos para o cliente:** o app já grava os avisos (pontos ganhos, reserva separada), mas ainda não há a tela deles nem a notificação push.
+- **Pontos pela nota fiscal** (RF12): ler o QR da NFC-e de uma compra feita fora do app e consultar a nota na SEFAZ. Hoje os pontos entram pela compra registrada no balcão.
+- **Busca por semelhança com vetores** (Cloudflare Vectorize), quando o catálogo das lojas passar de algumas centenas de produtos.
+- **O nome do app**, definido junto com o shopping.
 
 ## Equipe
 
@@ -213,16 +228,22 @@ Declaração do item 6.3 do edital.
 
 O código é distribuído sob a [licença MIT](LICENSE), © 2026 Equipe Tyranitar. As fotos dos produtos e das capas são do Unsplash, com a licença própria descrita em [docs/creditos.md](docs/creditos.md).
 
+## Easter egg
+
 <details>
 <summary><strong>Não abra numa sexta-feira 13</strong></summary>
 
 <br>
 
-O tirano da sexta-feira 13 deixou quatro rastros no código. Nenhum aparece para quem só usa o app: é preciso ir procurar. As dicas dizem onde olhar, não o que tem lá.
+O tirano da sexta-feira 13 deixou rastros no app e no código. Nenhum aparece para quem só usa o app do jeito de sempre: é preciso ir procurar. As dicas dizem onde olhar, não o que tem lá.
 
+- **Na Capi.** Ela atende pelo nome da equipe.
+- **No toque.** Treze é o número. Vale tentar no avatar da Capi e no seletor de piso do mapa.
 - **No console.** Abra qualquer tela do app com o console do navegador aberto (F12). O tirano deixou o nome dele e diz como acordá-lo. O que ele faz acordado, só vendo.
 - **No código-fonte.** Quem lê o código-fonte da página (Ctrl+U) até o fim descobre quem assinou o app.
 - **Nos cabeçalhos.** Toda resposta da API traz um recado que não vem no corpo. Olhe a aba Rede do navegador, ou chame a API com `curl -i`.
 - **Na API.** O shopping tem uma loja a mais, que só a API atende. O número é o da data; o endereço, do jeito que o mapa escreve as lojas.
+
+Desistiu? A [explicação completa](docs/easter-egg.md) conta tudo.
 
 </details>
