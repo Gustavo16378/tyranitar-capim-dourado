@@ -7,6 +7,7 @@ import { primeiroNome } from './formatos'
 
 const ITENS: { aba: AbaId; rotulo: string; icone?: IconName }[] = [
   { aba: 'inicio', rotulo: 'Início', icone: 'casa' },
+  { aba: 'salvos', rotulo: 'Salvos para provar', icone: 'coracao' },
   { aba: 'capi', rotulo: 'Capi' },
   { aba: 'mapa', rotulo: 'Mapa', icone: 'mapa' },
   { aba: 'carteira', rotulo: 'Carteira', icone: 'carteira' },

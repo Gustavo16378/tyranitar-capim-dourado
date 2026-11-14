@@ -1,13 +1,18 @@
 import { Link, useNavigate } from 'react-router'
 import { listarFavoritos, listarOfertas, obterCarteira, useDados, useSessao } from '../api'
-import { Button, CapiMark, CupomTicket, Icon, NivelBadge, ProdutoCard } from '../componentes'
+import { Button, CapiMark, CupomTicket, Icon, NivelBadge } from '../componentes'
 import { APP_NOME } from '../config'
 import { cx } from '../componentes/cx'
 import { useEntrada } from '../movimento'
+import { CAMINHO_DOS_SALVOS } from './caminhos'
+import { CartaoDoProduto } from './CartaoDoProduto'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
-import { dataCurta, descontoDoCupom, nomeDoPiso, paraNivel, primeiroNome, saudacao } from './formatos'
+import { dataCurta, descontoDoCupom, paraNivel, primeiroNome, saudacao } from './formatos'
 import { SetasDoCarrossel } from './SetasDoCarrossel'
 import { useCarrossel } from './useCarrossel'
+
+/** Quantos salvos o Início mostra; "Ver todos" abre o resto, por loja. */
+const SALVOS_NO_INICIO = 3
 
 /** Início: ofertas para o cliente, produtos salvos e o atalho para a Capi. */
 export default function Inicio() {
@@ -122,28 +127,41 @@ export default function Inicio() {
             </section>
 
             <section aria-labelledby="titulo-salvos" className="flex flex-col gap-3">
-              <h2 data-anim id="titulo-salvos" className="text-title-sm text-marrom-ink">
-                Você salvou
-              </h2>
+              <div data-anim className="flex items-center justify-between gap-3">
+                <h2 id="titulo-salvos" className="text-title-sm text-marrom-ink">
+                  Salvos para provar
+                </h2>
+                {favoritos.tipo === 'ok' && favoritos.dados.total > 0 && (
+                  <Link to={CAMINHO_DOS_SALVOS} className="text-label text-marrom-ink underline underline-offset-2">
+                    Ver todos ({favoritos.dados.total})
+                  </Link>
+                )}
+              </div>
               {favoritos.tipo === 'erro' && <ErroTela erro={favoritos.erro} onTentar={favoritos.recarregar} />}
               {favoritos.tipo === 'ok' &&
                 (favoritos.dados.itens.length === 0 ? (
-                  <Vazio>Você ainda não salvou nenhum produto. Pergunte à Capi.</Vazio>
+                  // No lugar do "Você salvou" vazio: o caminho para os salvos, explicando o coração.
+                  <Link
+                    data-anim
+                    to={CAMINHO_DOS_SALVOS}
+                    className="flex items-center gap-3 rounded-md border border-dashed border-line-strong px-4 py-4 text-ink no-underline"
+                  >
+                    <span className="grid size-10 flex-none place-items-center rounded-full bg-marrom-soft text-terra">
+                      <Icon name="coracao" />
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-label">Salvos para provar</span>
+                      <span className="block text-body-sm text-ink-muted">
+                        Toque no coração de um produto para guardar e provar na loja.
+                      </span>
+                    </span>
+                    <Icon name="seta" className="size-4 rotate-45 text-ink-muted" />
+                  </Link>
                 ) : (
                   <ul className="flex flex-col gap-3 md:grid md:grid-cols-2 xl:grid-cols-3">
-                    {favoritos.dados.itens.map((p) => (
+                    {favoritos.dados.itens.slice(0, SALVOS_NO_INICIO).map((p) => (
                       <li key={p.id} data-anim>
-                        <Link to={`/produto/${p.id}`} className="block rounded-md">
-                          <ProdutoCard
-                            horizontal
-                            nome={p.nome}
-                            loja={p.loja.nome}
-                            piso={nomeDoPiso(p.loja.piso)}
-                            precoCentavos={p.precoCentavos}
-                            estoque={p.estoque}
-                            foto={p.foto ?? undefined}
-                          />
-                        </Link>
+                        <CartaoDoProduto produto={p} />
                       </li>
                     ))}
                   </ul>

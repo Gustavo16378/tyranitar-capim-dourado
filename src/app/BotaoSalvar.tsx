@@ -1,6 +1,6 @@
 import { Icon } from '../componentes'
 import { cx } from '../componentes/cx'
-import { useSalvos } from './salvos'
+import { useSalvos } from './useSalvos'
 
 /**
  * O coração fora do cartão (na tela do produto), com o mesmo estado dos cartões. O nome fica fixo

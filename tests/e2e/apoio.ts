@@ -71,7 +71,7 @@ export async function perguntarPeloTenisDaFoto(page: Page) {
 }
 
 /** Toca numa aba da navegação do app. */
-export function aba(page: Page, nome: 'Início' | 'Capi' | 'Mapa' | 'Carteira') {
+export function aba(page: Page, nome: 'Início' | 'Salvos' | 'Capi' | 'Mapa' | 'Carteira') {
   // No celular, a BottomNav (botões); a partir de 768 px, a barra lateral (links). Só uma aparece.
   const navegacao = page.getByRole('navigation', { name: 'Navegação principal' })
   return navegacao.getByRole('button', { name: nome }).or(navegacao.getByRole('link', { name: nome }))

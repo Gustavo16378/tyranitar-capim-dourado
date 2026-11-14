@@ -263,7 +263,7 @@ function Vitrine({ tema }: { tema: Tema }) {
           <DemoNav />
         </Largura>
         <Largura px={360}>
-          <DemoNav abas={['inicio', 'capi', 'mapa', 'carteira']} />
+          <DemoNav abas={['inicio', 'salvos', 'capi', 'mapa', 'carteira']} />
         </Largura>
       </Bloco>
     </section>

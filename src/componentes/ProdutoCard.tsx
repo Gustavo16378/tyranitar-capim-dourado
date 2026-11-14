@@ -30,6 +30,8 @@ export interface ProdutoCardProps {
   /** Texto do botão de ação (primary). Sem ele, o cartão não tem botão. */
   acao?: string
   onAcao?: () => void
+  /** O nome do botão para o leitor de tela, quando acao sozinho é vago numa lista: "Reservar Tênis Run". */
+  nomeDaAcao?: string
   horizontal?: boolean
   /** O nome vira o link do produto, e o cartão inteiro abre o produto. */
   linkDoProduto?: LinkDoCartao
@@ -66,6 +68,7 @@ export function ProdutoCard({
   selo,
   acao,
   onAcao,
+  nomeDaAcao,
   horizontal,
   linkDoProduto,
   linkDaLoja,
@@ -115,7 +118,7 @@ export function ProdutoCard({
           <span className="whitespace-nowrap text-price text-ink">{formatarPreco(precoCentavos)}</span>
           {acao && (
             <span className="relative z-10">
-              <Button variant="primary" size="sm" disabled={estoque === 0} onClick={onAcao}>
+              <Button variant="primary" size="sm" disabled={estoque === 0} aria-label={nomeDaAcao} onClick={onAcao}>
                 {acao}
               </Button>
             </span>

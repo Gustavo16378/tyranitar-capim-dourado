@@ -1,5 +1,5 @@
 import { cx } from '../componentes/cx'
-import { useSalvos } from './salvos'
+import { useSalvos } from './useSalvos'
 
 /**
  * O aviso do coração, um só para o app (fica no LayoutApp): "Tênis está nos seus salvos." O

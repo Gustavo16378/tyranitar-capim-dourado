@@ -9,7 +9,7 @@ import { AvisoDosSalvos } from './AvisoDosSalvos'
 import { BarraLateral } from './BarraLateral'
 
 /** As abas do app do cliente, na ordem da barra (a busca fica com a Capi). */
-const ABAS: AbaId[] = ['inicio', 'capi', 'mapa', 'carteira']
+const ABAS: AbaId[] = ['inicio', 'salvos', 'capi', 'mapa', 'carteira']
 
 /**
  * Telas abertas a qualquer visitante, sem login: o mapa (o QR de cada entrada abre
@@ -32,7 +32,7 @@ function larguraDaTela(caminho: string) {
   if (tela === 'mapa') return 'h-full'
   if (tela === 'capi') return 'h-full md:max-w-3xl'
   if (tela === 'inicio') return 'md:max-w-5xl'
-  if (tela === 'carteira') return 'md:max-w-3xl'
+  if (tela === 'carteira' || tela === 'salvos') return 'md:max-w-3xl'
   return 'md:max-w-2xl'
 }
 

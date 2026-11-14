@@ -11,6 +11,7 @@ import MinhaConta from './MinhaConta'
 import PortaDoApp from './PortaDoApp'
 import Produto from './Produto'
 import Reserva from './Reserva'
+import Salvos from './Salvos'
 
 // Todas passam pela PortaDoApp: a cada carregamento do app, a Abertura vem antes da tela pedida.
 export const rotasDoApp = (
@@ -20,6 +21,7 @@ export const rotasDoApp = (
     <Route path="/cadastro" element={<Cadastro />} />
     <Route element={<LayoutApp />}>
       <Route path="/inicio" element={<Inicio />} />
+      <Route path="/salvos" element={<Salvos />} />
       <Route path="/capi" element={<Capi />} />
       <Route path="/produto/:id" element={<Produto />} />
       <Route path="/reserva/:id" element={<Reserva />} />

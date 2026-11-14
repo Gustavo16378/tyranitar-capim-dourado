@@ -1,8 +1,8 @@
-// O coração de salvar (src/app/salvos.ts): estado otimista, os pedidos de cada produto em fila,
+// O coração de salvar (src/app/useSalvos.ts): estado otimista, os pedidos de cada produto em fila,
 // desfazer quando a API recusa e os avisos para o leitor de tela.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ErroApi } from '../../src/api/cliente'
-import { criarSalvos, DURACAO_DO_AVISO_MS, type ApiDosSalvos } from '../../src/app/salvos'
+import { criarSalvos, DURACAO_DO_AVISO_MS, type ApiDosSalvos } from '../../src/app/useSalvos'
 
 const TENIS = { id: 'p-tenis', nome: 'Tênis Run' }
 
