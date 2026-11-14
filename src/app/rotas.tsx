@@ -1,5 +1,6 @@
 // Rotas do app do cliente. O App.tsx só inclui {rotasDoApp}; tela nova entra aqui.
 import { Navigate, Route } from 'react-router'
+import Loja13 from '../easter-egg/Loja13SobDemanda'
 import Cadastro from './Cadastro'
 import Capi from './Capi'
 import Carteira from './Carteira'
@@ -26,6 +27,7 @@ export const rotasDoApp = (
       <Route path="/mapa" element={<Mapa />} />
       <Route path="/carteira" element={<Carteira />} />
       <Route path="/conta" element={<MinhaConta />} />
+      <Route path="/loja-13" element={<Loja13 />} />
     </Route>
   </Route>
 )
