@@ -196,6 +196,7 @@ function MapaAte({
             nomes={nomes}
             origem={aqui?.id}
             onSelecionarLoja={aoEscolher}
+            onSelecionarEntrada={escolher}
             controle={controle}
           />
         </div>
@@ -217,20 +218,29 @@ function MapaAte({
             {minutosAPe(rota.metros)} min a pé · {Math.round(rota.metros)} m
           </Badge>
         )}
-        <p className="text-body-sm text-ink-muted">
-          {!destino
-            ? // Sem login, a Capi não está à mão: o convite embaixo leva até ela.
-              `${aqui ? `Você está na ${aqui.nome}. ` : ''}Toque numa loja para ver o caminho${visitante ? '' : ', ou peça à Capi'}. Arraste para girar e use dois dedos para aproximar.`
-            : !achado
-              ? 'Essa loja ainda não está na planta.'
-              : achado.piso !== piso
-                ? `${nome ?? 'A loja'} fica no ${nomeDoPiso(achado.piso).toLowerCase()}: troque o piso para ver a rota.`
-                : `Saindo da ${naRota?.nome ?? 'entrada mais próxima'}. Arraste para girar o mapa.`}
-        </p>
-        {naTela && escolhas[piso] !== undefined && (
-          <Button size="sm" variant="ghost" onClick={() => escolher(undefined)}>
-            Trocar a entrada
-          </Button>
+        {destino && achado?.piso === piso ? (
+          <>
+            {/* De onde a rota sai, com o botão de trocar logo ao lado. Tocar numa entrada no
+                mapa também troca, e a rota é refeita na hora. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="text-body-sm text-ink">{`Saindo da ${naRota?.nome ?? 'entrada mais próxima'}.`}</p>
+              {naTela && escolhas[piso] !== undefined && (
+                <Button size="sm" variant="secondary" icon="pin" onClick={() => escolher(undefined)}>
+                  Trocar a entrada
+                </Button>
+              )}
+            </div>
+            <p className="text-body-sm text-ink-muted">Toque numa entrada no mapa para sair dela. Arraste para girar o mapa.</p>
+          </>
+        ) : (
+          <p className="text-body-sm text-ink-muted">
+            {!destino
+              ? // Sem login, a Capi não está à mão: o convite embaixo leva até ela.
+                `${aqui ? `Você está na ${aqui.nome}. ` : ''}Toque numa loja para ver o caminho${visitante ? '' : ', ou peça à Capi'}. Arraste para girar e use dois dedos para aproximar.`
+              : !achado
+                ? 'Essa loja ainda não está na planta.'
+                : `${nome ?? 'A loja'} fica no ${nomeDoPiso(achado.piso).toLowerCase()}: troque o piso para ver a rota.`}
+          </p>
         )}
         {visitante && (
           <Link

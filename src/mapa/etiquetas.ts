@@ -18,6 +18,8 @@ export interface Etiqueta {
   texto: string
   posicao: [x: number, y: number, z: number]
   estilo: 'loja' | 'escolhida' | 'entrada' | 'voce'
+  /** Só nas entradas: o id dela, para o toque na etiqueta escolher a entrada. */
+  entrada?: string
 }
 
 /**
@@ -52,6 +54,7 @@ export function etiquetasDoPiso(
         texto: aqui ? 'Você está aqui' : entrada.nome,
         posicao: [ponto.x, ESPESSURA_DO_PISO + altura * 1.6, ponto.y],
         estilo: aqui ? 'voce' : 'entrada',
+        entrada: entrada.id,
       },
     ]
   })

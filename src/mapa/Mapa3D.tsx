@@ -41,11 +41,12 @@ const PASSO_DO_ZOOM = 0.7
 
 /**
  * As etiquetas (nome da loja, entrada, "Você está aqui", de etiquetas.ts) são HTML do próprio app,
- * numa camada por cima do canvas, nítidas em qualquer zoom e sem pegar o toque. O Projetor, dentro
+ * numa camada por cima do canvas, nítidas em qualquer zoom. Só as das entradas pegam o toque (a
+ * pessoa escolhe por onde chegou); as outras deixam o toque passar para o mapa. O Projetor, dentro
  * da cena, leva cada uma até o ponto 3D dela a cada quadro desenhado.
  */
 const ETIQUETA =
-  'pointer-events-none absolute left-0 top-0 select-none whitespace-nowrap rounded-pill border px-2 py-0.5 text-caption shadow-card invisible'
+  'absolute left-0 top-0 select-none whitespace-nowrap rounded-pill border px-2 py-0.5 text-caption shadow-card invisible'
 
 const ESTILO_DA_ETIQUETA = {
   loja: 'border-line bg-surface-raised text-ink',
@@ -89,6 +90,8 @@ export interface Mapa3DProps {
    */
   origem?: string
   onSelecionarLoja?: (mapaId: string) => void
+  /** Tocar numa entrada (o marco ou a etiqueta) escolhe ela como ponto de partida. */
+  onSelecionarEntrada?: (entradaId: string) => void
   /** Para os botões de aproximar, afastar e recentralizar. */
   controle?: Ref<ControleDoMapa>
 }
@@ -295,6 +298,7 @@ function Cena({
   nomes,
   origem,
   onSelecionarLoja,
+  onSelecionarEntrada,
   controle,
   sobre,
   setSobre,
@@ -391,15 +395,34 @@ function Cena({
       {rota && <LinhaDaRota rota={rota} altura={ESPESSURA_DO_PISO + altura * 0.25} cores={cores} />}
 
       {/* Marco de cada entrada; a de onde sai a rota já tem o ponto do começo da linha. */}
-      {entradas.map(
-        (entrada) =>
-          rota?.pontos[0]?.id !== entrada.id && (
-            <mesh key={entrada.id} position={[entrada.x, ESPESSURA_DO_PISO + altura * 0.15, entrada.y]}>
+      {entradas.map((entrada) => (
+        <group key={entrada.id} position={[entrada.x, ESPESSURA_DO_PISO + altura * 0.15, entrada.y]}>
+          {rota?.pontos[0]?.id !== entrada.id && (
+            <mesh>
               <cylinderGeometry args={[altura * 0.9, altura * 0.9, altura * 0.3, 24]} />
               <meshLambertMaterial color={cores.entrada} />
             </mesh>
-          ),
-      )}
+          )}
+          {/* A área de toque: maior que o marco (pequeno no celular) e invisível. A entrada já
+              escolhida não precisa dela. */}
+          {onSelecionarEntrada && entrada.id !== origemAqui && (
+            <mesh
+              onPointerOver={(e) => {
+                e.stopPropagation()
+                setSobre(() => entrada.id)
+              }}
+              onPointerOut={() => setSobre((atual) => (atual === entrada.id ? null : atual))}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (e.delta <= 6) onSelecionarEntrada(entrada.id)
+              }}
+            >
+              <cylinderGeometry args={[altura * 2.4, altura * 2.4, altura * 1.2, 16]} />
+              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
+          )}
+        </group>
+      ))}
 
       <Projetor etiquetas={etiquetas} elementos={elementos} />
     </>
@@ -408,7 +431,7 @@ function Cena({
 
 /** O mapa 3D de um piso. Ocupa o pai: dê a altura pelo contêiner. */
 export function Mapa3D(props: Mapa3DProps) {
-  const { piso, destino, nomes, origem } = props
+  const { piso, destino, nomes, origem, onSelecionarEntrada } = props
   const caixa = CAIXAS[piso]
   const inicial = enquadrar(caixa, [], 1)
   const [sobre, setSobre] = useState<string | null>(null)
@@ -437,18 +460,28 @@ export function Mapa3D(props: Mapa3DProps) {
         <Cena {...props} sobre={sobre} setSobre={setSobre} etiquetas={etiquetas} elementos={elementos} />
       </Canvas>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        {etiquetas.map((etiqueta) => (
-          <span
-            key={etiqueta.id}
-            ref={(el) => {
-              if (el) elementos.current.set(etiqueta.id, el)
-              else elementos.current.delete(etiqueta.id)
-            }}
-            className={cx(ETIQUETA, ESTILO_DA_ETIQUETA[etiqueta.estilo])}
-          >
-            {etiqueta.texto}
-          </span>
-        ))}
+        {etiquetas.map((etiqueta) => {
+          // A etiqueta de uma entrada escolhe a entrada. Pelo teclado e pelo leitor de tela, o
+          // mesmo se faz no "Trocar a entrada" da tela, por isso ela fica fora do foco.
+          const entrada = etiqueta.estilo === 'entrada' && onSelecionarEntrada ? etiqueta.entrada : undefined
+          return (
+            <span
+              key={etiqueta.id}
+              ref={(el) => {
+                if (el) elementos.current.set(etiqueta.id, el)
+                else elementos.current.delete(etiqueta.id)
+              }}
+              onClick={entrada ? () => onSelecionarEntrada?.(entrada) : undefined}
+              className={cx(
+                ETIQUETA,
+                ESTILO_DA_ETIQUETA[etiqueta.estilo],
+                entrada ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none',
+              )}
+            >
+              {etiqueta.texto}
+            </span>
+          )
+        })}
       </div>
     </div>
   )
