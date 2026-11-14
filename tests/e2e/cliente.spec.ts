@@ -52,7 +52,7 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
   })
 
   await test.step('a loja confirma com a hora e separa, e a Ana vê o status mudar', async () => {
-    // Pelas rotas do painel da loja; a jornada pelas telas do painel é o TE36.
+    // Pelas rotas do painel da loja; a jornada pelas telas do painel é o TE36 (reserva-com-a-loja.spec.ts).
     const lojista = comToken(await tokenDoLojista(request))
     const mudar = (data: Record<string, unknown>) => request.patch(`/api/loja/reservas/${reservaId}`, { headers: lojista, data })
     expect((await mudar({ status: 'CONFIRMADA', prontaAs: '23:59' })).status()).toBe(200)
