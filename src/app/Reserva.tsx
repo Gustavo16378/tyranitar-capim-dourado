@@ -8,14 +8,37 @@ import { useEntrada } from '../movimento'
 import type { Reserva as RespostaReserva, ReservaDetalhe } from '../tipos'
 import { Carregando, ErroTela, Esqueleto } from './Estados'
 import { FolhaCancelarReserva } from './FolhaCancelarReserva'
-import { nomeDoPiso, prazoDaReserva } from './formatos'
+import { escolhasDaReserva, horaEmPalmas, nomeDoPiso, prazoDaReserva } from './formatos'
 
 const EM_ABERTO = ['PENDENTE', 'CONFIRMADA', 'SEPARADA']
 
+/** O título e a frase de cada momento da reserva em aberto (ou retirada). */
+function momento(r: ReservaDetalhe, loja: string) {
+  switch (r.status) {
+    case 'PENDENTE':
+      return {
+        titulo: 'Reserva enviada',
+        frase: `${loja} vai confirmar e dizer a partir de que horas fica pronto. Você recebe um aviso no app.`,
+        pronta: false,
+      }
+    case 'CONFIRMADA':
+      return {
+        titulo: 'Reserva confirmada',
+        frase: `${r.prontaEm ? `Pronta para retirar a partir das ${horaEmPalmas(r.prontaEm)}. ` : ''}Mostre o QR da carteira no balcão.`,
+        pronta: true,
+      }
+    case 'SEPARADA':
+      return { titulo: 'Separado para você', frase: 'Está no balcão da loja. Mostre o QR da carteira para retirar.', pronta: true }
+    default:
+      return { titulo: 'Reserva retirada', frase: 'Saiu no balcão. Bom proveito.', pronta: true }
+  }
+}
+
 /**
- * Reserva: o Pix simulado (quando o cliente escolheu pagar agora) e depois a reserva confirmada,
- * com o status e os próximos passos. Abre pelo link (/reserva/{id}), lendo GET /api/reservas/{id}.
- * Em aberto, dá para cancelar, com confirmação: o produto volta para a loja.
+ * Reserva: o Pix simulado (quando o cliente escolheu pagar agora) e depois o andamento: enviada (a
+ * loja vai confirmar), confirmada com a hora em que fica pronta, separada e retirada; ou cancelada,
+ * recusada (com o motivo da loja) e expirada. Abre pelo link (/reserva/{id}), lendo
+ * GET /api/reservas/{id}. Em aberto, dá para cancelar, com confirmação: o produto volta para a loja.
  */
 export default function Reserva() {
   const { id = '' } = useParams()
@@ -102,6 +125,7 @@ export default function Reserva() {
           <h1 className="text-title-lg">Pague com Pix</h1>
           <p className="mt-0.5 text-body-sm text-ink-muted">
             {nome} · {formatarPreco(reserva.precoCentavos)}
+            {reserva.cupom && ` com o cupom ${reserva.cupom.titulo}`}
           </p>
         </div>
         <div data-anim className="flex flex-col items-center gap-2 rounded-md border bg-surface-raised p-6">
@@ -129,15 +153,22 @@ export default function Reserva() {
     )
   }
 
-  if (reserva.status === 'CANCELADA' || reserva.status === 'EXPIRADA') {
+  if (reserva.status === 'CANCELADA' || reserva.status === 'EXPIRADA' || reserva.status === 'RECUSADA') {
+    const titulo = { CANCELADA: 'Reserva cancelada', EXPIRADA: 'Reserva expirada', RECUSADA: 'Reserva recusada' }[reserva.status]
     return (
       <div ref={tela} className="flex flex-col gap-5 px-4 py-6">
         <title>{`Reserva · ${APP_NOME}`}</title>
         <h1 ref={tituloCancelada} tabIndex={-1} data-anim className="text-title-lg outline-none">
-          {reserva.status === 'CANCELADA' ? 'Reserva cancelada' : 'Reserva expirada'}
+          {titulo}
         </h1>
+        {reserva.status === 'RECUSADA' && reserva.motivoRecusa && (
+          <p data-anim className="rounded-md border bg-surface-raised px-4 py-3 text-body">
+            <span className="font-semibold">{produto?.loja.nome ?? 'A loja'} recusou:</span> {reserva.motivoRecusa}.
+          </p>
+        )}
         <p data-anim className="text-body-sm text-ink-muted">
-          {nome} voltou para o estoque da loja. Você pode reservar de novo.
+          {nome} voltou para o estoque da loja{reserva.cupom ? ', e o cupom voltou para a sua carteira' : ''}. Você pode
+          reservar de novo.
         </p>
         {reserva.estornoSolicitado && (
           <p data-anim className="rounded-md bg-cerrado-soft px-4 py-3 text-body-sm text-cerrado-ink">
@@ -156,17 +187,21 @@ export default function Reserva() {
     )
   }
 
+  const agora = momento(reserva, produto?.loja.nome ?? 'A loja')
+  const escolhas = escolhasDaReserva(reserva)
   return (
     <div ref={tela} className="flex min-h-full flex-col gap-5 px-4 py-6">
-      <title>{`Reserva confirmada · ${APP_NOME}`}</title>
+      <title>{`${agora.titulo} · ${APP_NOME}`}</title>
       <div data-anim className="flex items-center gap-3">
-        <span className="grid size-11 flex-none place-items-center rounded-full bg-cerrado text-on-cerrado">
-          <Icon name="check" />
+        <span
+          className={`grid size-11 flex-none place-items-center rounded-full ${agora.pronta ? 'bg-cerrado text-on-cerrado' : 'bg-ouro-soft text-ouro-ink'}`}
+        >
+          <Icon name={agora.pronta ? 'check' : 'relogio'} />
         </span>
-        <h1 className="text-title-lg">Separado para você</h1>
+        <h1 className="text-title-lg">{agora.titulo}</h1>
       </div>
       <p data-anim className="text-body-sm text-ink-muted">
-        A loja já foi avisada. Mostre o QR da carteira no balcão.
+        {agora.frase}
       </p>
       <div data-anim>
         <ReservaStatus
@@ -174,9 +209,32 @@ export default function Reserva() {
           loja={produto ? `${produto.loja.nome} · ${nomeDoPiso(produto.loja.piso)}` : ''}
           status={reserva.status}
           pago={reserva.pago}
-          prazo={reserva.pago ? undefined : prazoDaReserva(reserva.expiraEm)}
+          prazo={reserva.pago || reserva.status === 'RETIRADA' ? undefined : prazoDaReserva(reserva.expiraEm)}
+          prontaAs={reserva.prontaEm ? horaEmPalmas(reserva.prontaEm) : undefined}
         />
       </div>
+      {/* O que foi reservado: o tamanho, a cor e o valor (com o cupom, se houver). */}
+      <dl data-anim className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-md border bg-surface-raised px-4 py-3 text-body-sm">
+        {escolhas && (
+          <>
+            <dt className="text-ink-muted">Escolha</dt>
+            <dd>{escolhas}</dd>
+          </>
+        )}
+        <dt className="text-ink-muted">Valor</dt>
+        <dd>
+          <span className="font-semibold">{formatarPreco(reserva.precoCentavos)}</span>
+          {reserva.descontoCentavos > 0 && (
+            <span className="text-ink-muted"> (de {formatarPreco(reserva.brutoCentavos)})</span>
+          )}
+        </dd>
+        {reserva.cupom && (
+          <>
+            <dt className="text-ink-muted">Cupom</dt>
+            <dd>{reserva.cupom.titulo}</dd>
+          </>
+        )}
+      </dl>
       <div data-anim className="mt-auto flex flex-col gap-2">
         <div className="flex gap-2">
           <Button block onClick={() => navigate('/carteira')}>

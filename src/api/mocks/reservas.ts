@@ -57,9 +57,25 @@ function conferirPrazo(reserva: ReservaGuardada, agora: number) {
 }
 
 /** A reserva como POST /api/reservas e o pagamento devolvem. */
-function comoResposta({ id, status, formaPagamento, pago, estornoSolicitado, precoCentavos, expiraEm, pix }: Reserva): Reserva {
-  // Guardada antes de o cancelamento existir, a reserva não tem o campo: nunca pediu estorno.
-  return { id, status, formaPagamento, pago, estornoSolicitado: estornoSolicitado ?? false, precoCentavos, expiraEm, ...(pix ? { pix } : {}) }
+function comoResposta(r: Reserva): Reserva {
+  // Guardada antes de o cancelamento (ou do cupom) existir, a reserva não tem esses campos.
+  return {
+    id: r.id,
+    status: r.status,
+    formaPagamento: r.formaPagamento,
+    pago: r.pago,
+    estornoSolicitado: r.estornoSolicitado ?? false,
+    brutoCentavos: r.brutoCentavos ?? r.precoCentavos,
+    descontoCentavos: r.descontoCentavos ?? 0,
+    precoCentavos: r.precoCentavos,
+    tamanho: r.tamanho ?? null,
+    cor: r.cor ?? null,
+    cupom: r.cupom ?? null,
+    prontaEm: r.prontaEm ?? null,
+    motivoRecusa: r.motivoRecusa ?? null,
+    expiraEm: r.expiraEm,
+    ...(r.pix ? { pix: r.pix } : {}),
+  }
 }
 
 function resumo({ id, nome, categoria, precoCentavos, estoque, foto, loja }: ProdutoResumo): ProdutoResumo {
@@ -85,7 +101,14 @@ export async function criarReserva({ produtoId, quantidade, formaPagamento }: No
     formaPagamento,
     pago: false,
     estornoSolicitado: false,
+    brutoCentavos: precoCentavos,
+    descontoCentavos: 0,
     precoCentavos,
+    tamanho: null,
+    cor: null,
+    cupom: null,
+    prontaEm: null,
+    motivoRecusa: null,
     expiraEm: new Date(agora + PRAZO_NA_LOJA).toISOString(),
     ...(formaPagamento === 'PIX' ? { pix: { copiaECola: pixSimulado(id, precoCentavos), simulado: true } } : {}),
     produto: resumo(produto),
@@ -138,11 +161,16 @@ export function reservasEmAberto(agora = Date.now()) {
   RESERVAS.forEach((r) => conferirPrazo(r, agora))
   return RESERVAS.filter((r) => EM_ABERTO.has(r.status))
     .sort((a, b) => Date.parse(a.expiraEm) - Date.parse(b.expiraEm))
-    .map(({ id, produto, status, pago, expiraEm }) => ({
+    .map(({ id, produto, status, pago, expiraEm, precoCentavos, tamanho, cor, cupom, prontaEm }) => ({
       id,
       produto: produto.nome,
       status,
       pago,
+      tamanho: tamanho ?? null,
+      cor: cor ?? null,
+      precoCentavos,
+      cupom: cupom?.titulo ?? null,
+      prontaEm: prontaEm ?? null,
       expiraEm,
       loja: { nome: produto.loja.nome, piso: produto.loja.piso, mapaId: produto.loja.mapaId },
     }))

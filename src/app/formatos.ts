@@ -84,3 +84,36 @@ export function pontosGanhos(pontos: number) {
   if (pontos === 0) return 'Sem pontos'
   return `+${formatarNumero(pontos)} ${pontos === 1 ? 'ponto' : 'pontos'}`
 }
+
+/** "15:30": a hora de um instante ISO, no horário de Palmas. */
+export function horaEmPalmas(iso: string) {
+  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Araguaina', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
+}
+
+/** O que a cliente escolheu na reserva: "Tamanho 42 · preto". Vazio quando não escolheu nada. */
+export function escolhasDaReserva({ tamanho, cor }: { tamanho: string | null; cor: string | null }) {
+  return [tamanho && `Tamanho ${tamanho}`, cor].filter(Boolean).join(' · ')
+}
+
+/**
+ * Para que o cupom vale, na carteira e na folha de reservar: "Calçados na Centauro", "Tudo na
+ * Centauro" (cupom da loja sem categoria) ou "Em qualquer loja" (voucher do shopping).
+ */
+export function paraQueValeOCupom({ categoria, loja }: { categoria: string | null; loja: string | null }) {
+  if (!loja) return 'Em qualquer loja'
+  return categoria ? `${categoria} na ${loja}` : `Tudo na ${loja}`
+}
+
+/** Há quanto tempo, para os avisos: "agora", "há 5 min", "há 2 h", "ontem" ou "13/11". */
+export function haQuantoTempo(iso: string, agora = Date.now()) {
+  const minutos = Math.floor((agora - Date.parse(iso)) / 60_000)
+  if (minutos < 1) return 'agora'
+  if (minutos < 60) return `há ${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `há ${horas} h`
+  if (horas < 48) return 'ontem'
+  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Araguaina', day: '2-digit', month: '2-digit' }).format(new Date(iso))
+}
+
+/** O número de um selo: até 9, depois "9+". */
+export const numeroDoSelo = (n: number) => (n > 9 ? '9+' : String(n))

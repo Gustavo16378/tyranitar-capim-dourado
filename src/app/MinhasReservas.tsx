@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Badge, Button } from '../componentes'
+import { Badge, Button, formatarPreco } from '../componentes'
 import type { Reserva, ReservaNaCarteira } from '../tipos'
 import { Vazio } from './Estados'
 import { FolhaCancelarReserva } from './FolhaCancelarReserva'
-import { nomeDoPiso, prazoDaReserva } from './formatos'
+import { escolhasDaReserva, horaEmPalmas, nomeDoPiso, prazoDaReserva } from './formatos'
 
-/** O passo da reserva, com as mesmas palavras do ReservaStatus da tela da reserva. */
-function passo(status: ReservaNaCarteira['status']) {
-  return status === 'SEPARADA'
-    ? { rotulo: 'Separada pela loja', tom: 'cerrado' as const, icone: 'check' as const }
-    : { rotulo: 'Reserva feita', tom: 'ouro' as const, icone: 'relogio' as const }
+/** O passo da reserva, com as palavras do ReservaStatus da tela da reserva. */
+function passo(reserva: ReservaNaCarteira) {
+  if (reserva.status === 'SEPARADA') return { rotulo: 'Separada pela loja', tom: 'cerrado' as const, icone: 'check' as const }
+  if (reserva.status === 'CONFIRMADA') {
+    const hora = reserva.prontaEm ? ` · pronta às ${horaEmPalmas(reserva.prontaEm)}` : ''
+    return { rotulo: `Confirmada${hora}`, tom: 'cerrado' as const, icone: 'check' as const }
+  }
+  return { rotulo: 'Esperando a loja', tom: 'ouro' as const, icone: 'relogio' as const }
 }
 
 /** "Paga · expira em 47 h", "Pagar na loja · expira em 3 h". */
@@ -69,7 +72,8 @@ export function MinhasReservas({ reservas }: { reservas: ReservaNaCarteira[] }) 
       ) : (
         <ul className="flex flex-col gap-3">
           {emAberto.map((reserva) => {
-            const { rotulo, tom, icone } = passo(reserva.status)
+            const { rotulo, tom, icone } = passo(reserva)
+            const escolhas = escolhasDaReserva(reserva)
             return (
               <li key={reserva.id} className="flex flex-col gap-3 rounded-md border border-line bg-surface-raised p-4">
                 {/* O cartão abre a reserva, com o passo a passo e o Pix. */}
@@ -81,6 +85,11 @@ export function MinhasReservas({ reservas }: { reservas: ReservaNaCarteira[] }) 
                     <span className="block text-label">{reserva.produto}</span>
                     <span className="block text-body-sm text-ink-muted">
                       {reserva.loja.nome} · {nomeDoPiso(reserva.loja.piso)}
+                    </span>
+                    <span className="block text-body-sm text-ink-muted">
+                      {[escolhas, formatarPreco(reserva.precoCentavos), reserva.cupom && `cupom ${reserva.cupom}`]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </span>
                   </span>
                   <span className="flex-none">

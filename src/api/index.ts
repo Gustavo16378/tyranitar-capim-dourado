@@ -9,7 +9,8 @@ export { listarOfertas } from './ofertas'
 export { listarFavoritos, salvarFavorito, tirarFavorito } from './favoritos'
 export { listarLojas, obterLoja } from './lojas'
 export { listarCompras } from './compras'
-export { cancelarReserva, criarReserva, obterReserva, pagarReserva } from './reservas'
+export { cancelarReserva, criarReserva, obterReserva, opcoesDaReserva, pagarReserva } from './reservas'
+export { assinarAvisos, atualizarAvisos, avisosAtuais, esquecerAvisos, marcarAvisosComoLidos } from './avisos'
 export { obterCarteira } from './carteira'
 export {
   apagarInteresse,

@@ -21,6 +21,14 @@ export interface ReservaNaCarteira {
   produto: string
   status: StatusReserva
   pago: boolean
+  tamanho: string | null
+  cor: string | null
+  /** O total, já com o desconto do cupom. */
+  precoCentavos: number
+  /** O título do cupom preso à reserva. */
+  cupom: string | null
+  /** ISO 8601. Confirmada pela loja: pronta para retirar a partir desta hora. */
+  prontaEm: string | null
   /** ISO 8601 (UTC). */
   expiraEm: string
   /** A loja onde retirar: mapaId abre o mapa nela ("Como chegar"). */

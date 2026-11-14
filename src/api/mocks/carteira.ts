@@ -68,6 +68,7 @@ export function obterCarteira(): Promise<Carteira> {
         tipo: 'PERCENTUAL',
         valor: 10,
         nivelMinimo: 'SEMENTE',
+        categoria: 'Calçados',
       },
       {
         id: 'cp2',
@@ -77,6 +78,7 @@ export function obterCarteira(): Promise<Carteira> {
         tipo: 'VALOR',
         valor: 2000,
         nivelMinimo: 'SEMENTE',
+        categoria: null,
       },
     ],
     reservasAtivas: reservasEmAberto(),

@@ -12,10 +12,13 @@ export interface ReservaStatusProps {
   prazo?: string
   /** A foto do produto, ao lado do nome. undefined: sem miniatura; null: a espiral no lugar da foto. */
   foto?: string | null
+  /** A hora que a loja informou ao confirmar ("15:30"): aparece no passo da confirmação. */
+  prontaAs?: string
 }
 
 const PASSOS = [
   { id: 'PENDENTE', rotulo: 'Reserva feita' },
+  { id: 'CONFIRMADA', rotulo: 'Confirmada pela loja' },
   { id: 'SEPARADA', rotulo: 'Separada pela loja' },
   { id: 'RETIRADA', rotulo: 'Retirada no balcão' },
 ] as const
@@ -27,8 +30,8 @@ const ESTILO = {
 } as const
 
 /** Ocupa a largura do pai (no design system, 340 px). */
-export function ReservaStatus({ produto, loja, status, pago, prazo, foto }: ReservaStatusProps) {
-  const atual = status === 'CONFIRMADA' ? 0 : PASSOS.findIndex((p) => p.id === status)
+export function ReservaStatus({ produto, loja, status, pago, prazo, foto, prontaAs }: ReservaStatusProps) {
+  const atual = PASSOS.findIndex((p) => p.id === status)
   const retirada = status === 'RETIRADA'
   const tom = status === 'SEPARADA' || retirada ? 'cerrado' : 'ouro'
 
@@ -73,7 +76,7 @@ export function ReservaStatus({ produto, loja, status, pago, prazo, foto }: Rese
               >
                 {estado === 'feito' && <Icon name="check" />}
               </span>
-              {passo.rotulo}
+              {passo.id === 'CONFIRMADA' && prontaAs ? `Confirmada: pronta a partir das ${prontaAs}` : passo.rotulo}
             </li>
           )
         })}

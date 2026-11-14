@@ -34,6 +34,8 @@ export interface CupomCarteira {
   tipo: TipoCupom
   valor: number
   nivelMinimo: NivelApi
+  /** Para que vale: a categoria em que desconta ("Calçados"); null na loja toda (ou em qualquer loja). */
+  categoria: string | null
 }
 
 /** Cupom nos painéis, com o uso dele: o da loja e o voucher do shopping têm o mesmo formato. */
