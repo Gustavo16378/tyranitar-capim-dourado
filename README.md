@@ -119,7 +119,14 @@ Entre um ensaio e outro, e antes do pitch:
 npm run demo:reset   # no D1 de produção; não precisa de deploy
 ```
 
-Ele cancela as reservas em aberto da Ana, apaga a conversa dela com a Capi (para a Capi não lembrar dos ensaios), devolve a ficha dela à do seed (com o consentimento ligado) e devolve o estoque do seed, rodando o seed de novo. Por isso precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `seed/produtos.csv`, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
+Ele volta a conta da Ana ao seed e não mexe nas contas de outras pessoas:
+
+- apaga as compras de ensaio dela no balcão (as que não são das 6 do seed), com o que cada compra grava junto: os usos de cupom, o reembolso do voucher do shopping, as avaliações e o aviso dos pontos. Os 4 cupons voltam para a carteira e o Extrato e os relatórios da loja ficam sem os ensaios;
+- apaga as reservas dela, a conversa com a Capi (para a Capi não lembrar dos ensaios), as buscas que a Capi fez e a ficha;
+- roda o seed de novo, que devolve o estoque, a ficha do roteiro (com o consentimento ligado) e os cupons;
+- recalcula o saldo pelas 6 compras do seed (2.140 pontos, nível Capim) e mostra o resultado: pontos, nível, cupons na carteira e o Extrato da loja da demonstração.
+
+Os ids das compras e dos cupons do seed ficam em `scripts/lib/ids-do-seed.mjs`, e o SQL do reset em `scripts/lib/demo-reset.mjs`, testado em `tests/api/demo-reset.test.ts`. O reset precisa das senhas `SEED_SENHA_*` no `.dev.vars`, como o `npm run seed:remoto`. Os produtos da demo têm 20 unidades cada no `seed/produtos.csv`, para os ensaios não esgotarem. Para testar na máquina: `node scripts/demo-reset.mjs --local`.
 
 ## Documentação
 
