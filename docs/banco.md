@@ -136,7 +136,7 @@ erDiagram
     text id PK
     text compra_id FK
     text produto_id FK
-    text reserva_id FK,UK
+    text reserva_id FK, UK
     text categoria
     int preco_centavos
     int desconto_centavos
