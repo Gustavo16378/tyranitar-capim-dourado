@@ -10,7 +10,7 @@ A bateria segue a pirâmide de testes: muitos testes rápidos de regra pura na b
 flowchart TB
   m["Manual e ensaio da demo<br/>6 casos"]
   e["E2E no navegador (Playwright)<br/>10 casos + 7 telas de acessibilidade"]
-  i["Capi com IA simulada<br/>8 casos + conjunto de avaliação"]
+  i["Capi com IA simulada<br/>10 casos + conjunto de avaliação"]
   a["API com D1 local<br/>36 casos"]
   b["Banco<br/>15 casos"]
   u["Unidade: regras puras<br/>30 casos"]
@@ -170,6 +170,7 @@ Com o Claude simulado:
 | TI07 | Link de uma página de exemplo | RF04 | `og:title` e `og:image` extraídos |
 | TI08 | Conversa longa | RF02 | Só as últimas mensagens vão para o modelo |
 | TI12 | Foto de tênis e, depois, "não gostei" | RF03 | O histórico guarda a descrição que a Capi fez da foto; na mensagem seguinte o Claude recebe a foto como vista, com a descrição, e o prompt proíbe dizer que não viu |
+| TI13 | Pedido de um item que nenhuma loja tem no app ("garrafa térmica", por texto e por foto) | RF02, RN14 | A ferramenta devolve, sem produto, até 3 lojas ativas da categoria (as com produto dela primeiro, uma por marca, sem as vagas); a Capi indica essas lojas e manda a rota até a primeira, sem cartão nem botão de reservar; sem categoria, o aviso pede para buscar de novo com ela |
 
 **Conjunto de avaliação com a IA real**, rodado à mão antes do pitch:
 
@@ -245,7 +246,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | Requisito | Testes |
 | --- | --- |
 | RF01 Cadastro e login | TA01, TA02, TA03, TA37, TB03, TE01, TE13 |
-| RF02 Conversar com a Capi | TI01, TI08, TE01 |
+| RF02 Conversar com a Capi | TI01, TI08, TI13, TE01 |
 | RF03 Foto ou print | TI06, TI09, TE01 |
 | RF04 Link | TI07 |
 | RF05 Buscar | TA07, TE02, TE04 |
@@ -284,7 +285,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RN11 Reembolso | TB10, TA25 |
 | RN12 Demanda anônima | TA08, TA33 |
 | RN13 Comparativo | TU30 |
-| RN14 Capi não inventa | TI02, TI10 |
+| RN14 Capi não inventa | TI02, TI10, TI13 |
 | RNF01 PWA | TE08, TE10, TM02, TM06 |
 | RNF02 Tempo de resposta | TA35, TM06 |
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
