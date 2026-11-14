@@ -286,3 +286,74 @@ for (const aparelho of ['light', 'dark'] as const) {
     })
   })
 }
+
+// O painel da loja com a reserva nova e a compra com itens (TX16 e TX17), nos dois temas: a reserva
+// pendente com os formulários de confirmar (com a hora) e de recusar (com o motivo), e o caixa do
+// Atendimento com produtos do catálogo, um valor em Outros, um cupom e o desconto item por item.
+for (const tema of ['light', 'dark'] as const) {
+  test.describe(`painel da loja, tema ${tema === 'light' ? 'claro' : 'escuro'}`, () => {
+    test.use({ colorScheme: tema })
+
+    test('TX16: reservas com uma nova, e os formulários de confirmar e de recusar', async ({ page }) => {
+      // A Ana reserva uma camiseta pela API: a reserva nasce PENDENTE na Loja A.
+      const { token } = await comSessaoDaAna(page)
+      const criada = await page.request.post('/api/reservas', {
+        headers: comToken(token),
+        data: { produtoId: 'p-camiseta', quantidade: 1, formaPagamento: 'NA_LOJA', tamanho: 'M' },
+      })
+      expect(criada.status()).toBe(201)
+      const { id } = (await criada.json()) as { id: string }
+
+      await entrarNoPainelDaLoja(page, '/loja/reservas')
+      // No celular, a lista das telas fica atrás do Menu, que leva o número das reservas novas.
+      await expect(page.getByRole('button', { name: /^Menu, \d+ reservas? novas?$/ })).toBeVisible()
+      const cartao = page.getByRole('article').filter({ hasText: 'Camiseta dry-fit' }).filter({ hasText: 'Nova' }).first()
+      await expect(cartao.getByText('tamanho M')).toBeVisible()
+      await expect(page.locator('.animate-pulse')).toHaveCount(0)
+      await semViolacoesGraves(page)
+
+      await cartao.getByRole('button', { name: 'Confirmar' }).click()
+      await expect(cartao.getByLabel('Pronta para retirar a partir de')).toBeFocused()
+      await semViolacoesGraves(page)
+      await cartao.getByRole('button', { name: 'Voltar' }).click()
+
+      await cartao.getByRole('button', { name: 'Recusar' }).click()
+      await expect(cartao.getByLabel('Motivo da recusa')).toBeFocused()
+      // Sem o motivo, o erro aparece no campo.
+      await cartao.getByRole('button', { name: 'Recusar reserva' }).click()
+      await expect(cartao.getByText('Diga o motivo em poucas palavras. O cliente vê essa frase.')).toBeVisible()
+      await semViolacoesGraves(page)
+
+      // A camiseta volta ao estoque para os próximos testes.
+      const cancelada = await page.request.patch(`/api/reservas/${id}/cancelar`, { headers: comToken(token) })
+      expect(cancelada.status()).toBe(200)
+    })
+
+    test('TX17: atendimento com itens na compra, um cupom e o desconto item por item', async ({ page }) => {
+      await entrarNoPainelDaLoja(page)
+      await page.getByRole('button', { name: 'Simular leitura' }).click()
+      await expect(page.getByRole('button', { name: 'Registrar compra' })).toBeVisible()
+
+      const busca = page.getByRole('searchbox', { name: 'Buscar no catálogo da loja' })
+      await busca.fill('pulse')
+      await page.getByRole('button', { name: 'Adicionar Tênis de corrida Pulse' }).click()
+      await busca.fill('camiseta')
+      await page.getByRole('button', { name: 'Adicionar Camiseta dry-fit' }).click()
+      await page.getByRole('textbox', { name: 'Outros, sem produto' }).fill('25,00')
+      await page.getByRole('button', { name: 'Adicionar valor' }).click()
+      const itens = page.getByRole('list', { name: 'Itens da compra' })
+      await expect(itens.getByRole('listitem')).toHaveCount(3)
+
+      // O cupom de calçados aparece porque há um tênis. Ele pode já ter sido usado por outro teste
+      // neste banco: sem ele, a tela é medida com os itens e a prévia sem desconto.
+      const calcados = page.getByRole('radio', { name: /^10% em calçados/ })
+      if (await calcados.count()) {
+        await calcados.check()
+        await expect(itens.getByRole('list', { name: 'Descontos' }).first()).toContainText('10% em calçados')
+      }
+      await expect(page.getByText(/^Ana ganha \d+ pontos?$/)).toBeVisible()
+      await expect(itens).toHaveAttribute('aria-busy', 'false')
+      await semViolacoesGraves(page)
+    })
+  })
+}
