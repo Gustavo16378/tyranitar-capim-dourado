@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { categoriaDaMarca } from './categorias-das-marcas.mjs'
+import { EMAIL_DA_ANA, HISTORICO_DA_ANA, idDoCupom, PONTOS_DA_ANA, uuid } from './lib/ids-do-seed.mjs'
 import { hashSenha } from './lib/senha.mjs'
 
 const raiz = new URL('../', import.meta.url)
@@ -88,15 +89,6 @@ function senhasDeTeste() {
 
 const sha256 = (texto) => createHash('sha256').update(texto).digest()
 
-/** UUID v5 (determinístico) a partir de um nome, no espaço de nomes do projeto. */
-function uuid(nome) {
-  const espaco = Buffer.from('6ba7b8119dad11d180b400c04fd430c8', 'hex') // namespace URL da RFC 4122
-  const bytes = createHash('sha1').update(espaco).update(`tyranitar:${nome}`).digest().subarray(0, 16)
-  bytes[6] = (bytes[6] & 0x0f) | 0x50
-  bytes[8] = (bytes[8] & 0x3f) | 0x80
-  const hex = bytes.toString('hex')
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
-}
 
 /** CNPJ fictício (raiz começando em 8) estável por loja, com dígitos verificadores válidos. */
 function cnpjFicticio(mapaId, usados) {
@@ -229,7 +221,7 @@ const lojasComProduto = lojas.filter((l) => comProduto.has(l.mapaId))
 // ---------- usuários ----------
 
 const senhas = senhasDeTeste()
-const ANA = 'ana.souza@demo.test'
+const ANA = EMAIL_DA_ANA
 const usuarios = [
   { id: uuid('usuario:ana.souza'), nome: 'Ana Souza', email: ANA, perfil: 'CLIENTE', mapaId: null },
   ...lojasComProduto.map((l) => ({
@@ -256,27 +248,19 @@ const lojaDaDemo = lojas.find((l) => l.mapaId === produtos[0]?.mapaId)
 const primeiroCalcado = produtos.find((p) => p.categoria === 'calcados')
 const lojaCalcados = lojas.find((l) => l.mapaId === primeiroCalcado?.mapaId) ?? lojasComProduto[0]
 const cupons = [
-  lojaCalcados && { id: uuid('cupom:10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
+  lojaCalcados && { id: idDoCupom('10-calcados'), mapaId: lojaCalcados.mapaId, titulo: '10% em calçados', tipo: 'PERCENTUAL', valor: 10, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
   // Segundo cupom da mesma loja: não combina com o de 10% na mesma compra (RN05).
-  lojaCalcados && { id: uuid('cupom:15-camisetas'), mapaId: lojaCalcados.mapaId, titulo: 'R$ 15 em camisetas', tipo: 'VALOR', valor: 1500, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
-  { id: uuid('cupom:20-reais-shopping'), mapaId: null, titulo: 'R$ 20 em qualquer loja', tipo: 'VALOR', valor: 2000, nivel: 'SEMENTE', limite: 1, validade: '2026-12-15' },
-  { id: uuid('cupom:estacionamento'), mapaId: null, titulo: 'Estacionamento grátis por 2 h', tipo: 'BRINDE', valor: 0, nivel: 'CAPIM', limite: 2, validade: '2026-11-30' },
+  lojaCalcados && { id: idDoCupom('15-camisetas'), mapaId: lojaCalcados.mapaId, titulo: 'R$ 15 em camisetas', tipo: 'VALOR', valor: 1500, nivel: 'SEMENTE', limite: 1, validade: '2026-12-31' },
+  { id: idDoCupom('20-reais-shopping'), mapaId: null, titulo: 'R$ 20 em qualquer loja', tipo: 'VALOR', valor: 2000, nivel: 'SEMENTE', limite: 1, validade: '2026-12-15' },
+  { id: idDoCupom('estacionamento'), mapaId: null, titulo: 'Estacionamento grátis por 2 h', tipo: 'BRINDE', valor: 0, nivel: 'CAPIM', limite: 2, validade: '2026-11-30' },
 ].filter(Boolean)
 
 // ---------- histórico da Ana ----------
 
-// Compras no caixa em lojas diferentes nos últimos 12 meses, somando os 2.140 pontos do saldo
-// dela (RN07: 1 ponto por real). Alimentam o nível (RN08) e os relatórios.
+// As compras do histórico (scripts/lib/ids-do-seed.mjs), cada uma numa loja diferente.
 const lojasDoHistorico = [...lojasComProduto, ...livres].slice(0, 6)
-const compras = [
-  { dias: 300, valor: 45980, comFicha: 0 },
-  { dias: 240, valor: 18990, comFicha: 0 },
-  { dias: 170, valor: 24900, comFicha: 1 },
-  { dias: 95, valor: 39990, comFicha: 1 },
-  { dias: 40, valor: 52000, comFicha: 0 },
-  { dias: 12, valor: 32400, comFicha: 1 },
-].map((c, i) => ({ ...c, id: uuid(`compra:ana:${i + 1}`), mapaId: lojasDoHistorico[i % lojasDoHistorico.length].mapaId, pontos: Math.floor(c.valor / 100) }))
-const pontosDaAna = compras.reduce((soma, c) => soma + c.pontos, 0)
+const compras = HISTORICO_DA_ANA.map((c, i) => ({ ...c, mapaId: lojasDoHistorico[i % lojasDoHistorico.length].mapaId }))
+const pontosDaAna = PONTOS_DA_ANA
 
 // ---------- buscas da demonstração ----------
 
