@@ -155,3 +155,63 @@ for (const tema of ['light', 'dark'] as const) {
     })
   })
 }
+
+// O easter egg do tirano (docs/easter-egg.md, TX11): as telas novas nos dois temas, com e sem
+// movimento reduzido. No modo tirano o app usa o tema escuro em qualquer caso.
+const RESPOSTA_DO_TIRANO = /GRRR\.\.\. quer dizer, oi!/
+
+/** Liga o modo tirano pela sessão, como depois de um apagão (sem esperar o apagão de novo). */
+async function comModoTirano(page: Page) {
+  await page.addInitScript(() => sessionStorage.setItem('capi.tirano', JSON.stringify({ ligado: true, nivelVisto: false })))
+}
+
+for (const movimento of ['reduce', 'no-preference'] as const) {
+  for (const tema of ['light', 'dark'] as const) {
+    test.describe(`easter egg, tema ${tema === 'light' ? 'claro' : 'escuro'}, ${movimento === 'reduce' ? 'com' : 'sem'} movimento reduzido`, () => {
+      test.use({ colorScheme: tema, reducedMotion: movimento })
+
+      test('TX11: Capi Tirana, mapa no escuro, Loja 13, nível Tirano e Piso 13', async ({ page }) => {
+        const { token } = await comSessaoDaAna(page)
+        await novaConversa(page.request, token)
+
+        await page.goto('/capi')
+        await page.getByRole('textbox', { name: 'Mensagem para a Capi' }).fill('tyranitar')
+        await page.getByRole('button', { name: 'Enviar', exact: true }).click()
+        await expect(page.getByText(RESPOSTA_DO_TIRANO)).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Acordar o tirano' })).toBeVisible()
+        await semViolacoesGraves(page)
+
+        await comModoTirano(page)
+        await page.goto('/mapa')
+        await expect(page.getByRole('heading', { name: 'Mapa no escuro' })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Entrar na Loja 13' })).toBeVisible()
+        await semViolacoesGraves(page)
+
+        await page.getByRole('button', { name: 'Entrar na Loja 13' }).click()
+        await expect(page.getByRole('heading', { name: 'Tyranitar', level: 1 })).toBeVisible()
+        // O letreiro terminou de acender quando a equipe acena.
+        await expect(page.locator('[data-personagem="acenando"]')).toHaveCount(4)
+        await semViolacoesGraves(page)
+
+        await page.getByRole('button', { name: 'Subir para o nível Tirano' }).click()
+        await expect(page.getByText('Você subiu para o nível Tirano')).toBeVisible()
+        // O selo terminou de entrar: opacidade cheia e escala 1 (o GSAP deixa a matriz no fim).
+        await page.waitForFunction(() => {
+          const selo = document.querySelector('[data-selo-tirano]')
+          if (!selo) return false
+          const { opacity, transform } = getComputedStyle(selo)
+          const escala = transform === 'none' ? 1 : new DOMMatrix(transform).a
+          return opacity === '1' && escala === 1
+        })
+        await semViolacoesGraves(page)
+
+        await page.goto('/mapa')
+        const terreo = page.getByRole('tab', { name: 'Térreo' })
+        for (let i = 0; i < 13; i++) await terreo.click()
+        await expect(page.getByRole('tab', { name: 'Piso 13', selected: true })).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Piso 13' })).toBeVisible()
+        await semViolacoesGraves(page)
+      })
+    })
+  }
+}
