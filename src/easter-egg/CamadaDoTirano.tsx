@@ -6,9 +6,6 @@ import { AVISOS, BOTAO_ACENDER } from './falas'
 import { modoTirano } from './modoTirano'
 import { useModoTirano } from './useModoTirano'
 
-/** O evento que tyranitar(), no console do navegador, dispara no window. */
-export const EVENTO_ACORDAR = 'tyranitar:acordar'
-
 /**
  * Enquanto as luzes estão apagadas, o app usa o tema escuro, qualquer que seja o do aparelho. Os
  * tokens do escuro já passam no contraste, então nada fica ilegível. Ao acender, o tema volta.
@@ -57,7 +54,7 @@ function FaixaDoTirano({ aoAcender }: { aoAcender: () => void }) {
 
 /**
  * O modo tirano no app (docs/easter-egg.md), montado no LayoutApp: o apagão quando o tirano
- * acorda (pela Capi ou pelo tyranitar() do console), o tema escuro e a faixa "Acender as luzes"
+ * acorda (pela Capi ou pelo tyranitar() do console, src/easter-egg/console.ts), o tema escuro e a faixa "Acender as luzes"
  * enquanto as luzes estão apagadas, a camada que clareia no fim, e o aviso para o leitor de tela.
  */
 export function CamadaDoTirano() {
@@ -66,12 +63,6 @@ export function CamadaDoTirano() {
   const [revelar, setRevelar] = useState<{ vez: number; de: number } | null>(null)
   // O que o leitor de tela ouve: sai do estado do modo, a cada passo.
   const aviso = modo.apagando ? AVISOS.apagando : modo.ligado ? AVISOS.apagadas : modo.acesas > 0 ? AVISOS.acesas : ''
-
-  useEffect(() => {
-    const acordar = () => modoTirano.acordar()
-    window.addEventListener(EVENTO_ACORDAR, acordar)
-    return () => window.removeEventListener(EVENTO_ACORDAR, acordar)
-  }, [])
 
   useTemaDoTirano(modo.ligado)
 

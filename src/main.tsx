@@ -4,10 +4,13 @@ import { BrowserRouter } from 'react-router'
 import App from './App'
 import './design-system/tokens.css'
 import './index.css'
+import { ouvirOTiranoDoConsole } from './easter-egg/console'
 import { instalarTirano } from './tirano'
 
-// Easter egg: o banner do tirano no console e tyranitar() (veja src/tirano.ts).
+// Easter egg: o banner do tirano no console e tyranitar() (veja src/tirano.ts), que acorda o
+// tirano no app (src/easter-egg/console.ts).
 instalarTirano(window, console)
+ouvirOTiranoDoConsole(window)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
