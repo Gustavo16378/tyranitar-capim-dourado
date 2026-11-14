@@ -53,6 +53,24 @@ A cliente toca na sugestão com a foto do tênis (ela só anexa a foto e põe a 
 | :---: | :---: | :---: | :---: | :---: |
 | <img src="docs/img/tela-reserva.png" width="150" alt="Reserva separada, com o andamento"> | <img src="docs/img/tela-mapa.png" width="150" alt="Mapa 3D perguntando por qual entrada a cliente chegou, com a rota até a loja"> | <img src="docs/img/tela-carteira.png" width="150" alt="Carteira com o QR e os pontos"> | <img src="docs/img/tela-carteira-reservas.png" width="150" alt="Reservas e cupons na carteira"> | <img src="docs/img/painel-atendimento.png" width="150" alt="Painel da loja atendendo pelo QR"> |
 
+## Funcionalidades
+
+**App do cliente** (`/`, no celular):
+
+- **Capi:** o cliente pergunta por texto, foto (câmera ou galeria) ou link; a Capi acha o produto nas lojas do shopping e reserva na conversa quando ele confirma.
+- **Produto:** loja, piso, preço, estoque, o mesmo item em outras lojas e reservar com Pix (simulado) ou pagando na loja.
+- **Salvos para provar:** o coração salva o produto (na tela do produto e nos cartões da Capi, do Início e da loja). A aba Salvos junta os salvos por loja, com "Reservar" em cada um e "Como chegar" em cada loja.
+- **Página da loja:** tocar no nome de uma loja (no produto, nos cartões, nos salvos e no mapa) abre a loja no app, com a categoria, o piso, os produtos dela e "Como chegar".
+- **Mapa 3D:** a rota da entrada até a loja, um piso por vez. Abre sem login pelo QR de cada entrada.
+- **Carteira:** o QR para o balcão, os pontos e o nível, Minhas reservas (com "Como chegar" e cancelar), Minhas compras (loja, dia, valor pago, cupons usados e pontos ganhos, com "Ver tudo" para a lista inteira) e os cupons.
+- **Minha conta:** nome, senha, a ficha que a Capi anotou (com o consentimento) e os dados para baixar (LGPD).
+
+**Painel da loja** (`/loja`): atendimento pelo QR do cliente, com a ficha e as reservas; registro da compra com cupons; reservas; produtos e importação de planilha; cupons; desempenho e extrato.
+
+**Painel do shopping** (`/shopping`): lojas e lojistas, fidelidade e campanhas, demanda, jornada e reembolsos, e os QR das entradas.
+
+As telas, uma a uma, estão em [docs/telas.md](docs/telas.md).
+
 ## Arquitetura
 
 ```mermaid
