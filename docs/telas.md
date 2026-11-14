@@ -63,17 +63,18 @@ O easter egg "O tirano da sexta-feira 13" acrescenta, só no modo tirano, o mapa
 
 ## Painéis no celular e no tablet
 
-Os dois painéis funcionam de 390 px em diante sem rolar para o lado. O rodapé da barra lateral tem o mesmo seletor de aparência da Minha conta (a escolha é do aparelho e vale nas três interfaces). Abaixo de 1024 px, a barra lateral vira uma barra no topo com o botão Menu, que abre a lista de telas (Esc ou a escolha de uma tela fecham); as tabelas viram cartões, um por linha, e os formulários ficam em uma coluna no celular.
+Os dois painéis funcionam de 390 px em diante sem rolar para o lado. O rodapé da barra lateral tem o mesmo seletor de aparência da Minha conta (a escolha é do aparelho e vale nas três interfaces). Abaixo de 1024 px, a barra lateral vira uma barra no topo com o botão Menu, que abre a lista de telas (Esc ou a escolha de uma tela fecham) e mostra o total dos selos, como o das reservas novas; as tabelas viram cartões, um por linha, e os formulários ficam em uma coluna no celular.
 
 ## Painel da loja
 
 | Tela | Para que serve | Componentes | Requisitos |
 | --- | --- | --- | --- |
-| Atendimento | Ler o QR do cliente, ver a ficha e as reservas, registrar a compra com os cupons | FichaCliente, ReservaStatus, StatTile, Button | RF18, RF19 |
-| Reservas | Lista das reservas do dia por status, com confirmar, separar e retirar | ReservaStatus, Badge | RF20 |
+| Atendimento | Ler o QR do cliente (câmera ou "Simular leitura") e ver o nome, o nível e a ficha; as reservas dela nesta loja, com o tamanho, o valor, o cupom e "Já pago com Pix" ou "Pagar no caixa": "Retirar" põe a confirmada na compra, e a pendente pede "Confirmar agora". A compra junta os itens: a reserva, produtos da busca no catálogo da loja (com a quantidade) e "Outros", um valor sem produto. Os cupons vêm em dois grupos, o da loja e o voucher do shopping, só os que descontam em algum item da compra (os outros aparecem com o motivo, como "só em calçados"). Cada item mostra o desconto de cada cupom, e o total, "Cliente paga" e os pontos, pela prévia da API; "Registrar compra" (ou "Registrar retirada", quando tudo já foi pago por Pix) abre o recibo com os itens | FichaCliente, Badge, Button | RF18, RF19, RN05, RN15 |
+| Reservas | As reservas da loja em filtros (Ativas, Novas, Confirmadas, Separadas e Encerradas), as novas primeiro. Cada cartão mostra o produto, a cliente, o tamanho, a cor, o valor (com o "era" quando teve cupom), o cupom e de quem é, o pagamento e o prazo: "Responder até" na nova, "Pronta a partir de" e "Retirar até" na confirmada. "Confirmar" abre o campo da hora em que fica pronta, já com a próxima meia hora, e diz "Hoje" ou "Amanhã, a partir das 09:00"; "Recusar" explica o que acontece e pede o motivo, que a cliente vê; "Separar" aparece na confirmada. A recusada mostra o motivo. A tela pergunta à API a cada 20 s: o item Reservas do menu ganha o selo com quantas esperam a loja, a reserva nova toca um som curto (que se desliga no topo da tela, e a escolha fica no aparelho) e o leitor de tela ouve "Reserva nova: Camiseta dry-fit para Ana." Com a aba escondida, não pergunta | Badge, Button | RF20, RN01, RN03 |
 | Produtos | Catálogo da loja, cadastro com atributos por categoria e importação de planilha | ProdutoCard, Button | RF21, RF22 |
 | Cupons | Criar cupons da loja e acompanhar o uso | CupomTicket, Button | RF23 |
-| Desempenho | Mais vendidos, mais buscados, buscados e não encontrados, picos | StatTile | RF24, RF25 |
+| Desempenho | Mais vendidos (pelos itens das compras), mais buscados, buscados e não encontrados, picos e o que aconteceu com as reservas, com as recusadas pela loja à parte | StatTile | RF24 |
+| Extrato | As compras do caixa no período, cada uma com a cliente e os itens (o desconto de cada um e os que vieram de reserva), os descontos da loja e do shopping e os reembolsos a receber | StatTile | RF25 |
 
 ## Painel do shopping
 

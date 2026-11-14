@@ -100,6 +100,9 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TU40 | O desconto item por item | RN05, RN06, RN15 | O cupom da loja calcula sobre os itens dele e o voucher sobre o que sobrou de todos; no máximo um de cada; validade, nível e uso único valem; a repartição soma sempre o total, sem centavo a mais nem a menos |
 | TU41 | A reserva no balcão | RN15 | O cupom da reserva vale como prometido, mesmo vencido, e conta no limite da compra; o item pago com Pix entra no valor e nos pontos, mas o caixa não cobra e nenhum cupom do caixa desconta nele |
 | TU42 | A hora "pronta a partir de" | RN01, RNF11 | `HH:MM` no horário de Palmas, hoje, ou amanhã se já passou há mais de uma hora; sem hora, pronta agora; formato errado, 400 |
+| TU43 | Reserva nova no painel da loja | RF20 | A primeira consulta só guarda as pendentes que já existem (sem som); depois, nova é a de um id nunca visto, e confirmar uma não faz a próxima da fila contar como nova; a frase do leitor de tela e o rótulo do selo; o som vem ligado e a escolha fica no aparelho |
+| TU44 | A hora "pronta para retirar a partir de" no painel | RF20, RN01 | A próxima meia hora em Palmas já vem no campo; a frase "Hoje" ou "Amanhã, a partir das 09:00" segue a mesma regra da API; hora fora do formato não é aceita |
+| TU45 | O carrinho do caixa | RF19, RN05, RN15 | Reserva, produto do catálogo e "Outros" viram os itens do pedido; o caixa só oferece o cupom que desconta em algum item; o cupom da reserva ocupa o lado dele (loja ou shopping); o cupom escolhido sai do pedido quando o item dele sai |
 
 ### Banco (TB)
 
@@ -241,6 +244,7 @@ Com o Claude simulado:
 | TE33 | Salvar com o coração e Salvos para provar | RF16, RNF08 | O coração muda na hora (`aria-pressed`) no produto e nos cartões do Início e da Capi, e o leitor de tela ouve "está nos seus salvos"; a aba Salvos agrupa por loja (a do salvo mais recente primeiro), com "Reservar" (a folha de sempre) e "Como chegar"; tirar o coração ali deixa o produto na lista; se a API recusa, o coração volta e o aviso aparece na tela |
 | TE34 | Minhas compras | RF11, RF16 | Na carteira, abaixo das reservas, as três últimas compras com loja, dia, valor pago, cupons com o desconto e pontos; "Ver tudo" abre a lista inteira com a Carteira marcada na navegação, dez por vez; "Mostrar mais" traz o resto, diz quantas aparecem e põe o foco na primeira que chegou |
 | TE35 | Página da loja | RF07, RF10 | O nome da loja no produto abre `/lojas/{id}` com nome, categoria, piso e os produtos em grade (com o coração); "Como chegar" abre o mapa na loja, e no mapa o nome dela volta para a página; loja que não existe mostra o erro sem "Tentar de novo"; sem login, o nome no mapa não vira link |
+| TE36 | A reserva com a loja de ponta a ponta, com o app e o painel lado a lado | RF08, RF14, RF18, RF19, RF20, RN01, RN15 | A Ana reserva com tamanho e cupom (o preço sai com o desconto); sem recarregar, o selo de Reservas no painel sobe e o leitor de tela ouve "Reserva nova"; a loja confirma com a hora (a próxima meia hora já vem no campo) e a Ana vê a hora na reserva, o aviso no sino do Início e o selo na Carteira; a loja separa e a Ana vê "Separado para você"; no Atendimento, "Retirar" põe a reserva na compra junto com um produto do catálogo, e os pontos do recibo chegam na carteira. No celular, com Pix; no computador, pagando na loja |
 
 ### Acessibilidade (TX)
 
@@ -263,6 +267,8 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX13 | Salvos para provar, com o coração ligado e desligado |
 | TX14 | Página da loja, com os produtos em grade |
 | TX15 | Minhas compras, na carteira e a lista inteira |
+| TX16 | Reservas do painel com uma reserva nova (o selo no menu, também no Menu aberto) e os formulários de confirmar e de recusar, nos dois temas |
+| TX17 | Atendimento com itens na compra, um cupom e o desconto item por item, nos dois temas |
 
 ### Manual (TM)
 
@@ -286,19 +292,19 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF05 Buscar | TA07, TE02, TE04 |
 | RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
 | RF07 Produto | TA09, TA44, TE02, TE35 |
-| RF08 Reservar na loja | TA11, TA15, TA40, TA49, TI03, TE02, TE28 |
+| RF08 Reservar na loja | TA11, TA15, TA40, TA49, TI03, TE02, TE28, TE36 |
 | RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
 | RF10 Mapa e rota | TA44, TE01, TE09, TE20, TE27, TE29, TE35, TM01 |
 | RF11 Carteira | TU05, TA17, TA43, TE01, TE28, TE34 |
 | RF12 Nota fiscal | TU22, TA18 |
 | RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
-| RF14 Notificações | TA45, TA47, TA48, TA50, TE01 |
+| RF14 Notificações | TA45, TA47, TA48, TA50, TE01, TE36 |
 | RF15 Avaliar | TA22, TB11 |
 | RF16 Favoritos e histórico | TA42, TA43, TE02, TE33, TE34 |
 | RF17 Login do lojista | TA03, TE03 |
-| RF18 Atendimento | TA23, TA24, TE01, TE06, TM03 |
-| RF19 Compra no caixa | TU06, TU07, TU39 a TU41, TA25, TA27, TA46, TA47, TB08 |
-| RF20 Gerir reservas | TU18, TU19, TU42, TA28, TA45, TA48, TB05, TE01, TE28 |
+| RF18 Atendimento | TA23, TA24, TE01, TE06, TE36, TX17, TM03 |
+| RF19 Compra no caixa | TU06, TU07, TU39 a TU41, TU45, TA25, TA27, TA46, TA47, TB08, TE36, TX17 |
+| RF20 Gerir reservas | TU18, TU19, TU42 a TU44, TA28, TA45, TA48, TB05, TE01, TE28, TE36, TX16 |
 | RF21 Produtos | TB12 |
 | RF22 Importar CSV | TU27, TU28, TA29, TE04 |
 | RF23 Cupons da loja | TB15, TE03 |
@@ -320,13 +326,13 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RN12 Demanda anônima | TA08, TA33 |
 | RN13 Comparativo | TU30 |
 | RN14 Capi não inventa | TI02, TI10, TI13 |
-| RN15 Cupom por categoria e na reserva | TU39, TU40, TU41, TA46, TA48, TA49 |
+| RN15 Cupom por categoria e na reserva | TU39, TU40, TU41, TU45, TA46, TA48, TA49, TE36 |
 | RNF01 PWA | TE08, TE10, TM02, TM06 |
 | RNF02 Tempo de resposta | TA35, TM06 |
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
 | RNF06 LGPD | TA21, TA24 |
 | RNF07 Chave da IA | TA36 |
-| RNF08 Acessibilidade | TU34, TU38, TE32, TE33, TX01 a TX15 |
+| RNF08 Acessibilidade | TU34, TU38, TE32, TE33, TX01 a TX17 |
 | RNF09 Mapa no celular | TM01 |
 | RNF10 IA fora do ar | TI05, TM04 |
 | RNF11 Português e fuso | TU29 |
