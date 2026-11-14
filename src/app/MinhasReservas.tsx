@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Badge, Button } from '../componentes'
 import type { Reserva, ReservaNaCarteira } from '../tipos'
@@ -32,6 +32,8 @@ function avisoDoCancelamento(produto: string, cancelada: Reserva) {
 export function MinhasReservas({ reservas }: { reservas: ReservaNaCarteira[] }) {
   const navigate = useNavigate()
   const titulo = useRef<HTMLHeadingElement>(null)
+  /** Cancelou agora: quando a folha terminar de fechar, o foco vai para o título. */
+  const focarTitulo = useRef(false)
   const [canceladas, setCanceladas] = useState<string[]>([])
   const [aviso, setAviso] = useState('')
   const [cancelando, setCancelando] = useState<ReservaNaCarteira | null>(null)
@@ -40,10 +42,18 @@ export function MinhasReservas({ reservas }: { reservas: ReservaNaCarteira[] }) 
   function aoCancelar(cancelada: Reserva) {
     setCanceladas((atuais) => [...atuais, cancelada.id])
     setAviso(avisoDoCancelamento(cancelando?.produto ?? 'produto', cancelada))
+    focarTitulo.current = true
     setCancelando(null)
-    // O botão tocado sumiu com a reserva: o foco volta para o título da seção.
-    requestAnimationFrame(() => titulo.current?.focus())
   }
+
+  // O botão tocado sumiu com a reserva: o foco volta para o título da seção. Num efeito, e não num
+  // requestAnimationFrame: o <dialog> da folha fecha no efeito dele (que roda antes deste, por ser
+  // filho) e, ao fechar, o navegador devolve o foco a quem abriu a folha, que já não existe.
+  useEffect(() => {
+    if (cancelando || !focarTitulo.current) return
+    focarTitulo.current = false
+    titulo.current?.focus()
+  }, [cancelando])
 
   return (
     <section aria-labelledby="titulo-reservas" className="flex flex-col gap-3">
