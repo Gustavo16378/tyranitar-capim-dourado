@@ -5,7 +5,9 @@ import { Badge, Button, Icon, type IconName } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
 import { EQUIPE } from '../easter-egg/equipe'
+import { criarContadorDeToques } from '../easter-egg/gatilhos'
 import { Personagem } from '../easter-egg/Personagem'
+import { Piso13 } from '../easter-egg/Piso13'
 import { useModoTirano } from '../easter-egg/useModoTirano'
 import { acharNaPlanta, rotaAte } from '../mapa/dados'
 import {
@@ -23,6 +25,9 @@ import type { Piso } from '../tipos'
 import { nomeDoPiso } from './formatos'
 
 const PISOS: Piso[] = [1, 2]
+
+/** As abas do seletor: os dois pisos e, depois de 13 toques nele, o Piso 13 do easter egg. */
+type Aba = Piso | 13
 
 /** Botão redondo sobre o mapa (44 px de toque), com o nome para o leitor de tela. */
 function BotaoDoMapa({ rotulo, icone, onClick }: { rotulo: string; icone: IconName; onClick: () => void }) {
@@ -104,10 +109,16 @@ function MapaAte({
 }) {
   const achado = destino ? acharNaPlanta(destino) : undefined
   const [piso, setPiso] = useState<Piso>(achado?.piso ?? doLink?.piso ?? 1)
-  const abas = useRef<(HTMLButtonElement | null)[]>([])
+  const abas = useRef<Partial<Record<Aba, HTMLButtonElement | null>>>({})
   const navigate = useNavigate()
   // O modo tirano (docs/easter-egg.md): o mapa no escuro, com a trilha até a Loja 13.
   const { ligado: escuro } = useModoTirano()
+  // 13 toques seguidos no seletor de piso abrem o Piso 13, que fica no seletor até sair do mapa.
+  const toques = useRef(criarContadorDeToques())
+  const [comPiso13, setComPiso13] = useState(false)
+  const [noPiso13, setNoPiso13] = useState(false)
+  const aba: Aba = noPiso13 ? 13 : piso
+  const listaDeAbas: Aba[] = comPiso13 ? [...PISOS, 13] : PISOS
   const controle = useRef<ControleDoMapa>(null)
   // A entrada por onde o cliente chegou, em cada piso: a do QR, a lembrada ou nenhuma ainda.
   const [escolhas, setEscolhas] = useState<Partial<Record<Piso, string>>>(() => {
@@ -141,12 +152,32 @@ function MapaAte({
   const visitante = useSessao()?.usuario.perfil !== 'CLIENTE'
   const { pathname, search } = useLocation()
 
+  function irPara(destinoDaAba: Aba) {
+    if (destinoDaAba === 13) {
+      setNoPiso13(true)
+      return
+    }
+    setPiso(destinoDaAba)
+    setNoPiso13(false)
+  }
+
+  /** `quando`: o timeStamp do clique, em ms. */
+  function tocarNaAba(tocada: Aba, quando: number) {
+    irPara(tocada)
+    if (toques.current.tocar(quando)) {
+      setComPiso13(true)
+      setNoPiso13(true)
+    }
+  }
+
   // Setas do teclado trocam de piso, como numa lista de abas.
   function aoTeclar(evento: KeyboardEvent) {
     if (evento.key !== 'ArrowLeft' && evento.key !== 'ArrowRight') return
-    const proximo: Piso = piso === 1 ? 2 : 1
-    setPiso(proximo)
-    abas.current[proximo - 1]?.focus()
+    const passo = evento.key === 'ArrowRight' ? 1 : -1
+    const i = listaDeAbas.indexOf(aba)
+    const proxima = listaDeAbas[(i + passo + listaDeAbas.length) % listaDeAbas.length]
+    irPara(proxima)
+    abas.current[proxima]?.focus()
   }
 
   const naTrilha = escuro && piso === 1 && !destino
@@ -167,64 +198,70 @@ function MapaAte({
           <h1 className="mt-0.5 text-title-md">{nome ?? (destino ? 'Rota até a loja' : escuro ? 'Mapa no escuro' : 'Mapa')}</h1>
         </div>
         <div role="tablist" aria-label="Piso" className="flex flex-none rounded-pill bg-surface-sunken p-1">
-          {PISOS.map((n) => (
+          {listaDeAbas.map((n) => (
             <button
               key={n}
               ref={(el) => {
-                abas.current[n - 1] = el
+                abas.current[n] = el
               }}
               type="button"
               role="tab"
               id={`aba-piso-${n}`}
-              aria-selected={piso === n}
+              aria-selected={aba === n}
               aria-controls="planta"
-              tabIndex={piso === n ? 0 : -1}
-              onClick={() => setPiso(n)}
+              tabIndex={aba === n ? 0 : -1}
+              onClick={(evento) => tocarNaAba(n, evento.timeStamp)}
               onKeyDown={aoTeclar}
               className={cx(
-                'cursor-pointer rounded-pill border-0 px-3 py-2 text-label',
-                piso === n ? 'bg-marrom text-on-marrom' : 'bg-transparent text-ink-muted',
+                'cursor-pointer select-none rounded-pill border-0 px-3 py-2 text-label',
+                aba === n ? 'bg-marrom text-on-marrom' : 'bg-transparent text-ink-muted',
               )}
             >
-              {nomeDoPiso(n)}
+              {n === 13 ? 'Piso 13' : nomeDoPiso(n)}
             </button>
           ))}
         </div>
       </header>
 
-      {perguntar && <PerguntaDaEntrada entradas={entradasDoPiso(piso)} aoEscolher={escolher} />}
+      {perguntar && !noPiso13 && <PerguntaDaEntrada entradas={entradasDoPiso(piso)} aoEscolher={escolher} />}
 
-      <div id="planta" role="tabpanel" aria-labelledby={`aba-piso-${piso}`} className="relative md:min-h-0 md:flex-1">
-        <div
-          role="img"
-          aria-label={descricao}
-          className="h-[58dvh] min-h-[300px] overflow-hidden rounded-lg bg-surface-sunken md:h-full"
-        >
-          <Mapa3D
-            piso={piso}
-            destino={destino}
-            nomes={nomes}
-            origem={aqui?.id}
-            onSelecionarLoja={aoEscolher}
-            onSelecionarEntrada={escolher}
-            controle={controle}
-            escuro={escuro}
-            onLoja13={() => navigate('/loja-13')}
-          />
+      {noPiso13 ? (
+        <div id="planta" role="tabpanel" aria-labelledby="aba-piso-13" className="relative md:min-h-0 md:flex-1">
+          <Piso13 />
         </div>
-        {/* Fora do role="img", para o leitor de tela achar os botões. */}
-        <div className="absolute right-3 top-3 z-30 flex flex-col gap-2">
-          <BotaoDoMapa rotulo="Aproximar" icone="mais" onClick={() => controle.current?.aproximar()} />
-          <BotaoDoMapa rotulo="Afastar" icone="menos" onClick={() => controle.current?.afastar()} />
-          <BotaoDoMapa
-            rotulo={naTela ? 'Voltar para a rota' : 'Ver o piso inteiro'}
-            icone="alvo"
-            onClick={() => controle.current?.recentralizar()}
-          />
+      ) : (
+        <div id="planta" role="tabpanel" aria-labelledby={`aba-piso-${piso}`} className="relative md:min-h-0 md:flex-1">
+          <div
+            role="img"
+            aria-label={descricao}
+            className="h-[58dvh] min-h-[300px] overflow-hidden rounded-lg bg-surface-sunken md:h-full"
+          >
+            <Mapa3D
+              piso={piso}
+              destino={destino}
+              nomes={nomes}
+              origem={aqui?.id}
+              onSelecionarLoja={aoEscolher}
+              onSelecionarEntrada={escolher}
+              controle={controle}
+              escuro={escuro}
+              onLoja13={() => navigate('/loja-13')}
+            />
+          </div>
+          {/* Fora do role="img", para o leitor de tela achar os botões. */}
+          <div className="absolute right-3 top-3 z-30 flex flex-col gap-2">
+            <BotaoDoMapa rotulo="Aproximar" icone="mais" onClick={() => controle.current?.aproximar()} />
+            <BotaoDoMapa rotulo="Afastar" icone="menos" onClick={() => controle.current?.afastar()} />
+            <BotaoDoMapa
+              rotulo={naTela ? 'Voltar para a rota' : 'Ver o piso inteiro'}
+              icone="alvo"
+              onClick={() => controle.current?.recentralizar()}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {naTrilha && (
+      {naTrilha && !noPiso13 && (
         <section aria-labelledby="titulo-trilha" className="flex flex-col items-start gap-3 rounded-md border bg-surface-raised p-4">
           <div className="flex -space-x-3">
             {EQUIPE.map((pessoa) => (
@@ -247,12 +284,12 @@ function MapaAte({
       )}
 
       <div className="flex flex-col items-start gap-2">
-        {rota && naTela && (
+        {rota && naTela && !noPiso13 && (
           <Badge tone="ouro" icon="pin">
             {minutosAPe(rota.metros)} min a pé · {Math.round(rota.metros)} m
           </Badge>
         )}
-        {naTrilha ? null : destino && achado?.piso === piso ? (
+        {noPiso13 || naTrilha ? null : destino && achado?.piso === piso ? (
           <>
             {/* De onde a rota sai, com o botão de trocar logo ao lado. Tocar numa entrada no
                 mapa também troca, e a rota é refeita na hora. */}
