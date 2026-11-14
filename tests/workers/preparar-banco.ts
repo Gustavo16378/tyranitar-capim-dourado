@@ -8,7 +8,7 @@ await applyD1Migrations(env.DB, env.MIGRATIONS)
 
 // Filhas antes das mães, por causa das chaves estrangeiras. A configuração fica (vem da migration).
 const TABELAS = [
-  'reembolso', 'uso_cupom', 'avaliacao', 'compra', 'reserva', 'favorito', 'notificacao',
+  'reembolso', 'uso_cupom', 'avaliacao', 'compra_item', 'compra', 'reserva', 'favorito', 'notificacao',
   'busca', 'mensagem', 'ficha', 'cupom', 'produto', 'usuario', 'loja',
 ]
 

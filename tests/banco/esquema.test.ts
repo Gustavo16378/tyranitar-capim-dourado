@@ -42,7 +42,7 @@ const NOVO_REEMBOLSO = `INSERT INTO reembolso (id, loja_id, compra_id, cupom_id,
 const chave = (fim: string) => fim.padStart(44, '1')
 
 describe('TB01: migrations num banco vazio', () => {
-  it('criam as 15 tabelas, na ordem das migrations, e a configuração inicial', async () => {
+  it('criam as 16 tabelas, na ordem das migrations, e a configuração inicial', async () => {
     const { results: tabelas } = await env.DB.prepare(
       `SELECT name FROM sqlite_master
        WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'd1_migrations'
@@ -52,6 +52,7 @@ describe('TB01: migrations num banco vazio', () => {
       'avaliacao',
       'busca',
       'compra',
+      'compra_item',
       'configuracao',
       'cupom',
       'favorito',
