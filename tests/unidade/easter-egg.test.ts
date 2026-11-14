@@ -1,7 +1,8 @@
-// O easter egg "O tirano da sexta-feira 13" (docs/easter-egg.md, TU31 a TU36): os gatilhos (a
+// O easter egg "O tirano da sexta-feira 13" (docs/easter-egg.md, TU31 a TU37): os gatilhos (a
 // palavra e os 13 toques), o modo tirano lembrado na sessão, o apagão dentro do limite de piscadas
 // (WCAG 2.3.1), a Loja 13 num corredor livre do térreo e os personagens da equipe.
 import { describe, expect, it } from 'vitest'
+import { ouvirOTiranoDoConsole } from '../../src/easter-egg/console'
 import { caminhoDoPersonagem, EQUIPE, inicial, nomeNoArquivo, POSES } from '../../src/easter-egg/equipe'
 import { criarContadorDeToques, ehPalavraDoTirano, PAUSA_MAXIMA_MS, TOQUES_DO_SEGREDO } from '../../src/easter-egg/gatilhos'
 import {
@@ -12,11 +13,12 @@ import {
   LOJA_13,
   trilhaDeRachaduras,
 } from '../../src/easter-egg/lugarDaLoja13'
-import { CHAVE_DO_TIRANO, criarModoTirano, type Armazem } from '../../src/easter-egg/modoTirano'
+import { CHAVE_DO_TIRANO, criarModoTirano, modoTirano, type Armazem } from '../../src/easter-egg/modoTirano'
 import { mudancasDeClaridade, piscadasNoPiorSegundo, planoDoApagao } from '../../src/easter-egg/planoDoApagao'
 import { GRAFO, LOJAS_DA_PLANTA, PLANTAS } from '../../src/mapa/dados'
 import { acharEntrada } from '../../src/mapa/entradas'
 import type { Ponto2D } from '../../src/mapa/svg'
+import { instalarTirano } from '../../src/tirano'
 
 describe('TU31: a palavra do tirano', () => {
   it('vale "tyranitar" sozinha, sem diferenciar maiúsculas e sem os espaços das pontas', () => {
@@ -134,6 +136,18 @@ describe('TU33: o modo tirano', () => {
     estragado.setItem(CHAVE_DO_TIRANO, '{não é json')
     expect(criarModoTirano(estragado).estado().ligado).toBe(false)
     expect(criarModoTirano(undefined).estado().ligado).toBe(false)
+  })
+})
+
+describe('TU37: tyranitar() no console acorda o tirano do app', () => {
+  it('o evento do console começa o apagão, como o botão da Capi', () => {
+    const janela = new EventTarget() as EventTarget & { tyranitar?: () => string }
+    instalarTirano(janela, { log: () => {} })
+    ouvirOTiranoDoConsole(janela)
+    expect(modoTirano.estado().apagando).toBe(false)
+    expect(janela.tyranitar?.()).toBe('O tirano acordou.')
+    expect(modoTirano.estado().apagando).toBe(true)
+    modoTirano.acender()
   })
 })
 

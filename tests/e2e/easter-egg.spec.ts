@@ -1,6 +1,7 @@
 // O easter egg "O tirano da sexta-feira 13" (docs/easter-egg.md, TE30), no celular, como na
 // apresentação: "tyranitar" na Capi (sem chamar a IA), o apagão, o mapa no escuro, a Loja 13, o
-// nível Tirano na carteira e "Acender as luzes" voltando tudo ao normal.
+// nível Tirano na carteira e "Acender as luzes" voltando tudo ao normal. O TE31 acorda o tirano
+// pelo tyranitar() do console (src/tirano.ts).
 import { expect, test } from '@playwright/test'
 import { comSessaoDaAna, novaConversa } from './apoio'
 
@@ -87,4 +88,19 @@ test('TE30: de "tyranitar" na Capi ao nível Tirano, e "Acender as luzes" volta 
     await expect(page.getByRole('button', { name: /Tem esse tênis aí no shopping/ })).toBeVisible()
     expect(paraAIA).toEqual([])
   })
+})
+
+test('TE31: tyranitar() no console acorda o tirano no app', async ({ page }, info) => {
+  test.skip(info.project.name !== 'e2e-computador', 'O console é coisa do computador.')
+  await comSessaoDaAna(page)
+  await page.goto('/inicio')
+  await expect(page.getByRole('heading', { name: 'O que você procura hoje?' })).toBeVisible()
+  const resposta = await page.evaluate(() => (window as unknown as { tyranitar: () => string }).tyranitar())
+  expect(resposta).toBe('O tirano acordou.')
+  // O mesmo apagão do botão da Capi, até o mapa no escuro.
+  await expect(page.locator('[data-apagao]')).toBeAttached()
+  await expect(page).toHaveURL(/\/mapa$/)
+  await expect(page.getByRole('heading', { name: 'Mapa no escuro' })).toBeVisible()
+  await page.getByRole('button', { name: 'Acender as luzes' }).click()
+  await expect(page.getByRole('heading', { name: 'Mapa', exact: true })).toBeVisible()
 })
