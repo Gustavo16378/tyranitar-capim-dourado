@@ -4,21 +4,39 @@ import {
   calcularExpiracao,
   mudarStatus,
   PRAZOS_PADRAO,
+  prontaAPartirDe,
   statusEfetivo,
   TRANSICOES,
   type StatusReserva,
 } from '../../../functions/_lib/regras/reserva'
 
 describe('prazos da reserva (RN01, RN02)', () => {
-  it('TU15: pagar na loja, criada às 10h, expira às 14h', () => {
+  it('TU15: pendente, criada às 10h, a loja tem até as 14h para confirmar', () => {
     const criadaEm = new Date('2026-11-13T13:00:00Z') // 10h em Palmas
     expect(calcularExpiracao({ forma: 'NA_LOJA', criadaEm }).toISOString()).toBe('2026-11-13T17:00:00.000Z')
   })
 
-  it('TU16: Pix pago expira 48 h depois do pagamento', () => {
+  it('TU16: o prazo para retirar conta da hora que a loja confirmou: 4 h na loja, 48 h com o Pix pago', () => {
     const criadaEm = new Date('2026-11-13T13:00:00Z')
-    const pagaEm = new Date('2026-11-13T13:05:00Z')
-    expect(calcularExpiracao({ forma: 'PIX', criadaEm, pagaEm }).toISOString()).toBe('2026-11-15T13:05:00.000Z')
+    const prontaEm = new Date('2026-11-13T18:30:00Z') // pronta às 15h30 em Palmas
+    expect(calcularExpiracao({ forma: 'NA_LOJA', criadaEm, prontaEm }).toISOString()).toBe('2026-11-13T22:30:00.000Z')
+    expect(calcularExpiracao({ forma: 'PIX', criadaEm, prontaEm, pago: true }).toISOString()).toBe('2026-11-15T18:30:00.000Z')
+    // Pix ainda não pago tem o prazo de pagar na loja, também depois de confirmada.
+    expect(calcularExpiracao({ forma: 'PIX', criadaEm, prontaEm, pago: false }).toISOString()).toBe('2026-11-13T22:30:00.000Z')
+  })
+
+  it('TU42: a hora "pronta a partir de" é a de Palmas, hoje, ou amanhã se já passou', () => {
+    const agora = new Date('2026-11-13T17:00:00Z') // 14h em Palmas
+    expect(prontaAPartirDe('15:30', agora).toISOString()).toBe('2026-11-13T18:30:00.000Z')
+    // Hora que acabou de passar (menos de 1 h): pronta agora.
+    expect(prontaAPartirDe('13:30', agora).toISOString()).toBe(agora.toISOString())
+    // De noite para a manhã: amanhã.
+    expect(prontaAPartirDe('09:00', agora).toISOString()).toBe('2026-11-14T12:00:00.000Z')
+    // Sem hora: pronta agora.
+    expect(prontaAPartirDe(undefined, agora)).toEqual(agora)
+    for (const errada of ['15h30', '25:00', '9:00', '15:60']) {
+      expect(() => prontaAPartirDe(errada, agora)).toThrow(expect.objectContaining({ codigo: 'DADOS_INVALIDOS' }))
+    }
   })
 
   it('Pix ainda não pago tem o prazo de pagar na loja; os prazos vêm da configuração', () => {
@@ -51,7 +69,11 @@ describe('estados da reserva (RF20)', () => {
     ['EXPIRADA', 'SEPARADA'],
     ['CANCELADA', 'PENDENTE'],
     ['PENDENTE', 'RETIRADA'],
+    // A loja confirma antes de separar.
+    ['PENDENTE', 'SEPARADA'],
     ['SEPARADA', 'PENDENTE'],
+    ['RECUSADA', 'CONFIRMADA'],
+    ['RETIRADA', 'RECUSADA'],
   ] as const)('TU19: %s → %s é TRANSICAO_INVALIDA', (de, para) => {
     expect(() => mudarStatus(de, para)).toThrow(expect.objectContaining({ codigo: 'TRANSICAO_INVALIDA' }))
   })
