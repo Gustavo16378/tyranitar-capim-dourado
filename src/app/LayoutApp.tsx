@@ -5,6 +5,7 @@ import { useSessao } from '../api'
 import { BottomNav, type AbaId } from '../componentes'
 import { cx } from '../componentes/cx'
 import { comMovimento, DURACAO, EASE, useGSAP } from '../movimento'
+import { AvisoDosSalvos } from './AvisoDosSalvos'
 import { BarraLateral } from './BarraLateral'
 
 /** As abas do app do cliente, na ordem da barra (a busca fica com a Capi). */
@@ -101,6 +102,8 @@ export default function LayoutApp() {
             <Outlet />
           </div>
         </main>
+        {/* O aviso do coração de salvar (o leitor de tela lê; o de erro aparece na tela). */}
+        <AvisoDosSalvos />
         <div className="flex-none bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden [&>nav]:rounded-none">
           <BottomNav abas={ABAS} ativo={aba} onSelect={(destino) => navigate(`/${destino}`)} />
         </div>
