@@ -74,22 +74,39 @@ React 19, Vite, TypeScript e Tailwind no front. Cloudflare Pages Functions e D1 
 
 ## Como rodar
 
-Requisito: Node 22.12 ou mais novo.
+Requisitos: **Node 22** (LTS, 22.12 ou mais novo) e Git. Tudo roda na máquina, sem conta no Cloudflare: o banco D1 local fica na pasta `.wrangler/`. Estes passos foram conferidos num clone limpo do GitHub.
 
 ```bash
+git clone https://github.com/Gustavo16378/tyranitar-capim-dourado.git
+cd tyranitar-capim-dourado
 npm install
-cp .dev.vars.exemplo .dev.vars   # preencha as chaves e as senhas; o .dev.vars fica fora do Git
-npm run db:migrar                # cria as tabelas no banco D1 local
-npm run seed:local               # lojas e produtos de seed/, cupons e usuários de teste
-npm run dev                      # front em http://localhost:5173
-npm run dev:api                  # build + Functions e D1 local em http://localhost:8788
+cp .dev.vars.exemplo .dev.vars        # 1. preencha o .dev.vars (tabela abaixo)
+echo VITE_MODO_DEMO=1 > .env.local    # 2. o modo demonstração do front (entra no build)
+npm run db:migrar                     # 3. cria as tabelas no D1 local (confirme se o wrangler perguntar)
+npm run seed:local                    # 4. lojas, produtos, cupons, usuários e o histórico da Ana
+npm run dev:api                       # 5. build e o site com a API em http://localhost:8788
 ```
 
-Com os dois rodando, o front do `npm run dev` chama a API pelo proxy de `/api`. Para conferir as Functions: `http://localhost:8788/api/saude` responde `{ "ok": true }`. Os usuários de teste (cliente, lojista e administração) estão descritos no `.dev.vars.exemplo`; as senhas ficam só no `.dev.vars` de cada um.
+Abra [http://localhost:8788](http://localhost:8788), toque em **Começar** e entre com **Cliente (Ana)**. Os painéis ficam em `/loja` e `/shopping`, com os botões **Lojista** e **Shopping (admin)**. Para conferir só a API: `http://localhost:8788/api/saude` responde `{ "ok": true }`.
 
-O seed não é migration: as migrations só criam o esquema. `npm run seed:local` e `npm run seed:remoto` podem rodar quantas vezes for preciso (atualizam em vez de duplicar), então quando os CSVs mudarem basta rodar de novo. Os dados vêm de `seed/lojas.csv` (as unidades da planta, com número, área e a marca de cada loja) e `seed/produtos.csv` (os produtos de exemplo, com a loja, o preço, o estoque e a foto em `public/produtos/`); para ler de outra pasta, `npm run seed:local -- --csv outra/pasta`. A categoria de cada loja sai do nome da marca (`scripts/categorias-das-marcas.mjs`, ou a coluna `categoria` do `lojas.csv`, se existir) e vem antes das categorias dos produtos dela: é a que dá a capa no painel do shopping. Uma marca nova sem categoria aparece num aviso no fim do seed.
+No Windows, sem o Git Bash, troque o `cp` por `copy .dev.vars.exemplo .dev.vars` e crie o `.env.local` com uma linha só: `VITE_MODO_DEMO=1`.
 
-Outros comandos: `npm run build`, `npm run lint`, `npm run typecheck` e `npm test` (unidade e API). Os testes no navegador (`npm run test:e2e` e `npm run test:a11y`) sobem sozinhos o site com o modo demonstração e um banco de teste; na primeira vez, instale o Chromium com `npx playwright install chromium`. O CI roda tudo isso a cada push.
+**O `.dev.vars`** fica fora do Git e guarda os segredos da máquina:
+
+| Variável | Precisa? | O que pôr |
+| --- | --- | --- |
+| `JWT_SECRET` | Sim | 32 caracteres aleatórios ou mais: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `SEED_SENHA_CLIENTE`, `SEED_SENHA_LOJISTA` e `SEED_SENHA_ADMIN` | Sim, para o seed | Senhas de 12 caracteres ou mais para os usuários de teste. O banco guarda só os hashes. Com o modo demonstração, os botões da tela de entrar entram sem senha |
+| `ANTHROPIC_API_KEY` | Não | A chave da API do Claude. Sem ela, a Capi responde as perguntas do roteiro com as respostas salvas, e nas outras o app faz a busca comum no catálogo |
+| `CAPI_MODELO` | Não | O modelo da Capi; padrão `claude-sonnet-5-5` |
+
+**O `.env.local`** liga os avisos de dados de demonstração no front. O Vite o lê no build, então crie antes do `npm run dev:api` (que faz o build).
+
+**Para desenvolver com recarga**, rode também `npm run dev` (o front em `http://localhost:5173`, que chama a API do `dev:api` pelo proxy de `/api`).
+
+**Testes:** `npm run lint`, `npm run typecheck`, `npm test` (unidade, API, banco e Capi), `npm run test:e2e` e `npm run test:a11y`. Os dois últimos sobem sozinhos o site com o modo demonstração e um banco de teste; na primeira vez, instale o Chromium com `npx playwright install chromium`. O CI roda tudo a cada push. Use o Node 22: no Node 26, o Vitest quebra nos testes de unidade (só funciona com `npx vitest run --project unidade --pool=vmThreads`).
+
+**O seed** não é migration: as migrations só criam o esquema. `npm run seed:local` e `npm run seed:remoto` podem rodar quantas vezes for preciso (atualizam em vez de duplicar), então quando os CSVs mudarem basta rodar de novo. Os dados vêm de `seed/lojas.csv` (as unidades da planta, com número, área e a marca de cada loja) e `seed/produtos.csv` (os produtos de exemplo, com a loja, o preço, o estoque e a foto em `public/produtos/`); para ler de outra pasta, `npm run seed:local -- --csv outra/pasta`. A categoria de cada loja sai do nome da marca (`scripts/categorias-das-marcas.mjs`, ou a coluna `categoria` do `lojas.csv`, se existir) e vem antes das categorias dos produtos dela: é a que dá a capa no painel do shopping. Uma marca nova sem categoria aparece num aviso no fim do seed.
 
 ## Modo demonstração
 
@@ -103,15 +120,7 @@ São três chaves, ligadas com `1`; nenhuma é segredo.
 | `DEMO` | Functions | `1`, no `[vars]` do `wrangler.toml` | Liga `/api/auth/demo` e os botões de conta de demonstração da tela de entrar, sem senha: Cliente (Ana), Lojista (a loja do roteiro) e Shopping (admin). Desligada, a rota responde 404 e os botões somem. |
 | `CAPI_MODO_DEMO` | Functions | `0`, no `[vars]` do `wrangler.toml` | Com `0`, a Capi é o Claude de verdade, também no roteiro, e as respostas salvas (`functions/_lib/capi/demonstracao.json`) só entram se ele falhar. Com `1`, o roteiro sai sempre das respostas salvas, sem chamar o Claude (para apresentar sem internet). |
 
-Na máquina:
-
-```bash
-echo VITE_MODO_DEMO=1 > .env.local   # o Vite não lê o .dev.vars; o .env.local fica fora do Git
-# DEMO e CAPI_MODO_DEMO vêm do wrangler.toml; o .dev.vars muda as duas só na sua máquina
-npm run dev:api                      # http://localhost:8788
-```
-
-Em produção, `DEMO` e `CAPI_MODO_DEMO` vão no deploy pelo `[vars]` do `wrangler.toml`. O `VITE_MODO_DEMO` entra no build: o deploy sobe o `dist/` pronto, então o `npm run build` precisa rodar com o `.env.local` acima. Para desligar depois do hackathon, troque `DEMO` para `"0"` e apague o `.env.local`.
+Em produção, `DEMO` e `CAPI_MODO_DEMO` vão no deploy pelo `[vars]` do `wrangler.toml`; o `.dev.vars` muda as duas só na sua máquina. O `VITE_MODO_DEMO` entra no build: o deploy sobe o `dist/` pronto, então o `npm run build` precisa rodar com o `.env.local`. Para desligar depois do hackathon, troque `DEMO` para `"0"` e apague o `.env.local`.
 
 Entre um ensaio e outro, e antes do pitch:
 
