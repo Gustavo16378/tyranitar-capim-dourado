@@ -1,71 +1,89 @@
-import { useCallback } from 'react'
 import { Button, formatarNumero, formatarPreco, Icon } from '../../../componentes'
 import { cx } from '../../../componentes/cx'
-import type { PedidoCompra } from '../../../tipos/loja'
-import { calcularPrevia, useConsulta } from '../../api'
-import { useAdiado } from '../../../painel/comum/useAdiado'
+import type { PreviaCompra } from '../../../tipos/loja'
+import type { ErroApi } from '../../api'
 
 interface TotalDaCompraProps {
-  /** null enquanto o valor digitado não é válido. */
-  pedido: PedidoCompra | null
+  /** A prévia da API (usePrevia); null sem itens ou antes da primeira resposta. */
+  previa: PreviaCompra | null
+  recalculando: boolean
+  erro: ErroApi | null
+  aoTentarDeNovo: () => void
+  /** A compra não tem itens ainda. */
+  vazia: boolean
   /** Primeiro nome do cliente. */
   cliente: string
-  reservaPaga: boolean
+  /** O nome de cada cupom, pelo id. */
+  nomes: ReadonlyMap<string, string>
 }
 
 /**
- * "Cliente paga", antes de registrar: a API calcula os descontos e os pontos
- * (POST /api/loja/compras/previa) assim que o caixa para de digitar ou troca um cupom.
- * Enquanto recalcula, o total anterior fica mais claro na tela.
+ * O total antes de registrar, calculado pela API (POST /api/loja/compras/previa): o valor dos
+ * itens, o desconto de cada cupom, o que já foi pago com Pix e o que o cliente paga no caixa, com
+ * os pontos que ele ganha. Enquanto recalcula, o total anterior fica mais claro na tela.
  */
-export function TotalDaCompra({ pedido, cliente, reservaPaga }: TotalDaCompraProps) {
-  const chaveAgora = pedido ? JSON.stringify(pedido) : null
-  const chave = useAdiado(chaveAgora)
-  const buscar = useCallback(
-    (sinal: AbortSignal) => (chave ? calcularPrevia(JSON.parse(chave) as PedidoCompra, sinal) : Promise.resolve(null)),
-    [chave],
-  )
-  const consulta = useConsulta(buscar)
-  const recalculando = chave !== chaveAgora || (consulta.estado === 'pronto' && consulta.atualizando)
-  const previa = consulta.estado === 'pronto' && chaveAgora ? consulta.dados : null
+export function TotalDaCompra({ previa, recalculando, erro, aoTentarDeNovo, vazia, cliente, nomes }: TotalDaCompraProps) {
+  const jaPago = previa ? previa.valorPagoCentavos - previa.aPagarNoCaixaCentavos : 0
 
-  let nota = 'Digite o valor da compra.'
+  let nota = 'Ponha um item na compra.'
   if (previa) {
-    const desconto = previa.descontos.reduce((soma, d) => soma + d.centavos, 0)
-    const pontos = `${cliente} ganha ${formatarNumero(previa.pontosGerados)} ${previa.pontosGerados === 1 ? 'ponto' : 'pontos'}`
-    nota = desconto > 0 ? `Desconto de ${formatarPreco(desconto)} · ${pontos}` : pontos
-  } else if (chaveAgora && consulta.estado !== 'erro') {
+    nota = `${cliente} ganha ${formatarNumero(previa.pontosGerados)} ${previa.pontosGerados === 1 ? 'ponto' : 'pontos'}`
+  } else if (!vazia) {
     nota = 'Calculando…'
   }
 
   return (
-    <div className="flex flex-col gap-1 border-t border-line pt-4">
+    <div className="flex flex-col gap-3 border-t border-line pt-4">
+      {previa && (
+        <dl className={cx('flex flex-col gap-1 text-body-sm transition-opacity duration-rapida', recalculando && 'opacity-60')}>
+          <Linha rotulo="Valor dos itens" valor={formatarPreco(previa.valorBrutoCentavos)} />
+          {previa.descontos.map((d) => (
+            <Linha
+              key={d.cupom}
+              rotulo={nomes.get(d.cupom) ?? 'Cupom'}
+              valor={d.centavos ? `− ${formatarPreco(d.centavos)}` : 'brinde'}
+            />
+          ))}
+          {jaPago > 0 && <Linha rotulo="Já pago com Pix" valor={`− ${formatarPreco(jaPago)}`} />}
+        </dl>
+      )}
+
       <div aria-live="polite" aria-busy={recalculando} className="flex flex-col gap-1">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="text-label">{reservaPaga ? 'Já pago com Pix' : 'Cliente paga'}</span>
+          <span className="text-label">Cliente paga</span>
           <strong
             className={cx(
               'text-price transition-opacity duration-rapida',
-              (recalculando || !previa) && 'opacity-50',
+              !previa && 'text-ink-muted',
+              previa && recalculando && 'opacity-60',
             )}
           >
-            {previa ? formatarPreco(previa.valorPagoCentavos) : '—'}
+            {previa ? formatarPreco(previa.aPagarNoCaixaCentavos) : '—'}
           </strong>
         </div>
-        {consulta.estado !== 'erro' && <p className="text-body-sm text-ink-muted">{nota}</p>}
+        {!erro && <p className="text-body-sm text-ink-muted">{nota}</p>}
       </div>
 
-      {consulta.estado === 'erro' && chaveAgora && (
+      {erro && (
         <div role="alert" className="flex flex-wrap items-center gap-2 text-body-sm text-perigo-ink">
           <Icon name="alerta" />
-          <span>{consulta.erro.mensagem}</span>
-          {consulta.erro.passageiro && (
-            <Button size="sm" variant="ghost" onClick={consulta.recarregar}>
+          <span>{erro.mensagem}</span>
+          {erro.passageiro && (
+            <Button size="sm" variant="ghost" onClick={aoTentarDeNovo}>
               Tentar de novo
             </Button>
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-ink-muted">{rotulo}</dt>
+      <dd className="tabular-nums">{valor}</dd>
     </div>
   )
 }

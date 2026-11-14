@@ -9,8 +9,10 @@ import type {
   FiltroProdutos,
   FiltroReservas,
   Lista,
+  ListaDeReservas,
   PedidoCompra,
   PedidoCupom,
+  PedidoMudarStatus,
   PedidoPrevia,
   PedidoProduto,
   Periodo,
@@ -19,7 +21,6 @@ import type {
   Relatorio,
   ReservaDaLoja,
   ResultadoImportacao,
-  StatusPedidoPelaLoja,
 } from '../../tipos/loja'
 import { requisitar } from './cliente'
 
@@ -28,29 +29,33 @@ export function buscarAtendimento(qr: string, sinal?: AbortSignal) {
   return requisitar<Atendimento>('GET', `/api/loja/atendimento/${encodeURIComponent(qr)}`, { sinal })
 }
 
-/** POST /api/loja/compras/previa: quanto o cliente paga e quantos pontos ganha, sem gravar (RF19). */
+/** POST /api/loja/compras/previa: o desconto item por item, quanto o cliente paga e quantos pontos ganha, sem gravar (RF19). */
 export function calcularPrevia(pedido: PedidoPrevia, sinal?: AbortSignal) {
   return requisitar<PreviaCompra>('POST', '/api/loja/compras/previa', { corpo: pedido, sinal })
 }
 
-/** POST /api/loja/compras: registra a compra no caixa, com cupons, e soma os pontos (RF19). */
+/** POST /api/loja/compras: registra a compra no caixa (reservas, produtos e "Outros"), com cupons, e soma os pontos (RF19). */
 export function registrarCompra(pedido: PedidoCompra) {
   return requisitar<Compra>('POST', '/api/loja/compras', { corpo: pedido })
 }
 
-/** GET /api/loja/reservas: reservas da loja do token, mais urgentes primeiro (RF20). */
+/**
+ * GET /api/loja/reservas: reservas da loja do token, as novas (PENDENTE) primeiro e depois as que
+ * vencem antes (RF20). Vem com quantas esperam a loja responder (`pendentes`).
+ */
 export function listarReservas(filtro: FiltroReservas = {}, sinal?: AbortSignal) {
-  return requisitar<Lista<ReservaDaLoja>>('GET', '/api/loja/reservas', {
+  return requisitar<ListaDeReservas>('GET', '/api/loja/reservas', {
     busca: { status: filtro.status?.join(','), pagina: filtro.pagina, tamanho: filtro.tamanho },
     sinal,
   })
 }
 
-/** PATCH /api/loja/reservas/{id}: confirmar, separar, marcar retirada ou cancelar (RF20). */
-export function mudarStatusReserva(id: string, status: StatusPedidoPelaLoja) {
-  return requisitar<ReservaDaLoja>('PATCH', `/api/loja/reservas/${encodeURIComponent(id)}`, {
-    corpo: { status },
-  })
+/**
+ * PATCH /api/loja/reservas/{id}: confirmar (com a hora em que fica pronta), separar ou recusar
+ * (com o motivo) (RF20). A retirada é a compra no Atendimento; cancelar é do cliente.
+ */
+export function mudarStatusReserva(id: string, pedido: PedidoMudarStatus) {
+  return requisitar<ReservaDaLoja>('PATCH', `/api/loja/reservas/${encodeURIComponent(id)}`, { corpo: pedido })
 }
 
 /** GET /api/loja/produtos: o catálogo da loja, ativos e inativos (RF21). */

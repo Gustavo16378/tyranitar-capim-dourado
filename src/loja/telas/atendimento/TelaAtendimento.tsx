@@ -1,12 +1,16 @@
 // Atendimento (RF18, RF19). O molde das telas do painel: docs/como-fazer-uma-tela.md
 // explica cada peça. O vendedor lê o QR da carteira, vê a ficha, as reservas e os cupons
-// do cliente e registra a compra, que vira pontos na carteira dele.
+// do cliente e registra a compra com itens, que vira pontos na carteira dele.
 //
-//   TelaAtendimento      cabeçalho com o resumo das reservas e, embaixo, uma das duas fases:
-//   ├─ LeitorQR          1. esperando o QR (câmera com html5-qrcode ou "Simular leitura")
-//   └─ ClienteLido       2. QR lido: GET /api/loja/atendimento/{qr} e os quatro estados
-//      ├─ FichaCliente, ReservaStatus
-//      └─ RegistrarCompra → POST /api/loja/compras → Recibo (pontos somando)
+//   TelaAtendimento        cabeçalho com o resumo das reservas e, embaixo, uma das duas fases:
+//   ├─ LeitorQR            1. esperando o QR (câmera com html5-qrcode ou "Simular leitura")
+//   └─ ClienteLido         2. QR lido: GET /api/loja/atendimento/{qr}, os quatro estados e o carrinho
+//      ├─ FichaCliente       nome, nível e o que procura nesta loja
+//      ├─ ReservasDoCliente  as reservas dela aqui: "Retirar" põe na compra (pendente: confirmar antes)
+//      └─ RegistrarCompra    o caixa: ItensDaCompra (desconto item por item), BuscaNoCatalogo,
+//                            Outros, CuponsDaCompra (só os que valem nos itens) e TotalDaCompra
+//                            (POST /api/loja/compras/previa) → POST /api/loja/compras → Recibo
+//   As contas do carrinho e dos cupons, sem DOM, ficam em carrinho.ts.
 import { useState } from 'react'
 import { useEntrada } from '../../../movimento'
 import { CabecalhoTela } from '../../../painel/comum/CabecalhoTela'

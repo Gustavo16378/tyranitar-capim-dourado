@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cx } from '../../../componentes/cx'
 import { useEntrada } from '../../../movimento'
 import type { ReservaDaLoja } from '../../../tipos/loja'
 import { listarReservas, useConsulta } from '../../api'
+import { useAvisoDeReservas } from '../../avisos/contexto'
 import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
 import { Paginacao } from '../../../painel/comum/Paginacao'
 import { useAgora } from '../../../painel/comum/useAgora'
@@ -19,7 +20,8 @@ interface ListaDeReservasProps {
 
 /**
  * As reservas de um filtro, nos quatro estados, com paginação. Ao trocar o filtro ou a
- * página, a lista anterior fica mais clara até a nova chegar.
+ * página, a lista anterior fica mais clara até a nova chegar. Quando o aviso de reserva nova
+ * (AvisoDeReservas) acha uma, a lista busca de novo sozinha.
  */
 export function ListaDeReservas({ filtro, pagina, aoMudarPagina }: ListaDeReservasProps) {
   const [aviso, setAviso] = useState('')
@@ -28,10 +30,21 @@ export function ListaDeReservas({ filtro, pagina, aoMudarPagina }: ListaDeReserv
     [filtro, pagina],
   )
   const consulta = useConsulta(buscar)
+  const { recarregar } = consulta
+  const { chegadas, recarregar: recontarPendentes } = useAvisoDeReservas()
+  const chegadasVistas = useRef(chegadas)
+
+  useEffect(() => {
+    if (chegadas === chegadasVistas.current) return
+    chegadasVistas.current = chegadas
+    recarregar()
+  }, [chegadas, recarregar])
 
   function aoMudar(reserva: ReservaDaLoja, mensagem: string) {
     setAviso(`${mensagem} (${reserva.produto}, ${reserva.cliente}).`)
-    consulta.recarregar()
+    recarregar()
+    // O selo do menu acompanha na hora, sem esperar a próxima pergunta do aviso.
+    recontarPendentes()
   }
 
   if (consulta.estado === 'carregando') {

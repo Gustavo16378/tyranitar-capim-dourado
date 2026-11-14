@@ -79,9 +79,14 @@ describe('paraNivel', () => {
 describe('transições da reserva (docs/uml.md)', () => {
   it('segue o diagrama de estados', () => {
     expect(podeMudar('PENDENTE', 'CONFIRMADA')).toBe(true)
-    expect(podeMudar('PENDENTE', 'SEPARADA')).toBe(true)
+    expect(podeMudar('PENDENTE', 'RECUSADA')).toBe(true)
+    expect(podeMudar('CONFIRMADA', 'SEPARADA')).toBe(true)
     expect(podeMudar('CONFIRMADA', 'RETIRADA')).toBe(true)
-    expect(podeMudar('SEPARADA', 'CANCELADA')).toBe(true)
+    expect(podeMudar('SEPARADA', 'RECUSADA')).toBe(true)
+    // A loja confirma antes de separar (a API responde 409), e cancelar é do cliente.
+    expect(podeMudar('PENDENTE', 'SEPARADA')).toBe(false)
+    expect(podeMudar('SEPARADA', 'CANCELADA')).toBe(false)
+    expect(podeMudar('RECUSADA', 'CONFIRMADA')).toBe(false)
     expect(podeMudar('PENDENTE', 'RETIRADA')).toBe(false)
     expect(podeMudar('RETIRADA', 'CANCELADA')).toBe(false)
     expect(podeMudar('SEPARADA', 'PENDENTE')).toBe(false)

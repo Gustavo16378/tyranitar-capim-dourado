@@ -1,5 +1,5 @@
 import type { StatusReserva } from '../../../tipos/loja'
-import { STATUS_ATIVOS } from '../../comum/reserva'
+import { STATUS_ATIVOS, STATUS_ENCERRADOS } from '../../comum/reserva'
 
 /** As abas da tela: cada uma pede um grupo de status e tem sua frase de vazio. */
 export const FILTROS = [
@@ -13,7 +13,7 @@ export const FILTROS = [
     id: 'novas',
     rotulo: 'Novas',
     status: ['PENDENTE'],
-    vazio: 'Nenhuma reserva nova para confirmar.',
+    vazio: 'Nenhuma reserva nova para confirmar ou recusar.',
   },
   {
     id: 'confirmadas',
@@ -30,8 +30,8 @@ export const FILTROS = [
   {
     id: 'encerradas',
     rotulo: 'Encerradas',
-    status: ['RETIRADA', 'CANCELADA', 'EXPIRADA'],
-    vazio: 'Nenhuma reserva retirada, cancelada ou expirada ainda.',
+    status: STATUS_ENCERRADOS,
+    vazio: 'Nenhuma reserva retirada, cancelada, recusada ou expirada ainda.',
   },
 ] as const satisfies readonly { id: string; rotulo: string; status: readonly StatusReserva[]; vazio: string }[]
 

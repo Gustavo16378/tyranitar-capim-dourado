@@ -1,13 +1,26 @@
-import { useCallback } from 'react'
-import { Button, FichaCliente, ReservaStatus, type ReservaStatusProps } from '../../../componentes'
+import { useCallback, useState } from 'react'
+import { Button, FichaCliente } from '../../../componentes'
 import { useEntrada } from '../../../movimento'
-import type { Atendimento, ReservaDoCliente } from '../../../tipos/loja'
-import { buscarAtendimento, useConsulta } from '../../api'
-import { Carregando, Erro, Esqueleto, Vazio } from '../../../painel/comum/Estados'
+import type { Atendimento } from '../../../tipos/loja'
+import { buscarAtendimento, listarReservas, useConsulta } from '../../api'
+import { Carregando, Erro, Esqueleto } from '../../../painel/comum/Estados'
 import { paraNivel } from '../../../painel/comum/formatos'
 import { STATUS_ATIVOS } from '../../comum/reserva'
+import {
+  chaveDoItem,
+  completarOrigens,
+  faltaOrigem,
+  comProduto,
+  comReserva,
+  descricaoDoItem,
+  semItem,
+  type CarrinhoDoCaixa,
+  type ItemNoCarrinho,
+  type ProdutoNoCarrinho,
+} from './carrinho'
 import type { Leitura } from './LeitorQR'
 import { RegistrarCompra } from './RegistrarCompra'
+import { ReservasDoCliente } from './ReservasDoCliente'
 
 interface ClienteLidoProps {
   leitura: Leitura
@@ -21,6 +34,15 @@ interface ClienteLidoProps {
 export function ClienteLido({ leitura, aoRegistrar, aoTerminar }: ClienteLidoProps) {
   const buscar = useCallback((sinal: AbortSignal) => buscarAtendimento(leitura.qr, sinal), [leitura.qr])
   const consulta = useConsulta(buscar)
+  // A origem do cupom de cada reserva (loja ou shopping) vem da lista de reservas da loja quando o
+  // atendimento não manda; com ela no atendimento, esta busca nem acontece.
+  const semOrigem = consulta.estado === 'pronto' && faltaOrigem(consulta.dados.reservas)
+  const buscarOrigens = useCallback(
+    (sinal: AbortSignal) =>
+      semOrigem ? listarReservas({ status: [...STATUS_ATIVOS], tamanho: 100 }, sinal) : Promise.resolve(null),
+    [semOrigem],
+  )
+  const origens = useConsulta(buscarOrigens)
 
   if (consulta.estado === 'carregando') return <EsqueletoDoAtendimento />
 
@@ -37,8 +59,13 @@ export function ClienteLido({ leitura, aoRegistrar, aoTerminar }: ClienteLidoPro
 
   return (
     <AtendimentoDoCliente
-      atendimento={consulta.dados}
+      atendimento={{
+        ...consulta.dados,
+        reservas: completarOrigens(consulta.dados.reservas, origens.estado === 'pronto' ? origens.dados?.itens : null),
+      }}
+      atualizando={consulta.atualizando}
       leitura={leitura}
+      aoRecarregar={consulta.recarregar}
       aoRegistrar={aoRegistrar}
       aoTerminar={aoTerminar}
     />
@@ -48,72 +75,103 @@ export function ClienteLido({ leitura, aoRegistrar, aoTerminar }: ClienteLidoPro
 function EsqueletoDoAtendimento() {
   return (
     <Carregando rotulo="Carregando a ficha do cliente" className="grid items-start gap-5 lg:grid-cols-2">
-      <Esqueleto className="h-[220px]" />
       <div className="flex flex-col gap-4">
+        <Esqueleto className="h-[220px]" />
         <Esqueleto className="h-[150px]" />
-        <Esqueleto className="h-[320px]" />
       </div>
+      <Esqueleto className="h-[420px]" />
     </Carregando>
   )
 }
 
 interface AtendimentoDoClienteProps extends ClienteLidoProps {
   atendimento: Atendimento
+  atualizando: boolean
+  /** Busca o atendimento de novo (depois de confirmar uma reserva, ou de registrar a compra). */
+  aoRecarregar: () => void
 }
 
-/** Com dados: a ficha à esquerda; as reservas e o caixa à direita. Entra em cascata. */
-function AtendimentoDoCliente({ atendimento, leitura, aoRegistrar, aoTerminar }: AtendimentoDoClienteProps) {
+/**
+ * Com dados: à esquerda, a ficha e as reservas dela nesta loja ("Retirar" põe a reserva na
+ * compra); à direita, o caixa. O carrinho fica aqui, porque as duas colunas mexem nele. Entra em
+ * cascata.
+ */
+function AtendimentoDoCliente({ atendimento, atualizando, leitura, aoRecarregar, aoRegistrar, aoTerminar }: AtendimentoDoClienteProps) {
   const ref = useEntrada<HTMLDivElement>()
   const { cliente, ficha } = atendimento
-  const reservas = atendimento.reservas.filter(ativa)
+  const [carrinho, setCarrinho] = useState<ItemNoCarrinho[]>([])
+  const [registrada, setRegistrada] = useState(false)
+  // O que mudou no carrinho, para o leitor de tela: "Camiseta dry-fit entrou na compra."
+  const [anuncio, setAnuncio] = useState('')
+
+  function mudarCarrinho(novo: ItemNoCarrinho[], frase: string) {
+    setCarrinho(novo)
+    setAnuncio(frase)
+  }
+
+  const carrinhoComMudancas: CarrinhoDoCaixa = {
+    itens: carrinho,
+    retirar: (reservaId: string) => {
+      const reserva = atendimento.reservas.find((r) => r.id === reservaId)
+      if (reserva) mudarCarrinho(comReserva(carrinho, reserva), `${reserva.produto} entrou na compra.`)
+    },
+    adicionar: (produto: ProdutoNoCarrinho) => mudarCarrinho(comProduto(carrinho, produto), `${produto.nome} entrou na compra.`),
+    tirar: (chave: string) => {
+      const item = carrinho.find((i) => chaveDoItem(i) === chave)
+      if (item) mudarCarrinho(semItem(carrinho, chave), `${descricaoDoItem(item)} saiu da compra.`)
+    },
+    trocar: (novo: ItemNoCarrinho[], frase: string) => mudarCarrinho(novo, frase),
+  }
+
+  function registrou() {
+    setRegistrada(true)
+    // As reservas que saíram somem da lista da esquerda.
+    aoRecarregar()
+    aoRegistrar()
+  }
 
   return (
     <div ref={ref} className="grid items-start gap-5 lg:grid-cols-2">
-      <div data-anim>
-        <h2 className="sr-only">Ficha do cliente</h2>
-        <FichaCliente
-          nome={cliente.nome}
-          nivel={paraNivel(cliente.nivel)}
-          interesses={ficha}
-          acoes={
-            <div>
-              <Button size="sm" variant="ghost" onClick={aoTerminar}>
-                Ler outro cliente
-              </Button>
-            </div>
-          }
-        />
-      </div>
-
       <div className="flex flex-col gap-4">
-        <section data-anim aria-label="Reservas nesta loja" className="flex flex-col gap-3">
-          <h2 className="text-title-sm">Reservas nesta loja</h2>
-          {reservas.length === 0 ? (
-            <Vazio ilustracao="sacola" compacto>{cliente.nome} não tem reservas nesta loja.</Vazio>
-          ) : (
-            reservas.map((r) => (
-              <ReservaStatus key={r.id} produto={r.produto} foto={r.foto} loja={situacao(r)} status={r.status} pago={r.pago} />
-            ))
-          )}
-        </section>
-
         <div data-anim>
-          <RegistrarCompra atendimento={atendimento} leitura={leitura} aoRegistrar={aoRegistrar} aoTerminar={aoTerminar} />
+          <h2 className="sr-only">Ficha do cliente</h2>
+          <FichaCliente
+            nome={cliente.nome}
+            nivel={paraNivel(cliente.nivel)}
+            interesses={ficha}
+            acoes={
+              <div>
+                <Button size="sm" variant="ghost" onClick={aoTerminar}>
+                  Ler outro cliente
+                </Button>
+              </div>
+            }
+          />
+        </div>
+        <div data-anim>
+          <ReservasDoCliente
+            atendimento={atendimento}
+            atualizando={atualizando}
+            carrinho={carrinho}
+            registrada={registrada}
+            aoRetirar={carrinhoComMudancas.retirar}
+            aoConfirmar={aoRecarregar}
+          />
         </div>
       </div>
+
+      <div data-anim>
+        <RegistrarCompra
+          atendimento={atendimento}
+          leitura={leitura}
+          carrinho={carrinhoComMudancas}
+          aoRegistrar={registrou}
+          aoTerminar={aoTerminar}
+        />
+      </div>
+      <p role="status" className="sr-only">
+        {anuncio}
+      </p>
     </div>
   )
-}
-
-type ReservaAtiva = ReservaDoCliente & { status: ReservaStatusProps['status'] }
-
-function ativa(r: ReservaDoCliente): r is ReservaAtiva {
-  return STATUS_ATIVOS.includes(r.status)
-}
-
-/** A linha embaixo do produto: o que o vendedor faz com a reserva. */
-function situacao({ status, pago }: ReservaDoCliente) {
-  if (status === 'SEPARADA') return pago ? 'Paga com Pix · retirar agora' : 'Separada · cobrar no caixa'
-  if (status === 'CONFIRMADA') return 'Confirmada · falta separar'
-  return 'Nova · separe antes de entregar'
 }
