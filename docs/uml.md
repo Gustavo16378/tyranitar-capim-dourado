@@ -175,9 +175,15 @@ classDiagram
     +status: StatusReserva
     +formaPagamento: FormaPagamento
     +pago: boolean
+    +tamanho: string
+    +cor: string
+    +descontoCentavos: int
+    +prontaEm: datetime
+    +motivoRecusa: string
     +expiraEm: datetime
-    +confirmar()
+    +confirmar(prontaAs)
     +separar()
+    +recusar(motivo)
     +retirar()
     +cancelar()
     +expirou(agora) boolean
@@ -188,6 +194,14 @@ classDiagram
     +chaveNfce: string
     +pontosGerados: int
   }
+  class CompraItem {
+    +descricao: string
+    +categoria: string
+    +quantidade: int
+    +precoCentavos: int
+    +descontoCentavos: int
+    +jaPago: boolean
+  }
   class UsoCupom {
     +descontoCentavos: int
   }
@@ -197,7 +211,9 @@ classDiagram
     +valor: int
     +limitePorCliente: int
     +validade: date
+    +categoria: string
     +doShopping() boolean
+    +aceita(item) boolean
     +calcularDesconto(valorCentavos) int
   }
   class Reembolso {
@@ -208,7 +224,10 @@ classDiagram
   Reserva "*" --> "1" Produto : de
   Cliente "1" --> "*" Compra : faz
   Compra "*" --> "1" Loja : em
-  Compra "0..1" --> "0..1" Reserva : retira
+  Compra "1" *-- "1..*" CompraItem : tem
+  CompraItem "0..1" --> "0..1" Reserva : retira
+  CompraItem "*" --> "0..1" Produto : de
+  Reserva "*" --> "0..1" Cupom : prende
   Compra "1" *-- "*" UsoCupom : aplica
   UsoCupom "*" --> "1" Cupom : usa
   Loja "0..1" --> "*" Cupom : emite
@@ -279,14 +298,23 @@ sequenceDiagram
   participant A as App (PWA)
   participant F as API (Functions)
   participant DB as D1
-  C->>A: Reserva com Pix
-  A->>F: POST /api/reservas<br/>(produtoId, PIX)
-  F->>DB: Estoque - 1<br/>e reserva PENDENTE
-  F-->>A: Reserva + QR do Pix simulado
+  actor L as Loja
+  C->>A: Abre a folha de reservar
+  A->>F: GET /api/produtos/{id}/cupons
+  F-->>A: Tamanhos, cores e os cupons<br/>que valem para o produto
+  C->>A: Tamanho, cupom e Pix
+  A->>F: POST /api/reservas<br/>(produtoId, tamanho, cupomId, PIX)
+  F->>DB: Estoque - 1, reserva PENDENTE<br/>com o cupom preso (RN15)
+  F-)DB: Aviso "Reserva enviada para a loja"
+  F-->>A: Reserva + Pix simulado,<br/>já com o desconto
   A->>F: POST /api/reservas/{id}/pagamento
-  F->>DB: pago = 1<br/>expira em 48 h (RN02)
-  F-->>A: Reserva paga
-  A-->>C: Mapa com a rota até a loja
+  F->>DB: pago = 1
+  L->>F: PATCH /api/loja/reservas/{id}<br/>(CONFIRMADA, prontaAs 15:30)
+  F->>DB: pronta_em e expira em<br/>48 h dali (RN02)
+  F-)DB: Aviso "confirmou sua reserva"
+  A->>F: GET /api/me/notificacoes
+  F-->>A: Selo no Início e na Carteira
+  A-->>C: "Pronta para retirar a partir das 15:30"<br/>e o mapa com a rota até a loja
 ```
 
 ### Atendimento com QR e compra no caixa (RF18, RF19)
@@ -304,12 +332,14 @@ sequenceDiagram
   F->>DB: Cliente, reservas,<br/>cupons e ficha
   F->>F: Filtra a ficha pelas<br/>categorias da loja (RN04)
   F-->>P: Ficha, reservas e cupons
-  V->>P: Informa o valor e os cupons
+  V->>P: "Retirar" a reserva, produtos<br/>do catálogo, "Outros" e os cupons
+  P->>F: POST /api/loja/compras/previa<br/>(itens e cupons)
+  F->>F: Cupons item por item<br/>(RN05, RN06, RN15)
+  F-->>P: Desconto de cada item<br/>e o que o cliente paga
   P->>F: POST /api/loja/compras
-  F->>F: Valida os cupons<br/>(RN05, RN06)
-  F->>DB: Transação: compra, cupons,<br/>pontos, reembolso e<br/>reserva RETIRADA
+  F->>DB: Transação: compra e itens, cupons,<br/>pontos, reembolso, estoque e<br/>reserva RETIRADA
   F-->>P: Recibo com desconto e pontos
-  F-)DB: Notificação ao cliente
+  F-)DB: Avisos ao cliente:<br/>retirada e pontos
 ```
 
 ### Registro por nota fiscal (RF12)
