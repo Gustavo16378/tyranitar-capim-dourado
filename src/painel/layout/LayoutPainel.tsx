@@ -1,6 +1,7 @@
 import { Suspense, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { cx } from '../../componentes/cx'
+import { SeletorDeAparencia } from '../../tema/SeletorDeAparencia'
 import { Carregando, Esqueleto } from '../comum/Estados'
 import { urlNoPainel, usePainel } from '../painel'
 
@@ -89,7 +90,10 @@ export function LayoutPainel() {
             </ul>
           </nav>
 
-          <div className="flex items-center justify-between gap-2 border-t border-[color-mix(in_srgb,var(--on-terra)_20%,transparent)] px-2 pt-3 lg:mt-auto lg:flex-col lg:items-start">
+          <div className="flex flex-col gap-3 border-t border-[color-mix(in_srgb,var(--on-terra)_20%,transparent)] px-2 pt-3 lg:mt-auto">
+            <SeletorDeAparencia sobre="terra" />
+          </div>
+          <div className="flex items-center justify-between gap-2 px-2 lg:flex-col lg:items-start">
             <span className="min-w-0 truncate text-body-sm opacity-[.85]">{atual?.usuario.nome}</span>
             <button type="button" onClick={painel.sessao.apagarSessao} className={cx(ITEM, '-mx-3 cursor-pointer')}>
               Sair

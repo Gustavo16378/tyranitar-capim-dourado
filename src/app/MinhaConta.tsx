@@ -4,6 +4,7 @@ import { comoErroApi, excluirConta, mudarNome, obterConta, obterMeusDados, sair,
 import { Button, formatarNumero, Icon, NivelBadge } from '../componentes'
 import { APP_NOME } from '../config'
 import { useEntrada } from '../movimento'
+import { SeletorDeAparencia } from '../tema/SeletorDeAparencia'
 import type { Conta } from '../tipos'
 import { salvarJson } from './arquivo'
 import { Campo } from './Campo'
@@ -248,6 +249,16 @@ export default function MinhaConta() {
             <FichaDaConta conta={conta} onContaAtualizada={setAtualizada} />
             <Senha />
             <CopiaDosDados />
+
+            <section data-anim aria-labelledby="titulo-aparencia" className="flex flex-col gap-3">
+              <h2 id="titulo-aparencia" className="text-title-sm text-marrom-ink">
+                Aparência
+              </h2>
+              <p className="text-body-sm text-ink-muted">
+                Automático segue o tema do aparelho. A escolha fica salva neste aparelho e vale também para os painéis.
+              </p>
+              <SeletorDeAparencia legendaVisivel={false} />
+            </section>
 
             <section data-anim aria-label="Sessão e conta" className="mt-auto flex flex-col gap-3 pt-4">
               <Button block onClick={sair}>
