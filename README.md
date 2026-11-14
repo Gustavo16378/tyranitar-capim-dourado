@@ -160,3 +160,17 @@ Declaração do item 6.3 do edital.
 ## Licença
 
 O código é distribuído sob a [licença MIT](LICENSE), © 2026 Equipe Tyranitar. As fotos dos produtos e das capas são do Unsplash, com a licença própria descrita em [docs/creditos.md](docs/creditos.md).
+
+<details>
+<summary><strong>Não abra numa sexta-feira 13</strong></summary>
+
+<br>
+
+O tirano da sexta-feira 13 deixou quatro rastros no código. Nenhum aparece para quem só usa o app: é preciso ir procurar. As dicas dizem onde olhar, não o que tem lá.
+
+- **No console.** Abra qualquer tela do app com o console do navegador aberto (F12). O tirano deixou o nome dele e diz como acordá-lo. O que ele faz acordado, só vendo.
+- **No código-fonte.** Quem lê o código-fonte da página (Ctrl+U) até o fim descobre quem assinou o app.
+- **Nos cabeçalhos.** Toda resposta da API traz um recado que não vem no corpo. Olhe a aba Rede do navegador, ou chame a API com `curl -i`.
+- **Na API.** O shopping tem uma loja a mais, que só a API atende. O número é o da data; o endereço, do jeito que o mapa escreve as lojas.
+
+</details>
