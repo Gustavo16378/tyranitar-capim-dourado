@@ -285,7 +285,7 @@ describe('reservas do painel', () => {
       "SELECT titulo, corpo, destino FROM notificacao WHERE usuario_id = 'c-ana' AND titulo LIKE '%confirmou%'",
     )
     expect(aviso).toMatchObject({ titulo: 'Loja A confirmou sua reserva', destino: '/reserva/r1' })
-    expect(aviso.corpo).toMatch(/fica pronto para retirar a partir das \d\d:\d\d\./)
+    expect(aviso.corpo).toMatch(/^Sua reserva de .+ fica pronta para retirar a partir das \d\d:\d\d\.$/)
     const separar = await patch('r1', { status: 'SEPARADA' })
     expect(separar.corpo.status).toBe('SEPARADA')
     expect(await um("SELECT count(*) AS n FROM notificacao WHERE usuario_id = 'c-ana' AND titulo = 'Sua reserva está separada'")).toEqual({ n: 1 })

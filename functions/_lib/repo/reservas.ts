@@ -292,7 +292,7 @@ export async function mudarStatusDaReserva(
   const avisos: Partial<Record<StatusReserva, [string, string]>> = {
     CONFIRMADA: [
       `${reserva.loja_nome} confirmou sua reserva`,
-      `${produto} fica pronto para retirar a partir das ${horaEmPalmas(prontaEm ?? agora)}.`,
+      `Sua reserva de ${produto} fica pronta para retirar a partir das ${horaEmPalmas(prontaEm ?? agora)}.`,
     ],
     SEPARADA: ['Sua reserva está separada', `${produto} está esperando por você no balcão da ${reserva.loja_nome}.`],
     RECUSADA: [`${reserva.loja_nome} recusou sua reserva`, `${produto}: ${motivo?.trim()}.${estorno}`],
