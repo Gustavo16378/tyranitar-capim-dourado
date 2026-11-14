@@ -257,8 +257,12 @@ const cupons = [
 
 // ---------- histórico da Ana ----------
 
-// As compras do histórico (scripts/lib/ids-do-seed.mjs), cada uma numa loja diferente.
-const lojasDoHistorico = [...lojasComProduto, ...livres].slice(0, 6)
+// As compras do histórico (scripts/lib/ids-do-seed.mjs), cada uma numa loja diferente. As lojas
+// são fixas (as seis primeiras com produto quando o catálogo tinha 12 itens): com o catálogo
+// maior, a ordem das lojas com produto mudaria e, num banco novo, as compras iriam para outras.
+const LOJAS_DO_HISTORICO = ['loja-38', 'loja-36', 'loja-29', 'loja-73', 'loja-53', 'loja-ancora-01']
+const fixas = LOJAS_DO_HISTORICO.flatMap((mapaId) => lojasComProduto.filter((l) => l.mapaId === mapaId))
+const lojasDoHistorico = [...new Set([...fixas, ...lojasComProduto, ...livres])].slice(0, 6)
 const compras = HISTORICO_DA_ANA.map((c, i) => ({ ...c, mapaId: lojasDoHistorico[i % lojasDoHistorico.length].mapaId }))
 const pontosDaAna = PONTOS_DA_ANA
 
