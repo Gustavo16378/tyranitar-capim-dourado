@@ -1,7 +1,8 @@
 // O extrato da loja (RF25): as compras registradas no caixa pela plataforma no período, o
 // desconto que a loja deu nos cupons dela, o dos vouchers do shopping (que o shopping devolve,
 // RN11) e os reembolsos a receber. As compras por nota fiscal (o cliente cadastra) ficam fora.
-// O valor da compra no banco é o que o cliente pagou; o bruto é ele mais os descontos.
+// O valor da compra no banco é o que o cliente pagou; o bruto é ele mais os descontos. Cada
+// lançamento traz a cliente e os itens da compra (compra_item), com o desconto de cada um.
 import { deSqlite, paraSqlite } from '../regras/datas'
 import { inicioDoPeriodo, type Periodo } from '../regras/periodo'
 
@@ -13,6 +14,17 @@ const DO_PERIODO = `
   SELECT c.id, c.criado_em, c.valor_centavos, c.reserva_id, c.cliente_id,
          ${DESCONTO('NOT NULL')} AS desconto_loja, ${DESCONTO('NULL')} AS desconto_shopping
   FROM compra c WHERE c.loja_id = ?1 AND c.origem = 'CAIXA' AND c.criado_em >= ?2`
+
+interface ItemLinha {
+  compra_id: string
+  descricao: string
+  categoria: string | null
+  quantidade: number
+  preco_centavos: number
+  desconto_centavos: number
+  ja_pago: 0 | 1
+  reserva_id: string | null
+}
 
 interface LancamentoLinha {
   id: string
@@ -34,7 +46,7 @@ export async function montarExtrato(
   agora = new Date(),
 ) {
   const desde = paraSqlite(inicioDoPeriodo(periodo, agora))
-  const [resumo, lancamentos, reembolsos] = await db.batch([
+  const [resumo, lancamentos, itens, reembolsos] = await db.batch([
     db
       .prepare(
         `SELECT count(*) AS compras, COALESCE(sum(valor_centavos), 0) AS pago,
@@ -54,6 +66,15 @@ export async function montarExtrato(
          ORDER BY p.criado_em DESC, p.id LIMIT ?3 OFFSET ?4`,
       )
       .bind(lojaId, desde, pagina.tamanho, pagina.inicio),
+    // Os itens das compras da página (as mesmas do ORDER BY e do LIMIT dos lançamentos).
+    db
+      .prepare(
+        `SELECT i.compra_id, i.descricao, i.categoria, i.quantidade, i.preco_centavos, i.desconto_centavos, i.ja_pago, i.reserva_id
+         FROM compra_item i
+         WHERE i.compra_id IN (SELECT p.id FROM (${DO_PERIODO}) p ORDER BY p.criado_em DESC, p.id LIMIT ?3 OFFSET ?4)
+         ORDER BY i.rowid`,
+      )
+      .bind(lojaId, desde, pagina.tamanho, pagina.inicio),
     db
       .prepare(
         `SELECT COALESCE(sum(CASE WHEN status = 'PENDENTE' THEN valor_centavos END), 0) AS pendente,
@@ -64,6 +85,18 @@ export async function montarExtrato(
   ])
   const r = resumo.results[0] as { compras: number; pago: number; desconto_loja: number; desconto_shopping: number }
   const re = reembolsos.results[0] as { pendente: number; pago_no_periodo: number }
+  const itensDa = (compraId: string) =>
+    (itens.results as ItemLinha[])
+      .filter((i) => i.compra_id === compraId)
+      .map((i) => ({
+        descricao: i.descricao,
+        categoria: i.categoria,
+        quantidade: i.quantidade,
+        brutoCentavos: i.preco_centavos * i.quantidade,
+        descontoCentavos: i.desconto_centavos,
+        jaPago: i.ja_pago === 1,
+        retirada: i.reserva_id !== null,
+      }))
   return {
     periodo,
     resumo: {
@@ -83,7 +116,8 @@ export async function montarExtrato(
         descontoLojaCentavos: l.desconto_loja,
         descontoShoppingCentavos: l.desconto_shopping,
         pagoCentavos: l.valor_centavos,
-        retirada: l.reserva_id !== null,
+        itens: itensDa(l.id),
+        retirada: l.reserva_id !== null || itensDa(l.id).some((i) => i.retirada),
         reembolso: l.reembolso_status
           ? {
               status: l.reembolso_status,

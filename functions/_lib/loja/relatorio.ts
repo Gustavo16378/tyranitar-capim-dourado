@@ -1,6 +1,6 @@
 // O relatório de desempenho da loja (RF24), no formato de GET /api/loja/relatorios. Tudo sai do
-// banco, do período pedido. A compra não guarda os itens: "mais vendidos" e "parados" contam as
-// retiradas de reserva (a compra ligada a uma reserva diz o produto e a quantidade).
+// banco, do período pedido. "Mais vendidos" e "parados" contam os itens das compras (compra_item):
+// as reservas retiradas e os produtos do catálogo vendidos no balcão.
 // As buscas nunca dizem quem buscou (RN12); o comparativo só aparece com 3 lojas ou mais na
 // categoria (RN13).
 import { lerJson } from '../texto'
@@ -37,8 +37,8 @@ export async function montarRelatorio(db: D1Database, lojaId: string, periodo: P
   const [vendidos, parados, picos, cupons, ticket, reservas] = await db.batch([
     db
       .prepare(
-        `SELECT p.id AS produto_id, p.nome, sum(r.quantidade) AS quantidade, sum(r.quantidade * r.preco_centavos) AS valor
-         FROM compra c JOIN reserva r ON r.id = c.reserva_id JOIN produto p ON p.id = r.produto_id
+        `SELECT p.id AS produto_id, p.nome, sum(i.quantidade) AS quantidade, sum(i.quantidade * i.preco_centavos - i.desconto_centavos) AS valor
+         FROM compra c JOIN compra_item i ON i.compra_id = c.id JOIN produto p ON p.id = i.produto_id
          WHERE c.loja_id = ?1 AND c.criado_em >= ?2
          GROUP BY p.id ORDER BY quantidade DESC, valor DESC, p.nome LIMIT ?3`,
       )
@@ -47,11 +47,11 @@ export async function montarRelatorio(db: D1Database, lojaId: string, periodo: P
     db
       .prepare(
         `SELECT p.id AS produto_id, p.nome, p.estoque,
-                COALESCE((SELECT max(c.criado_em) FROM compra c JOIN reserva r ON r.id = c.reserva_id
-                          WHERE r.produto_id = p.id), p.atualizado_em) AS desde
+                COALESCE((SELECT max(c.criado_em) FROM compra c JOIN compra_item i ON i.compra_id = c.id
+                          WHERE i.produto_id = p.id), p.atualizado_em) AS desde
          FROM produto p WHERE p.loja_id = ?1 AND p.ativo = 1 AND p.estoque > 0
-           AND NOT EXISTS (SELECT 1 FROM compra c JOIN reserva r ON r.id = c.reserva_id
-                           WHERE r.produto_id = p.id AND c.criado_em >= ?2)
+           AND NOT EXISTS (SELECT 1 FROM compra c JOIN compra_item i ON i.compra_id = c.id
+                           WHERE i.produto_id = p.id AND c.criado_em >= ?2)
          ORDER BY desde, p.nome LIMIT ?3`,
       )
       .bind(lojaId, desde, LIMITE),
@@ -83,7 +83,7 @@ export async function montarRelatorio(db: D1Database, lojaId: string, periodo: P
     db
       .prepare(
         `SELECT sum(status = 'RETIRADA') AS retiradas, sum(status IN ('PENDENTE', 'CONFIRMADA', 'SEPARADA')) AS em_aberto,
-                sum(status = 'CANCELADA') AS canceladas, sum(status = 'EXPIRADA') AS expiradas
+                sum(status = 'CANCELADA') AS canceladas, sum(status = 'RECUSADA') AS recusadas, sum(status = 'EXPIRADA') AS expiradas
          FROM reserva WHERE loja_id = ?1 AND criado_em >= ?2`,
       )
       .bind(lojaId, desde),
@@ -95,6 +95,7 @@ export async function montarRelatorio(db: D1Database, lojaId: string, periodo: P
     retiradas: r.retiradas ?? 0,
     emAberto: r.em_aberto ?? 0,
     canceladas: r.canceladas ?? 0,
+    recusadas: r.recusadas ?? 0,
     expiradas: r.expiradas ?? 0,
   }
   const [maisBuscados, naoEncontrados] = await Promise.all([
@@ -134,7 +135,10 @@ export async function montarRelatorio(db: D1Database, lojaId: string, periodo: P
       semFichaCentavos: media(t.soma_sem, t.n_sem ?? 0),
     },
     comparativoCategoria: await comparativo(db, categorias, desde, media(t.soma, t.n ?? 0)),
-    reservas: { feitas: contagem.retiradas + contagem.emAberto + contagem.canceladas + contagem.expiradas, ...contagem },
+    reservas: {
+      feitas: contagem.retiradas + contagem.emAberto + contagem.canceladas + contagem.recusadas + contagem.expiradas,
+      ...contagem,
+    },
   }
 }
 
