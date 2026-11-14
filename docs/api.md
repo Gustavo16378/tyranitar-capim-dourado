@@ -40,13 +40,14 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/lojas/{id}` | Público | RF07, RF10 |
 | `GET /api/produtos` | Público | RF05 |
 | `GET /api/produtos/{id}` | Público | RF07 |
+| `GET /api/produtos/{id}/cupons` | CLIENTE | RF08, RN15 |
 | `GET /api/ofertas` | Público | RF06 |
 | `POST /api/chat` | CLIENTE | RF02, RF03, RF04 |
 | `GET /api/chat`, `DELETE` | CLIENTE | RF02 |
 | `POST /api/reservas` | CLIENTE | RF08, RF09 |
 | `GET /api/reservas/{id}` | CLIENTE | RF08, RF09 |
 | `POST /api/reservas/{id}/pagamento` | CLIENTE | RF09 |
-| `POST /api/reservas/{id}/cancelar` | CLIENTE | RF08 |
+| `PATCH /api/reservas/{id}/cancelar` | CLIENTE | RF08 |
 | `GET /api/me`, `PATCH /api/me`, `DELETE /api/me` | CLIENTE | RF13 |
 | `PUT /api/me/senha` | CLIENTE | RF01 |
 | `GET /api/me/ficha`, `DELETE /api/me/ficha/{id}` | CLIENTE | RF13, RN04 |
@@ -55,7 +56,7 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/me/compras` | CLIENTE | RF11, RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
 | `PUT /api/me/consentimento` | CLIENTE | RF13 |
-| `GET /api/me/notificacoes` | CLIENTE | RF14 |
+| `GET /api/me/notificacoes`, `POST /api/me/notificacoes/lidas` | CLIENTE | RF14 |
 | `POST /api/avaliacoes` | CLIENTE | RF15 |
 | `GET /api/me/favoritos`, `PUT /api/me/favoritos/{produtoId}`, `DELETE ...` | CLIENTE | RF16 |
 | `GET /api/loja/atendimento/{qr}` | LOJISTA | RF18 |
@@ -243,11 +244,30 @@ A foto não é guardada: `foto: true` diz que a mensagem tinha uma. No banco, a 
 
 ## Reservas
 
+### `GET /api/produtos/{id}/cupons`
+
+O que a folha de reservar mostra antes de enviar (RF08, RN15): as opções de tamanho e cor do produto e os cupons do cliente que valem para ele, com o desconto que cada um daria. Parâmetro: `quantidade` (de 1 a 5, padrão 1).
+
+```json
+{
+  "tamanhos": ["40", "41", "42"],
+  "cores": ["preto", "azul"],
+  "itens": [
+    { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA", "loja": "Loja de esportes", "categoria": "Calçados", "descontoCentavos": 3999 },
+    { "id": "cp2", "titulo": "R$ 20 em qualquer loja", "origem": "SHOPPING", "loja": null, "categoria": null, "descontoCentavos": 2000 }
+  ]
+}
+```
+
+`tamanhos` sai da numeração ou dos tamanhos do produto, e `cores` da cor dele; as duas listas vêm vazias quando o produto não tem a opção. Em `itens` entram os cupons da loja do produto (sem categoria, ou da categoria dele) e os vouchers do shopping, no nível do cliente, na validade e dentro do limite de usos (um cupom preso noutra reserva conta como usado). Brinde não entra, porque não desconta. `categoria` é para que o cupom vale ("Calçados"), ou `null` quando vale na loja toda ou em qualquer loja. Erro `404` quando o produto não existe ou está inativo.
+
 ### `POST /api/reservas`
 
 ```json
-{ "produtoId": "p1", "quantidade": 1, "formaPagamento": "PIX" }
+{ "produtoId": "p1", "quantidade": 1, "formaPagamento": "PIX", "tamanho": "42", "cor": "preto", "cupomId": "cp1" }
 ```
+
+`tamanho`, `cor` e `cupomId` são opcionais. O tamanho e a cor precisam ser uma das opções de `GET /api/produtos/{id}/cupons`; quando o produto tem uma cor só, ela entra sozinha. O cupom precisa ser um dos `itens` daquela rota: ele já desconta no preço e no Pix e fica preso à reserva até a retirada. Se a reserva for cancelada, recusada ou expirar, o cupom volta para a carteira (RN15).
 
 Resposta `201`:
 
@@ -258,26 +278,42 @@ Resposta `201`:
   "formaPagamento": "PIX",
   "pago": false,
   "estornoSolicitado": false,
-  "precoCentavos": 39990,
+  "brutoCentavos": 39990,
+  "descontoCentavos": 3999,
+  "precoCentavos": 35991,
+  "tamanho": "42",
+  "cor": "preto",
+  "cupom": { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" },
+  "prontaEm": null,
+  "motivoRecusa": null,
   "expiraEm": "2026-11-13T18:00:00Z",
   "pix": { "copiaECola": "00020126...", "simulado": true }
 }
 ```
 
-Erros: `404` (produto não existe ou inativo), `409` (`SEM_ESTOQUE`).
+A reserva nasce `PENDENTE`: ela vai para a loja, que confirma dizendo a partir de que horas o produto fica pronto (`PATCH /api/loja/reservas/{id}`). Enquanto isso, `expiraEm` é o prazo da loja para confirmar: 4 horas desde a criação (RN01). Depois da confirmação, `prontaEm` traz a hora informada e `expiraEm` passa a contar dela. `precoCentavos` é o total já com o desconto (`brutoCentavos` menos `descontoCentavos`), e é o valor do Pix. `cupom` e `motivoRecusa` vêm `null` quando não há. O cliente recebe o aviso "Reserva enviada para a loja" (`GET /api/me/notificacoes`).
+
+Erros: `404` (produto não existe ou inativo), `409` (`SEM_ESTOQUE`), `400` (tamanho ou cor que o produto não tem), `422` (`CUPOM_INVALIDO`: o cupom não vale para este produto agora).
 
 ### `GET /api/reservas/{id}`
 
-Uma reserva do cliente logado, com o produto no formato da busca. É o que a tela da reserva lê, então ela abre pelo link (`/reserva/{id}`). O prazo é conferido na leitura: se venceu, a reserva já vem `EXPIRADA` e o estoque volta (RN01 a RN03).
+Uma reserva do cliente logado, com o produto no formato da busca. É o que a tela da reserva lê, então ela abre pelo link (`/reserva/{id}`). O prazo é conferido na leitura: se venceu, a reserva já vem `EXPIRADA`, o estoque volta e o cupom fica livre (RN01 a RN03, RN15).
 
 ```json
 {
   "id": "r1",
-  "status": "PENDENTE",
+  "status": "CONFIRMADA",
   "formaPagamento": "PIX",
   "pago": false,
-  "precoCentavos": 39990,
-  "expiraEm": "2026-11-13T18:00:00Z",
+  "brutoCentavos": 39990,
+  "descontoCentavos": 3999,
+  "precoCentavos": 35991,
+  "tamanho": "42",
+  "cor": "preto",
+  "cupom": { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" },
+  "prontaEm": "2026-11-13T18:30:00Z",
+  "motivoRecusa": null,
+  "expiraEm": "2026-11-13T22:30:00Z",
   "pix": { "copiaECola": "00020126...", "simulado": true },
   "produto": {
     "id": "p1",
@@ -291,15 +327,15 @@ Uma reserva do cliente logado, com o produto no formato da busca. É o que a tel
 }
 ```
 
-`pix` só vem quando a forma de pagamento é `PIX`. Erro `404` quando a reserva não existe ou é de outro cliente (a mesma resposta nos dois casos, para não revelar reservas dos outros).
+Os campos são os de `POST /api/reservas`, mais o produto. `pix` só vem quando a forma de pagamento é `PIX`. Uma reserva `RECUSADA` traz em `motivoRecusa` o que a loja escreveu. Erro `404` quando a reserva não existe ou é de outro cliente (a mesma resposta nos dois casos, para não revelar reservas dos outros).
 
 ### `POST /api/reservas/{id}/pagamento`
 
-Confirma o Pix simulado. A reserva fica `pago: true` e passa a expirar em 48 horas (RN02). O status não muda: ela continua `PENDENTE`, agora paga, porque quem separa o produto é a loja (`PATCH /api/loja/reservas/{id}`). Resposta `200` no formato de `POST /api/reservas`. Erro `409` se já estiver paga, retirada, cancelada ou expirada.
+Confirma o Pix simulado, no valor já com o desconto do cupom. A reserva fica `pago: true` e o status não muda, porque quem confirma e separa é a loja (`PATCH /api/loja/reservas/{id}`). Já confirmada, o prazo para retirar passa a ser de 48 horas desde a hora em que fica pronta (RN02); ainda pendente, a loja continua com o prazo dela para confirmar, e as 48 horas contam da confirmação. Resposta `200` no formato de `POST /api/reservas`. Erro `409` se já estiver paga, retirada, cancelada ou expirada.
 
 ### `PATCH /api/reservas/{id}/cancelar`
 
-O cliente cancela a própria reserva (perfil `CLIENTE`, só o dono). Sem corpo. Vale enquanto ela está em aberto: `PENDENTE`, `CONFIRMADA` ou `SEPARADA` (para o cliente, a confirmada aparece como reserva feita). A reserva fica `CANCELADA` e o estoque volta na hora (RN03). Se estava paga por Pix, o estorno fica pedido: `estornoSolicitado: true`, simulado como o próprio Pix da demonstração. A loja vê a reserva cancelada em `GET /api/loja/reservas`, com o mesmo `estornoSolicitado`.
+O cliente cancela a própria reserva (perfil `CLIENTE`, só o dono). Sem corpo. Vale enquanto ela está em aberto: `PENDENTE`, `CONFIRMADA` ou `SEPARADA`. A reserva fica `CANCELADA`, o estoque volta na hora (RN03) e o cupom preso nela volta para a carteira (RN15). Se estava paga por Pix, o estorno fica pedido: `estornoSolicitado: true`, simulado como o próprio Pix da demonstração. A loja vê a reserva cancelada em `GET /api/loja/reservas`, com o mesmo `estornoSolicitado`.
 
 Resposta `200` no formato de `POST /api/reservas`:
 
@@ -310,15 +346,22 @@ Resposta `200` no formato de `POST /api/reservas`:
   "formaPagamento": "PIX",
   "pago": true,
   "estornoSolicitado": true,
+  "brutoCentavos": 39990,
+  "descontoCentavos": 0,
   "precoCentavos": 39990,
+  "tamanho": "42",
+  "cor": "preto",
+  "cupom": null,
+  "prontaEm": "2026-11-13T18:00:00Z",
+  "motivoRecusa": null,
   "expiraEm": "2026-11-15T18:00:00Z",
   "pix": { "copiaECola": "00020126...", "simulado": true }
 }
 ```
 
-Erros: `404` quando a reserva não existe ou é de outro cliente (a mesma resposta nos dois casos); `409` (`TRANSICAO_INVALIDA`) quando ela já foi retirada, já está cancelada ou expirou; `403` para lojista e administração.
+Erros: `404` quando a reserva não existe ou é de outro cliente (a mesma resposta nos dois casos); `409` (`TRANSICAO_INVALIDA`) quando ela já foi retirada, já está cancelada, foi recusada ou expirou; `403` para lojista e administração.
 
-`estornoSolicitado` vem em todas as respostas de reserva do cliente: é `false` até uma reserva paga por Pix ser cancelada (pelo cliente, pela loja ou pela exclusão da conta).
+`estornoSolicitado` vem em todas as respostas de reserva do cliente: é `false` até uma reserva paga por Pix sair sem ser retirada (cancelada pelo cliente ou pela exclusão da conta, recusada pela loja ou expirada).
 
 ## Área do cliente
 
@@ -412,15 +455,20 @@ Resposta `204`. Erro `403` para a conta de demonstração enquanto `DEMO=1`, par
   "nivel": "CAPIM",
   "proximoNivel": { "nivel": "DOURADO", "faltam": 2860 },
   "cupons": [
-    { "id": "cp1", "titulo": "10% em calçados", "loja": "Loja de esportes", "validade": "2026-12-31", "tipo": "PERCENTUAL", "valor": 10, "nivelMinimo": "SEMENTE" },
-    { "id": "cp2", "titulo": "R$ 20 em qualquer loja", "loja": null, "validade": "2026-12-15", "tipo": "VALOR", "valor": 2000, "nivelMinimo": "SEMENTE" }
+    { "id": "cp1", "titulo": "10% em calçados", "loja": "Loja de esportes", "validade": "2026-12-31", "tipo": "PERCENTUAL", "valor": 10, "nivelMinimo": "SEMENTE", "categoria": "Calçados" },
+    { "id": "cp2", "titulo": "R$ 20 em qualquer loja", "loja": null, "validade": "2026-12-15", "tipo": "VALOR", "valor": 2000, "nivelMinimo": "SEMENTE", "categoria": null }
   ],
   "reservasAtivas": [
     {
       "id": "r1",
       "produto": "Tênis de corrida Pulse",
-      "status": "SEPARADA",
+      "status": "CONFIRMADA",
       "pago": true,
+      "tamanho": "42",
+      "cor": "preto",
+      "precoCentavos": 35991,
+      "cupom": "R$ 15 em camisetas",
+      "prontaEm": "2026-11-13T18:00:00Z",
       "expiraEm": "2026-11-15T18:00:00Z",
       "loja": { "nome": "Loja de esportes", "piso": 1, "mapaId": "loja-esportes" }
     }
@@ -428,9 +476,40 @@ Resposta `204`. Erro `403` para a conta de demonstração enquanto `DEMO=1`, par
 }
 ```
 
-As reservas em aberto (`PENDENTE`, `CONFIRMADA` ou `SEPARADA`), as que vencem primeiro na frente, trazem a loja para o botão "Como chegar" (`mapaId` abre o mapa nela).
+As reservas em aberto (`PENDENTE`, `CONFIRMADA` ou `SEPARADA`), as que vencem primeiro na frente, trazem a loja para o botão "Como chegar" (`mapaId` abre o mapa nela). `prontaEm` é a hora que a loja informou ao confirmar (`null` enquanto ela não confirma): o app mostra "Confirmada · pronta às 15:00". `precoCentavos` já vem com o desconto do cupom, e `cupom` é o título dele, ou `null`.
 
-Cada cupom traz `tipo` (`PERCENTUAL`, `VALOR` ou `BRINDE`), `valor` (a porcentagem, ou centavos no `VALOR`) e `nivelMinimo`, para o app montar o canhoto ("10%", "R$ 20") e o selo de nível. `loja` vem `null` no voucher do shopping.
+Cada cupom traz `tipo` (`PERCENTUAL`, `VALOR` ou `BRINDE`), `valor` (a porcentagem, ou centavos no `VALOR`) e `nivelMinimo`, para o app montar o canhoto ("10%", "R$ 20") e o selo de nível. `loja` vem `null` no voucher do shopping. `categoria` diz para que o cupom da loja vale ("Calçados"); `null` quando ele vale na loja toda, e sempre no voucher do shopping. O app junta os dois: "Calçados na Loja de esportes" (RN15). Um cupom preso numa reserva em aberto não aparece, porque já conta como usado; ele volta se a reserva for cancelada, recusada ou expirar.
+
+### `GET /api/me/notificacoes`
+
+Os avisos do cliente, do mais novo para o mais antigo (os 20 últimos), e quantos ainda não foram lidos (RF14). Cada mudança da reserva deixa um aviso: enviada para a loja, confirmada com a hora, separada, recusada com o motivo, expirada e retirada. A compra registrada no balcão deixa o dos pontos.
+
+```json
+{
+  "itens": [
+    {
+      "id": "n1",
+      "tipo": "RESERVA",
+      "titulo": "Loja de esportes confirmou sua reserva",
+      "corpo": "Sua reserva de Tênis de corrida Pulse fica pronta para retirar a partir das 15:00.",
+      "destino": "/reserva/r1",
+      "lida": false,
+      "criadoEm": "2026-11-13T17:20:00Z"
+    }
+  ],
+  "naoLidas": { "total": 2, "reservas": 1 }
+}
+```
+
+`tipo` é `RESERVA`, `CUPOM`, `PONTOS` ou `SISTEMA`. `destino` é a tela que o aviso abre no app (`null` quando não abre nenhuma). `naoLidas.total` é o selo do sino no Início; `naoLidas.reservas`, o selo da Carteira. O app pergunta de novo a cada 30 segundos e quando volta para a frente da tela.
+
+### `POST /api/me/notificacoes/lidas`
+
+```json
+{ "tipo": "RESERVA" }
+```
+
+Marca como lidos os avisos do cliente: todos, sem corpo (o Início abriu a lista), ou só os de um tipo (a Carteira abriu, `RESERVA`). Resposta `200`: `{ "lidas": 1 }`, quantos mudaram. Erro `400` para um tipo desconhecido.
 
 ### `GET /api/me/favoritos`
 
@@ -508,57 +587,123 @@ Todas as rotas usam o `lojaId` do token. Um id de outra loja no corpo ou na rota
 {
   "cliente": { "nome": "Ana", "nivel": "CAPIM" },
   "ficha": [ "Tênis de corrida, número 42, até R$ 400, prefere preto", "Camisetas dry-fit" ],
-  "reservas": [ { "id": "r1", "produto": "Tênis de corrida Pulse", "foto": "/produtos/tenis-pulse.webp", "status": "SEPARADA", "pago": true } ],
-  "cupons": [ { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" }, { "id": "cp2", "titulo": "R$ 20 do shopping", "origem": "SHOPPING" } ]
+  "reservas": [
+    {
+      "id": "r1",
+      "produto": "Tênis de corrida Pulse",
+      "foto": "/produtos/tenis-pulse.webp",
+      "categoria": "calcados",
+      "quantidade": 1,
+      "tamanho": "42",
+      "cor": "preto",
+      "brutoCentavos": 39990,
+      "descontoCentavos": 3999,
+      "precoCentavos": 35991,
+      "cupom": { "id": "cp1", "titulo": "10% em calçados" },
+      "status": "SEPARADA",
+      "pago": true,
+      "podeRetirar": true
+    }
+  ],
+  "cupons": [
+    { "id": "cp3", "titulo": "R$ 15 em camisetas", "origem": "LOJA", "tipo": "VALOR", "categoria": "roupas", "paraQueVale": "Roupas" },
+    { "id": "cp2", "titulo": "R$ 20 em qualquer loja", "origem": "SHOPPING", "tipo": "VALOR", "categoria": null, "paraQueVale": null }
+  ]
 }
 ```
 
-`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `foto` é a primeira foto do produto (a miniatura no balcão), ou `null` quando ele não tem. `cupons` traz os da loja primeiro e depois os vouchers do shopping; em cada grupo, os que dão desconto antes dos brindes (o caixa já marca o primeiro de cada grupo).
+`ficha` vem vazia quando o cliente não deu consentimento, e só traz as categorias que a loja vende (RN04). `reservas` são as em aberto do cliente nesta loja, com o tamanho, a cor, o valor já com o cupom e se já foi paga; `foto` é a primeira foto do produto (a miniatura no balcão), ou `null`. `podeRetirar` é `true` nas confirmadas pela loja (`CONFIRMADA` ou `SEPARADA`): o caixa mostra "Retirar"; a pendente a loja confirma antes. `cupons` traz os da loja primeiro e depois os vouchers do shopping; em cada grupo, os que dão desconto antes dos brindes. `categoria` é a categoria em que o cupom da loja desconta e `paraQueVale` o nome dela, para o caixa oferecer o cupom só quando a compra tem um item da categoria (RN15). O cupom preso numa reserva não aparece aqui: ele entra sozinho quando a reserva sai na compra.
 
 ### `POST /api/loja/compras/previa`
 
-O mesmo corpo de `POST /api/loja/compras`, mas não grava nada: calcula a compra para o caixa mostrar "Cliente paga" enquanto o vendedor marca os cupons, antes de registrar. Aplica as mesmas regras.
+O mesmo corpo de `POST /api/loja/compras`, mas não grava nada: calcula a compra item por item para o caixa mostrar "Cliente paga" enquanto o vendedor monta os itens e marca os cupons, antes de registrar. Aplica as mesmas regras.
 
-Resposta `200`: a compra como ficaria, sem `id`.
-
-```json
-{
-  "valorBrutoCentavos": 45980,
-  "descontos": [ { "cupom": "cp1", "centavos": 4598 }, { "cupom": "cp2", "centavos": 2000 } ],
-  "valorPagoCentavos": 39382,
-  "pontosGerados": 393,
-  "reembolsoGerado": { "cupom": "cp2", "centavos": 2000 }
-}
-```
-
-Erros: os mesmos de `POST /api/loja/compras`.
+Resposta `200`: a compra como ficaria, sem `id`. Erros: os mesmos de `POST /api/loja/compras`.
 
 ### `POST /api/loja/compras`
 
 ```json
-{ "qrToken": "q-7f3a...", "valorCentavos": 45980, "cupons": ["cp1", "cp2"] }
+{
+  "qrToken": "q-7f3a...",
+  "itens": [
+    { "produtoId": "p1", "quantidade": 1 },
+    { "produtoId": "p2", "quantidade": 1 }
+  ],
+  "cupons": ["cp1", "cp2"]
+}
 ```
 
-Para registrar a retirada de uma reserva, envie também `reservaId`. Se ela foi paga por Pix, envie `valorCentavos: 0` e nenhum cupom: a compra entra com o valor da reserva, o caixa não cobra de novo e os pontos são somados na retirada.
+Cada item é uma de três coisas:
 
-Resposta `201`:
+- `{ "reservaId": "r1" }`: uma reserva do cliente nesta loja, já confirmada pela loja (o botão "Retirar" do atendimento). Ela entra com o preço, a quantidade e o cupom da reserva, e fica `RETIRADA`. Se foi paga por Pix, entra no valor e nos pontos, mas o caixa não cobra de novo.
+- `{ "produtoId": "p2", "quantidade": 1 }`: um produto do catálogo desta loja, pelo preço do cadastro. O estoque baixa.
+- `{ "valorCentavos": 2990, "descricao": "Meias" }`: valor avulso ("Outros", quando não vem `descricao`). Não tem categoria, então cupom de categoria não desconta nele.
+
+`cupons` são os escolhidos no caixa; os das reservas entram sozinhos. O corpo de antes, sem `itens` (`valorCentavos` e, para retirar, `reservaId`), ainda vale: vira um item "Outros" ou o item da reserva.
+
+As regras dos cupons (RN05, RN06, RN15):
+
+- No máximo um cupom da loja e um voucher do shopping por compra, contando os das reservas que saem nela.
+- O cupom da loja com categoria só desconta nos itens dessa categoria; sem nenhum item dela, a compra é recusada. Sem categoria, vale em todos os itens da loja.
+- O voucher do shopping desconta sobre o que sobrou depois do cupom da loja.
+- Item já pago por Pix ou que já tem o cupom da reserva fica de fora dos cupons do caixa.
+- Validade, nível mínimo e limite de usos por cliente são conferidos no servidor. O desconto de cada cupom é repartido entre os itens que ele aceita, na proporção do valor de cada um.
+
+Resposta `201` (o exemplo: o tênis e a camiseta, com "10% em calçados" e o voucher de R$ 20):
 
 ```json
 {
   "id": "co1",
-  "valorBrutoCentavos": 45980,
-  "descontos": [ { "cupom": "cp1", "centavos": 4598 }, { "cupom": "cp2", "centavos": 2000 } ],
-  "valorPagoCentavos": 39382,
-  "pontosGerados": 393,
+  "itens": [
+    {
+      "descricao": "Tênis de corrida Pulse",
+      "detalhe": null,
+      "categoria": "calcados",
+      "produtoId": "p1",
+      "reservaId": null,
+      "quantidade": 1,
+      "precoCentavos": 39990,
+      "brutoCentavos": 39990,
+      "descontos": [ { "cupom": "cp1", "centavos": 3999 }, { "cupom": "cp2", "centavos": 1637 } ],
+      "pagoCentavos": 34354,
+      "jaPago": false
+    },
+    {
+      "descricao": "Camiseta dry-fit",
+      "detalhe": null,
+      "categoria": "roupas",
+      "produtoId": "p2",
+      "reservaId": null,
+      "quantidade": 1,
+      "precoCentavos": 7990,
+      "brutoCentavos": 7990,
+      "descontos": [ { "cupom": "cp2", "centavos": 363 } ],
+      "pagoCentavos": 7627,
+      "jaPago": false
+    }
+  ],
+  "valorBrutoCentavos": 47980,
+  "descontos": [ { "cupom": "cp1", "centavos": 3999 }, { "cupom": "cp2", "centavos": 2000 } ],
+  "valorPagoCentavos": 41981,
+  "aPagarNoCaixaCentavos": 41981,
+  "pontosGerados": 419,
   "reembolsoGerado": { "cupom": "cp2", "centavos": 2000 }
 }
 ```
 
-Erros: `422` (`CUPOM_INVALIDO` por validade, limite ou nível; `CUPONS_INCOMPATIVEIS` para dois cupons da mesma loja), `409` (reserva já retirada).
+`detalhe` é o tamanho e a cor do item que veio de uma reserva ("tamanho 42, preto"). `valorPagoCentavos` é o valor da compra depois dos descontos, e é dele que saem os pontos (RN07); `aPagarNoCaixaCentavos` é o que o caixa cobra agora, sem os itens já pagos por Pix. `reembolsoGerado` é o que o shopping devolve à loja pelo voucher (RN11), ou `null`. O cliente recebe o aviso dos pontos e, para cada reserva retirada, o "Reserva retirada".
+
+Erros:
+
+- `422` (`CUPOM_INVALIDO`): validade, limite, nível, ou cupom de categoria sem item dela. Exemplo: `O cupom "10% em calçados" vale só para calçados, e a compra não tem itens dessa categoria.`
+- `422` (`CUPONS_INCOMPATIVEIS`): dois cupons da loja ou dois vouchers.
+- `404`: reserva de outro cliente ou de outra loja, ou produto fora do catálogo da loja.
+- `409` (`TRANSICAO_INVALIDA`): reserva já retirada, ou ainda pendente ("Confirme a reserva antes de entregar.").
+- `400`: item em formato errado, ou a mesma reserva duas vezes.
 
 ### `GET /api/loja/reservas`
 
-Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,SEPARADA`; sem ele, todos), `pagina` e `tamanho` (até 100). Vem primeiro a que expira primeiro.
+Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,SEPARADA`; sem ele, todos), `pagina` e `tamanho` (até 100). As pendentes vêm primeiro, porque esperam a resposta da loja; depois, a que expira primeiro. O painel pergunta de novo a cada 20 segundos.
 
 ```json
 {
@@ -568,28 +713,44 @@ Parâmetros: `status` (um ou mais, separados por vírgula: `PENDENTE,CONFIRMADA,
       "produto": "Tênis de corrida Pulse",
       "cliente": "Ana",
       "quantidade": 1,
-      "status": "SEPARADA",
+      "tamanho": "42",
+      "cor": "preto",
+      "status": "PENDENTE",
       "formaPagamento": "PIX",
       "pago": true,
       "estornoSolicitado": false,
-      "precoCentavos": 39990,
-      "expiraEm": "2026-11-14T18:00:00Z",
-      "criadoEm": "2026-11-12T18:00:00Z"
+      "brutoCentavos": 39990,
+      "descontoCentavos": 3999,
+      "precoCentavos": 35991,
+      "cupom": { "id": "cp1", "titulo": "10% em calçados", "origem": "LOJA" },
+      "prontaEm": null,
+      "motivoRecusa": null,
+      "expiraEm": "2026-11-13T18:00:00Z",
+      "criadoEm": "2026-11-13T14:00:00Z"
     }
   ],
-  "total": 7
+  "total": 7,
+  "pendentes": 1
 }
 ```
 
-`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o total da reserva, pelo preço do momento da reserva. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido (RN01, RN02, RN03). Uma reserva que o cliente cancelou vem `CANCELADA`; `estornoSolicitado: true` quando ela estava paga por Pix.
+`cliente` é só o primeiro nome, como no atendimento. `precoCentavos` é o total da reserva, pelo preço do momento da reserva, já com o desconto do cupom. `pendentes` conta as que esperam a loja confirmar ou recusar, com qualquer filtro: é o selo do menu Reservas e o aviso de reserva nova. Reservas vencidas já vêm `EXPIRADA`, com o estoque devolvido (RN01, RN02, RN03). Uma reserva que o cliente cancelou vem `CANCELADA`; `estornoSolicitado: true` quando ela estava paga por Pix.
 
 ### `PATCH /api/loja/reservas/{id}`
 
+A resposta da loja à reserva (RF20). Três pedidos:
+
 ```json
+{ "status": "CONFIRMADA", "prontaAs": "15:30" }
 { "status": "SEPARADA" }
+{ "status": "RECUSADA", "motivo": "Acabou a numeração 42" }
 ```
 
-Segue as transições do diagrama de estados: a loja pede `CONFIRMADA`, `SEPARADA`, `RETIRADA` ou `CANCELADA`; cancelar devolve o estoque (e pede o estorno, se a reserva estava paga por Pix) e separar avisa o cliente. Uma transição proibida devolve `409` (`TRANSICAO_INVALIDA`); reserva de outra loja, `403`. Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`. Para somar os pontos do cliente, a retirada vai pelo `POST /api/loja/compras` com `reservaId`.
+- `CONFIRMADA`: aceita e diz a partir de que horas fica pronta, em Palmas (`HH:MM`; sem `prontaAs`, pronta agora). Uma hora que já passou há mais de uma hora vale para o dia seguinte. O prazo para retirar conta dessa hora: 4 horas para pagar na loja, 48 horas se já foi paga por Pix (RN01, RN02).
+- `SEPARADA`: o produto está no balcão.
+- `RECUSADA`: o `motivo` é obrigatório (até 200 caracteres) e o cliente o vê. O estoque volta, o cupom fica livre e, se a reserva estava paga por Pix, o estorno é pedido (RN03, RN15).
+
+Cada mudança deixa um aviso para o cliente no app. A retirada é a compra registrada no balcão com a reserva num item (`POST /api/loja/compras`), e cancelar é do cliente: pedir `RETIRADA` ou `CANCELADA` aqui devolve `400`, com o caminho certo na mensagem. Uma transição proibida pelo diagrama de estados devolve `409` (`TRANSICAO_INVALIDA`); hora fora do formato ou recusa sem motivo, `400`; reserva de outra loja, `403`. Resposta `200`: a reserva atualizada, no formato de um item de `GET /api/loja/reservas`.
 
 ### `GET /api/loja/produtos`
 
@@ -688,11 +849,11 @@ Parâmetro `periodo` (`7d`, `30d`, `90d`). Traz `maisVendidos`, `maisBuscados`, 
   "cupons": [ { "cupomId": "cp1", "titulo": "10% em calçados", "usos": 12, "descontoCentavos": 62940 } ],
   "ticketMedio": { "comFichaCentavos": 31240, "semFichaCentavos": 18990 },
   "comparativoCategoria": [ { "categoria": "calcados", "ticketMedioLojaCentavos": 34990, "ticketMedioCategoriaCentavos": 29870 } ],
-  "reservas": { "feitas": 64, "retiradas": 41, "emAberto": 7, "canceladas": 9, "expiradas": 7 }
+  "reservas": { "feitas": 64, "retiradas": 41, "emAberto": 7, "canceladas": 6, "recusadas": 3, "expiradas": 7 }
 }
 ```
 
-Tudo sai do banco, no período. A compra não guarda os itens: `maisVendidos` conta as retiradas de reserva (a compra ligada a uma reserva diz o produto e a quantidade), e `parados` são os produtos ativos com estoque que não tiveram retirada no período, os parados há mais tempo primeiro (desde a última retirada ou, sem nenhuma, desde o cadastro). `maisVendidos`, `maisBuscados`, `naoEncontrados` e `parados` trazem até 5 linhas. `maisBuscados` são as buscas nas categorias da loja, com ou sem resultado; `naoEncontrados` são buscas nas categorias da loja sem resultado em nenhuma loja do shopping (RN12). `picos` só traz os horários com compra. O ticket médio conta as compras com valor pago maior que zero. `diaDaSemana` vai de 0 (domingo) a 6 e `hora` está em Palmas. `ticketMedio` traz `null` no lado sem compras no período; `comparativoCategoria` vem `null` quando nenhuma categoria da loja tem 3 lojas ativas ou mais (RN13), ou quando não há compras para comparar. O ticket da loja é o mesmo em todas as categorias dela, porque a compra não guarda a categoria. Em `reservas`, `feitas` é a soma das outras quatro.
+Tudo sai do banco, no período. `maisVendidos` conta os itens das compras com produto: as reservas retiradas e os produtos do catálogo vendidos no balcão (o valor avulso fica fora); `valorCentavos` é o valor dos itens depois dos descontos. `parados` são os produtos ativos com estoque que não venderam no período, os parados há mais tempo primeiro (desde a última venda ou, sem nenhuma, desde o cadastro). `maisVendidos`, `maisBuscados`, `naoEncontrados` e `parados` trazem até 5 linhas. `maisBuscados` são as buscas nas categorias da loja, com ou sem resultado; `naoEncontrados` são buscas nas categorias da loja sem resultado em nenhuma loja do shopping (RN12). `picos` só traz os horários com compra. O ticket médio conta as compras com valor pago maior que zero. `diaDaSemana` vai de 0 (domingo) a 6 e `hora` está em Palmas. `ticketMedio` traz `null` no lado sem compras no período; `comparativoCategoria` vem `null` quando nenhuma categoria da loja tem 3 lojas ativas ou mais (RN13), ou quando não há compras para comparar. O ticket da loja é o mesmo em todas as categorias dela, porque o ticket é por compra e uma compra pode ter itens de várias categorias. Em `reservas`, `feitas` é a soma das outras cinco.
 
 ### `GET /api/loja/extrato`
 
@@ -716,10 +877,14 @@ Parâmetros: `periodo` (`7d`, `30d`, `90d`), `pagina` e `tamanho`. As compras re
         "criadoEm": "2026-11-13T06:01:00Z",
         "cliente": "Ana",
         "brutoCentavos": 45980,
-        "descontoLojaCentavos": 4598,
+        "descontoLojaCentavos": 3999,
         "descontoShoppingCentavos": 2000,
-        "pagoCentavos": 39382,
-        "retirada": false,
+        "pagoCentavos": 39981,
+        "itens": [
+          { "descricao": "Tênis de corrida Pulse", "categoria": "calcados", "quantidade": 1, "brutoCentavos": 39990, "descontoCentavos": 5714, "jaPago": false, "retirada": true },
+          { "descricao": "Outros", "categoria": null, "quantidade": 1, "brutoCentavos": 5990, "descontoCentavos": 285, "jaPago": false, "retirada": false }
+        ],
+        "retirada": true,
         "reembolso": { "status": "PENDENTE", "pagoEm": null }
       }
     ],
@@ -728,7 +893,7 @@ Parâmetros: `periodo` (`7d`, `30d`, `90d`), `pagina` e `tamanho`. As compras re
 }
 ```
 
-`descontoLojaCentavos` é o dos cupons da loja (a loja dá); `descontoShoppingCentavos`, o dos vouchers (o shopping devolve). `reembolsos.pendenteCentavos` é tudo o que falta receber, de qualquer data. `lancamentos` vem da compra mais nova para a mais antiga; `reembolso` é `null` na compra sem voucher. `cliente` é só o primeiro nome.
+`descontoLojaCentavos` é o dos cupons da loja (a loja dá); `descontoShoppingCentavos`, o dos vouchers (o shopping devolve). `reembolsos.pendenteCentavos` é tudo o que falta receber, de qualquer data. `lancamentos` vem da compra mais nova para a mais antiga; `reembolso` é `null` na compra sem voucher. `cliente` é só o primeiro nome. `itens` são os da compra, com o desconto de cada um (dos dois lados somados); `retirada` diz que o item veio de uma reserva, e o lançamento traz `retirada: true` quando algum item veio. `jaPago` marca o item pago antes, por Pix.
 
 ## Painel do shopping
 
