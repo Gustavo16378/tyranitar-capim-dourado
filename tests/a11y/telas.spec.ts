@@ -2,7 +2,16 @@
 // de impacto serious ou critical das regras WCAG 2.1 A e AA, nos temas claro e escuro.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { comSessaoDaAna, dados, entrarNoPainelDaLoja, novaConversa, perguntarPeloTenisDaFoto } from '../e2e/apoio'
+import {
+  comSessaoDaAna,
+  comSessaoDaCarla,
+  comToken,
+  dados,
+  entrarNoPainelDaLoja,
+  novaConversa,
+  perguntarPeloTenisDaFoto,
+  semSalvos,
+} from '../e2e/apoio'
 
 const GRAVES = new Set(['serious', 'critical'])
 
@@ -102,6 +111,40 @@ for (const tema of ['light', 'dark'] as const) {
       await comSessaoDaAna(page)
       await page.goto('/mapa?loja=loja-07')
       await expect(page.getByRole('img', { name: /com a rota da entrada mais próxima até/ })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
+
+    test('TX11: salvos para provar, com os corações e o aviso de salvar', async ({ page }) => {
+      const { token } = await comSessaoDaAna(page)
+      await semSalvos(page.request, token)
+      for (const id of ['p-pulse', 'p-perfume']) {
+        expect((await page.request.put(`/api/me/favoritos/${id}`, { headers: comToken(token) })).status()).toBe(204)
+      }
+      await page.goto('/salvos')
+      await expect(page.getByRole('heading', { level: 2 })).toHaveText(['Loja B', 'Loja A'])
+      await semViolacoesGraves(page)
+      // Com o coração tirado (o produto fica na lista) e o aviso.
+      await page.getByRole('button', { name: 'Salvar Tênis de corrida Pulse' }).click()
+      await expect(page.getByRole('button', { name: 'Salvar Tênis de corrida Pulse' })).toHaveAttribute('aria-pressed', 'false')
+      await semViolacoesGraves(page)
+      await semSalvos(page.request, token)
+    })
+
+    test('TX12: página da loja, com os produtos em grade', async ({ page }) => {
+      await comSessaoDaAna(page)
+      await page.goto('/lojas/loja-a')
+      await expect(page.getByRole('heading', { level: 1, name: 'Loja A' })).toBeVisible()
+      await expect(page.getByRole('article')).toHaveCount(6)
+      await semViolacoesGraves(page)
+    })
+
+    test('TX13: minhas compras, na carteira e a lista inteira', async ({ page }) => {
+      await comSessaoDaCarla(page)
+      await page.goto('/carteira')
+      await expect(page.getByRole('region', { name: 'Minhas compras' }).getByRole('listitem')).toHaveCount(3)
+      await semViolacoesGraves(page)
+      await page.goto('/carteira/compras')
+      await expect(page.getByRole('list', { name: 'Compras' }).getByRole('listitem')).toHaveCount(10)
       await semViolacoesGraves(page)
     })
 
