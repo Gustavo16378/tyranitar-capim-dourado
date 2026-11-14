@@ -49,7 +49,7 @@ describe('mock de reservas', () => {
 
   it('pagar na loja: PENDENTE, sem Pix, expira em 4 h (RN01) e desconta o estoque (RN03)', async () => {
     const reserva = await m.reservas.criarReserva(
-      { produtoId: 'p-run', quantidade: 1, formaPagamento: 'NA_LOJA' },
+      { produtoId: 'p-run', quantidade: 1, formaPagamento: 'NA_LOJA', tamanho: '41' },
       agora,
     )
     expect(reserva).toEqual({
@@ -58,18 +58,25 @@ describe('mock de reservas', () => {
       formaPagamento: 'NA_LOJA',
       pago: false,
       estornoSolicitado: false,
+      brutoCentavos: 34990,
+      descontoCentavos: 0,
       precoCentavos: 34990,
+      tamanho: '41',
+      cor: null,
+      cupom: null,
+      prontaEm: null,
+      motivoRecusa: null,
       expiraEm: '2026-11-13T16:00:00.000Z',
     })
     expect(m.produtos.acharProduto('p-run')?.estoque).toBe(4)
   })
 
-  it('Pix: traz o copia e cola simulado e, pago, expira em 48 h (RN02) e segue PENDENTE', async () => {
+  it('Pix: traz o copia e cola simulado e, pago, segue PENDENTE com o prazo da loja para confirmar (RN01, RN02)', async () => {
     const reserva = await m.reservas.criarReserva({ produtoId: 'p-pulse', quantidade: 1, formaPagamento: 'PIX' }, agora)
     expect(reserva.pix).toEqual({ copiaECola: expect.stringMatching(/^000201/), simulado: true })
     const paga = await m.reservas.pagarReserva(reserva.id, agora)
-    // Quem separa é a loja: pagar não muda o status.
-    expect(paga).toMatchObject({ status: 'PENDENTE', pago: true, expiraEm: '2026-11-15T12:00:00.000Z' })
+    // Quem confirma e separa é a loja: pagar não muda o status, e as 48 h contam da confirmação.
+    expect(paga).toMatchObject({ status: 'PENDENTE', pago: true, expiraEm: '2026-11-13T16:00:00.000Z' })
   })
 
   it('GET /api/reservas/{id}: a reserva com o produto no formato da busca', async () => {

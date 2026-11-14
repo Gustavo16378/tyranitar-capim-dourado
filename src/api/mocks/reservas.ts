@@ -82,7 +82,7 @@ function resumo({ id, nome, categoria, precoCentavos, estoque, foto, loja }: Pro
   return { id, nome, categoria, precoCentavos, estoque, foto, loja }
 }
 
-export async function criarReserva({ produtoId, quantidade, formaPagamento }: NovaReserva, agora = Date.now()) {
+export async function criarReserva({ produtoId, quantidade, formaPagamento, tamanho, cor }: NovaReserva, agora = Date.now()) {
   if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 5) {
     return falhar(400, 'DADOS_INVALIDOS', 'A quantidade vai de 1 a 5.')
   }
@@ -104,8 +104,8 @@ export async function criarReserva({ produtoId, quantidade, formaPagamento }: No
     brutoCentavos: precoCentavos,
     descontoCentavos: 0,
     precoCentavos,
-    tamanho: null,
-    cor: null,
+    tamanho: tamanho ?? null,
+    cor: cor ?? null,
     cupom: null,
     prontaEm: null,
     motivoRecusa: null,
@@ -126,7 +126,11 @@ export function obterReserva(id: string, agora = Date.now()): Promise<ReservaDet
   return responder({ ...comoResposta(reserva), produto: reserva.produto })
 }
 
-/** Pagar o Pix não muda o status: a reserva segue PENDENTE, agora paga. Quem separa é a loja. */
+/**
+ * Pagar o Pix não muda o status: a reserva segue PENDENTE, agora paga, e quem confirma e separa é
+ * a loja. Como na API, as 48 h contam da hora em que fica pronta; pendente, o prazo da loja para
+ * confirmar não muda.
+ */
 export function pagarReserva(id: string, agora = Date.now()) {
   const reserva = RESERVAS.find((r) => r.id === id)
   if (!reserva) return falhar(404, 'NAO_ENCONTRADO', 'Não achamos essa reserva.')
@@ -135,7 +139,7 @@ export function pagarReserva(id: string, agora = Date.now()) {
     return falhar(409, 'TRANSICAO_INVALIDA', 'Essa reserva não está esperando pagamento.')
   }
   reserva.pago = true
-  reserva.expiraEm = new Date(agora + PRAZO_PIX_PAGO).toISOString()
+  if (reserva.prontaEm) reserva.expiraEm = new Date(Date.parse(reserva.prontaEm) + PRAZO_PIX_PAGO).toISOString()
   guardar()
   return responder(comoResposta(reserva))
 }
