@@ -9,3 +9,8 @@ export async function listarFavoritos(): Promise<Lista<ProdutoResumo>> {
   const { itens } = await listarProdutos({ tamanho: 3 })
   return responder({ itens, total: itens.length }, 0)
 }
+
+/** Mock de PUT e DELETE /api/me/favoritos/{produtoId}: respondem 204, sem guardar nada. */
+export async function mudarFavorito(): Promise<void> {
+  await responder(null, 0)
+}

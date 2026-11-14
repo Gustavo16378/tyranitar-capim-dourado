@@ -6,8 +6,9 @@ export { cadastrar, contasDeDemonstracao, entrar, entrarComDemo, sair, usuarioAt
 export { useSessao } from './sessao'
 export { listarProdutos, obterProduto } from './produtos'
 export { listarOfertas } from './ofertas'
-export { listarFavoritos } from './favoritos'
-export { listarLojas } from './lojas'
+export { listarFavoritos, salvarFavorito, tirarFavorito } from './favoritos'
+export { listarLojas, obterLoja } from './lojas'
+export { listarCompras } from './compras'
 export { cancelarReserva, criarReserva, obterReserva, pagarReserva } from './reservas'
 export { obterCarteira } from './carteira'
 export {
