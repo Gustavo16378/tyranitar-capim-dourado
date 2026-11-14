@@ -1,6 +1,6 @@
 # Banco de dados
 
-O banco é o Cloudflare D1, que usa SQLite. São 15 tabelas, criadas pela migration [`0001_inicial.sql`](../migrations/0001_inicial.sql) e ajustadas pelas seguintes, na pasta [`migrations/`](../migrations/). As regras que o banco consegue garantir sozinho (formatos, valores permitidos, unicidade, chaves estrangeiras) estão nele como `CHECK`, `UNIQUE` e `REFERENCES`; o resto fica nas regras de negócio da API.
+O banco é o Cloudflare D1, que usa SQLite. São 16 tabelas, criadas pela migration [`0001_inicial.sql`](../migrations/0001_inicial.sql) e ajustadas pelas seguintes, na pasta [`migrations/`](../migrations/). As regras que o banco consegue garantir sozinho (formatos, valores permitidos, unicidade, chaves estrangeiras) estão nele como `CHECK`, `UNIQUE` e `REFERENCES`; o resto fica nas regras de negócio da API.
 
 ## Convenções
 
@@ -100,6 +100,7 @@ erDiagram
     text id PK
     text usuario_id FK
     text tipo
+    text destino
     int lida
   }
 ```
@@ -110,7 +111,10 @@ erDiagram
 erDiagram
   usuario ||--o{ reserva : faz
   produto ||--o{ reserva : "é reservado"
-  reserva |o--o| compra : vira
+  reserva |o--o| compra_item : "sai em"
+  compra ||--|{ compra_item : tem
+  produto |o--o{ compra_item : "é vendido"
+  cupom |o--o{ reserva : "fica preso"
   usuario ||--o{ compra : faz
   loja ||--o{ compra : registra
   compra ||--o{ uso_cupom : aplica
@@ -124,7 +128,19 @@ erDiagram
     text produto_id FK
     text status
     text forma_pagamento
+    text cupom_id FK
+    text pronta_em
     text expira_em
+  }
+  compra_item {
+    text id PK
+    text compra_id FK
+    text produto_id FK
+    text reserva_id FK,UK
+    text categoria
+    int preco_centavos
+    int desconto_centavos
+    int ja_pago
   }
   compra {
     text id PK
@@ -202,11 +218,16 @@ Clientes, lojistas e administração do shopping numa tabela só.
 | --- | --- | --- |
 | `quantidade` | inteiro | De 1 a 5 |
 | `preco_centavos` | inteiro | Preço no momento da reserva |
-| `status` | texto | `PENDENTE`, `CONFIRMADA`, `SEPARADA`, `RETIRADA`, `CANCELADA` ou `EXPIRADA` (ver diagrama de estados na [UML](uml.md)) |
+| `status` | texto | `PENDENTE`, `CONFIRMADA`, `SEPARADA`, `RETIRADA`, `CANCELADA`, `RECUSADA` ou `EXPIRADA` (ver diagrama de estados na [UML](uml.md)) |
+| `tamanho` e `cor` | texto | O que o cliente escolheu, das opções do produto; nulos quando o produto não tem a opção |
+| `cupom_id` | texto | O cupom escolhido ao reservar; fica preso à reserva em aberto (conta como usado) até a retirada (RN15) |
+| `desconto_centavos` | inteiro | Desconto do cupom sobre o total (preço × quantidade); zero sem cupom, nunca maior que o total |
+| `pronta_em` | texto | A hora que a loja informou ao confirmar ("pronta para retirar a partir de"); o prazo de retirada conta dela |
+| `motivo_recusa` | texto | O motivo que a loja escreveu ao recusar; obrigatório na `RECUSADA` e só nela |
 | `forma_pagamento` | texto | `NA_LOJA` ou `PIX` |
 | `pago` | inteiro | Só pode ser 1 em reserva `PIX` |
-| `estorno_solicitado` | inteiro | 1 quando a reserva foi cancelada depois de paga por Pix (estorno simulado); só pode ser 1 em reserva paga |
-| `expira_em` | texto | Criação + 4 h (`NA_LOJA`) ou + 48 h depois do pagamento (`PIX`) (RN01, RN02) |
+| `estorno_solicitado` | inteiro | 1 quando a reserva saiu depois de paga por Pix (cancelada, recusada ou expirada; estorno simulado); só pode ser 1 em reserva paga |
+| `expira_em` | texto | Pendente: criação + 4 h, o prazo da loja para confirmar. Confirmada: `pronta_em` + 4 h (`NA_LOJA`) ou + 48 h com o Pix pago (RN01, RN02) |
 
 ### cupom
 
@@ -223,12 +244,16 @@ Clientes, lojistas e administração do shopping numa tabela só.
 
 | Coluna | Tipo | Regra |
 | --- | --- | --- |
-| `reserva_id` | texto | Reserva retirada nesta compra; única, para uma reserva não virar duas compras |
+| `reserva_id` | texto | A primeira reserva retirada nesta compra (as reservas de cada item ficam em `compra_item`); única, para uma reserva não virar duas compras |
 | `valor_centavos` | inteiro | Valor pago, depois dos descontos; pode ser zero quando os cupons cobrem tudo (e aí gera zero pontos) |
 | `origem` | texto | `CAIXA` (QR lido pelo vendedor) ou `NOTA` (NFC-e lida pelo cliente) |
 | `chave_nfce` | texto | 44 dígitos, única, obrigatória quando a origem é `NOTA` (RN09) |
 | `pontos_gerados` | inteiro | Pontos somados ao cliente (RN07) |
 | `com_ficha` | inteiro | 1 quando o atendimento mostrou a ficha; alimenta o relatório de conversão |
+
+### compra_item
+
+Os itens de cada compra no balcão (migration 0005): a reserva que sai, um produto do catálogo da loja ou um valor avulso ("Outros", sem produto nem categoria). `categoria` é a do produto no momento da compra e decide em que item o cupom de categoria desconta (RN15). `desconto_centavos` soma os cupons daquele item (o da loja e o voucher do shopping), nunca mais que o preço × quantidade. `ja_pago` é 1 no item que veio de uma reserva paga por Pix: entra no valor e nos pontos, mas o caixa não cobra. `reserva_id` é único, para uma reserva sair numa compra só. As compras de antes da migration viraram um item cada.
 
 ### uso_cupom e reembolso
 
@@ -240,7 +265,7 @@ Clientes, lojistas e administração do shopping numa tabela só.
 
 ### avaliacao, favorito e notificacao
 
-`avaliacao` exige uma compra e é única por cliente e produto (RN10). `favorito` é a lista de produtos salvos. `notificacao` alimenta o sino do app.
+`avaliacao` exige uma compra e é única por cliente e produto (RN10). `favorito` é a lista de produtos salvos. `notificacao` alimenta o sino do Início e o selo da Carteira: cada mudança da reserva e os pontos de uma compra deixam um aviso, e `destino` é a tela do app que ele abre (`/reserva/<id>`).
 
 ### configuracao
 
