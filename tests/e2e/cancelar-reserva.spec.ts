@@ -54,7 +54,7 @@ test('TE28: o cliente cancela a reserva na carteira e na tela da reserva, e a lo
 
   await test.step('na tela da reserva: cancelar mostra a reserva cancelada; pagar na loja não tem estorno', async () => {
     await page.goto(`/reserva/${naLoja}`)
-    await expect(page.getByRole('heading', { name: 'Separado para você' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible()
     await page.getByRole('button', { name: 'Cancelar reserva', exact: true }).click()
     const folha = page.getByRole('dialog', { name: 'Cancelar reserva' })
     await expect(folha.getByText('O produto volta para a loja. Quer cancelar?')).toBeVisible()

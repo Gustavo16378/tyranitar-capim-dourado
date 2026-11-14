@@ -46,18 +46,20 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
     reservaId = decodeURIComponent(new URL(page.url()).pathname.split('/').pop() ?? '')
     await expect(page.getByRole('heading', { name: 'Pague com Pix' })).toBeVisible()
     await page.getByRole('button', { name: 'Já paguei' }).click()
-    await expect(page.getByRole('heading', { name: 'Separado para você' })).toBeVisible()
+    // Paga, a reserva espera a loja confirmar.
+    await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible()
     await expect(page.getByText('Paga', { exact: true })).toBeVisible()
   })
 
-  await test.step('a loja separa o produto e a Ana vê o status mudar', async () => {
-    // Pelas rotas do painel da loja (a tela do painel está na branch fase-4).
+  await test.step('a loja confirma com a hora e separa, e a Ana vê o status mudar', async () => {
+    // Pelas rotas do painel da loja; a jornada pelas telas do painel é o TE36.
     const lojista = comToken(await tokenDoLojista(request))
-    const separar = await request.patch(`/api/loja/reservas/${reservaId}`, {
-      headers: lojista,
-      data: { status: 'SEPARADA' },
-    })
-    expect(separar.status()).toBe(200)
+    const mudar = (data: Record<string, unknown>) => request.patch(`/api/loja/reservas/${reservaId}`, { headers: lojista, data })
+    expect((await mudar({ status: 'CONFIRMADA', prontaAs: '23:59' })).status()).toBe(200)
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'Reserva confirmada' })).toBeVisible()
+    await expect(page.getByText(/Pronta para retirar a partir das 23:59/)).toBeVisible()
+    expect((await mudar({ status: 'SEPARADA' })).status()).toBe(200)
     await page.reload()
     await expect(page.getByRole('listitem').filter({ hasText: 'Separada pela loja' })).toHaveAttribute(
       'aria-current',
@@ -85,7 +87,7 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
     // Paga por Pix: o caixa não cobra de novo, a compra entra com o valor da reserva.
     const compra = await request.post('/api/loja/compras', {
       headers: lojista,
-      data: { qrToken: dados.ana.qrToken, valorCentavos: 0, cupons: [], reservaId },
+      data: { qrToken: dados.ana.qrToken, itens: [{ reservaId }], cupons: [] },
     })
     expect(compra.status()).toBe(201)
     pontosGerados = ((await compra.json()) as { pontosGerados: number }).pontosGerados
@@ -120,7 +122,7 @@ test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => 
     .getByRole('dialog', { name: 'Como você quer reservar?' })
     .getByRole('button', { name: /Pagar na loja/ })
     .click()
-  await expect(page.getByRole('heading', { name: 'Separado para você' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible()
   await expect(page.getByText(/Expira em [34] h/)).toBeVisible()
 })
 

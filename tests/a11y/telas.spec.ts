@@ -96,7 +96,11 @@ for (const tema of ['light', 'dark'] as const) {
       await expect(page.getByRole('heading', { name: 'Tênis Run 2 preto' })).toBeVisible()
       await semViolacoesGraves(page)
       await page.getByRole('button', { name: 'Reservar' }).click()
-      await expect(page.getByRole('dialog', { name: 'Como você quer reservar?' })).toBeVisible()
+      const folha = page.getByRole('dialog', { name: 'Como você quer reservar?' })
+      await expect(folha).toBeVisible()
+      // O tamanho e os cupons que valem para o produto chegam depois de a folha abrir.
+      await expect(folha.getByRole('group', { name: 'Tamanho' })).toBeVisible()
+      await expect(folha.getByRole('group', { name: 'Cupom' })).toBeVisible()
       await semViolacoesGraves(page)
     })
 
