@@ -88,6 +88,14 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TU28 | Linha do CSV com atributos em JSON inválido | RF22 | Erro com o número da linha |
 | TU29 | Formatação de valores e datas | RNF11 | "R$ 399,90" e horário de Palmas (UTC-3) |
 | TU30 | Comparativo da categoria com 2 lojas | RN13 | Não é calculado |
+| TU31 | Easter egg: a mensagem "tyranitar" | [Easter egg](easter-egg.md) | Vale sozinha, sem diferenciar maiúsculas e com espaços nas pontas; no meio de uma frase ou com outra grafia, a mensagem vai para a Capi de verdade |
+| TU32 | Easter egg: 13 toques seguidos | Easter egg | O 13º abre o segredo e a contagem recomeça; uma pausa de mais de 2 s entre dois toques zera |
+| TU33 | Easter egg: o modo tirano | Easter egg | Acordar passa pelo apagão, que não é lembrado; o fim liga o modo e a sessão lembra; o nível Tirano sobe uma vez; acender volta tudo; sem `sessionStorage`, funciona igual |
+| TU34 | Easter egg: o roteiro do apagão | RNF08 (WCAG 2.3.1) | No máximo 3 piscadas em qualquer segundo; com movimento reduzido, sem tremor nem rachaduras, só escurecendo |
+| TU35 | Easter egg: a Loja 13 no mapa | Easter egg | Dentro do piso, a mais de 5 m de toda loja da planta, com outro id que a LOJA 13 de verdade; a trilha sai da Entrada B pelo grafo até a fachada |
+| TU36 | Easter egg: os personagens da equipe | Easter egg | Os nomes dos PNGs sem acento (`kaua-apontando.png`) e a inicial do avatar sem PNG |
+| TU37 | Easter egg: `tyranitar()` no console | Easter egg | O evento do console começa o apagão, como o botão da Capi |
+| TU38 | Aparência Automático, Claro ou Escuro | RNF08 | A escolha fica salva no aparelho; o tema da página segue a escolha, ou o escuro do modo tirano; o script do `index.html` dá o mesmo tema em toda combinação |
 
 ### Banco (TB)
 
@@ -154,6 +162,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA38 | Ver e apagar um interesse da ficha | RF13, RN04 | O interesse apagado some da ficha e do atendimento da loja; os outros mantêm o id |
 | TA39 | Baixar meus dados | RF13 (LGPD) | JSON com conta, ficha, reservas, compras, favoritos, conversa e buscas, só do cliente, sem senha nem QR |
 | TA40 | O cliente cancela a própria reserva (`PATCH /api/reservas/{id}/cancelar`) | RF08, RF09, RN03 | O dono cancela: `CANCELADA` e o estoque volta na hora; paga por Pix, `estornoSolicitado: true`, e a loja vê cancelada; de outro cliente, 404 e nada muda; já retirada, cancelada ou expirada, 409 sem mexer no estoque |
+| TA41 | `demo:reset` depois de um ensaio no balcão | Modo demonstração | Depois de uma compra com cupom e voucher, reserva, conversa e busca, o SQL do reset volta a Ana aos 2.140 pontos e aos mesmos cupons, deixa o extrato da loja só com o seed e não muda a conta de outro cliente; um cupom do seed desligado volta a valer |
 
 ### Capi (TI)
 
@@ -212,6 +221,10 @@ Com o Claude simulado:
 | TE26 | Permissão da câmera negada | RF03 | A folha volta só com a galeria, com um aviso, e a foto escolhida fica anexada |
 | TE27 | QR da entrada lido sem sessão | RF10 | O mapa abre sem login já na entrada certa (também com a loja no link); reservar, a Capi e a carteira continuam pedindo login; o convite para entrar volta ao mesmo mapa |
 | TE28 | Cancelar a reserva pelo app | RF08, RF09, RF11, RF20 | Na carteira, "Não, manter a reserva" mantém e "Sim, cancelar" tira a reserva da lista, com o aviso do estorno do Pix; na tela da reserva, cancelar mostra "Reserva cancelada"; a loja vê as duas em Reservas › Encerradas, a do Pix com o estorno |
+| TE29 | Trocar a entrada no mapa | RF10 | "Trocar a entrada" é um botão ao lado de "Saindo da Entrada B"; tocar na etiqueta de outra entrada no mapa refaz a rota na hora saindo dela, e a escolha fica lembrada |
+| TE30 | Easter egg no celular, de "tyranitar" ao nível Tirano | [Easter egg](easter-egg.md) | Nenhum `POST /api/chat`; o apagão abre o mapa no escuro com a trilha até a Loja 13; a Loja 13 mostra os créditos; a carteira sobe para o nível Tirano com o TYRANITAR13; recarregar continua no escuro sem repetir a subida; "Acender as luzes" volta o tema, o nível, os cupons, o mapa e a Capi |
+| TE31 | Easter egg: `tyranitar()` no console do computador | Easter egg | O apagão acontece e o mapa abre no escuro; "Acender as luzes" volta ao normal |
+| TE32 | Aparência no app e nos painéis | RNF08 | Escuro na Minha conta fica salvo ao recarregar; sem o JavaScript do app, a página já vem escura (aplicada antes da primeira pintura); Claro vale com o aparelho no escuro e Automático volta a segui-lo; o mesmo seletor no rodapé da barra lateral do painel da loja |
 
 ### Acessibilidade (TX)
 
@@ -229,6 +242,8 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX08 | Painel no celular com o Menu aberto |
 | TX09 | Minha conta, com a ficha e a folha de trocar a senha |
 | TX10 | QR das entradas do painel do shopping |
+| TX11 | Telas do easter egg (Capi Tirana, mapa no escuro, Loja 13, nível Tirano e Piso 13), com e sem movimento reduzido |
+| TX12 | Minha conta e painel com a aparência oposta à do aparelho |
 
 ### Manual (TM)
 
@@ -254,7 +269,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF07 Produto | TA09, TE02 |
 | RF08 Reservar na loja | TA11, TA15, TA40, TI03, TE02, TE28 |
 | RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
-| RF10 Mapa e rota | TE01, TE09, TM01 |
+| RF10 Mapa e rota | TE01, TE09, TE20, TE27, TE29, TM01 |
 | RF11 Carteira | TU05, TA17, TE01, TE28 |
 | RF12 Nota fiscal | TU22, TA18 |
 | RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
@@ -291,10 +306,12 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
 | RNF06 LGPD | TA21, TA24 |
 | RNF07 Chave da IA | TA36 |
-| RNF08 Acessibilidade | TX01 a TX07 |
+| RNF08 Acessibilidade | TU34, TU38, TE32, TX01 a TX12 |
 | RNF09 Mapa no celular | TM01 |
 | RNF10 IA fora do ar | TI05, TM04 |
 | RNF11 Português e fuso | TU29 |
+| Modo demonstração (`demo:reset`) | TA41 |
+| Easter egg ([easter-egg.md](easter-egg.md)) | TU31 a TU37, TE30, TE31, TX11 |
 
 RF26 (sincronização com APIs das lojas) é futuro e não tem teste nesta versão.
 
