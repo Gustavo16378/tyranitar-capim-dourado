@@ -76,3 +76,27 @@ export function aba(page: Page, nome: 'Início' | 'Salvos' | 'Capi' | 'Mapa' | '
   const navegacao = page.getByRole('navigation', { name: 'Navegação principal' })
   return navegacao.getByRole('button', { name: nome }).or(navegacao.getByRole('link', { name: nome }))
 }
+
+/** Abre a sessão da Carla pelo login de verdade (POST /api/auth/login), sem passar pela tela. */
+export async function comSessaoDaCarla(page: Page) {
+  const resposta = await page.request.post('/api/auth/login', { data: { email: dados.carla.email, senha: dados.carla.senha } })
+  expect(resposta.status()).toBe(200)
+  const sessao = (await resposta.json()) as { token: string }
+  await page.addInitScript((valor) => localStorage.setItem('sessao', JSON.stringify(valor)), sessao)
+  return sessao
+}
+
+/** Tira todos os salvos do cliente pela API (DELETE /api/me/favoritos/{id}). */
+export async function semSalvos(request: APIRequestContext, token: string) {
+  const lista = await request.get('/api/me/favoritos?tamanho=100', { headers: comToken(token) })
+  expect(lista.status()).toBe(200)
+  for (const { id } of ((await lista.json()) as { itens: { id: string }[] }).itens) {
+    expect((await request.delete(`/api/me/favoritos/${id}`, { headers: comToken(token) })).status()).toBe(204)
+  }
+}
+
+/** Os ids salvos do cliente agora, pela API. */
+export async function idsSalvos(request: APIRequestContext, token: string) {
+  const lista = await request.get('/api/me/favoritos?tamanho=100', { headers: comToken(token) })
+  return ((await lista.json()) as { itens: { id: string }[] }).itens.map((p) => p.id)
+}
