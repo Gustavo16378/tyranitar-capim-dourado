@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CapiMark } from './CapiMark'
+import { CapiTirana } from './CapiTirana'
 import { cx } from './cx'
 
 export interface ChatBubbleProps {
@@ -7,18 +8,24 @@ export interface ChatBubbleProps {
   /** Descrição da foto ou print enviado, lida pelo leitor de tela. */
   anexo?: string
   digitando?: boolean
+  /** A Capi Tirana do easter egg (docs/easter-egg.md): o avatar com chifres e olhos bravos. */
+  tirana?: boolean
   children?: ReactNode
 }
 
 const PONTO = 'size-1.5 rounded-full bg-ink-muted animate-digitando motion-reduce:animate-none motion-reduce:opacity-60'
 
-export function ChatBubble({ de = 'capi', anexo, digitando, children }: ChatBubbleProps) {
+export function ChatBubble({ de = 'capi', anexo, digitando, tirana, children }: ChatBubbleProps) {
   const capi = de !== 'cliente'
   return (
     <div className={cx('flex max-w-full items-end gap-2', !capi && 'justify-end')}>
       {capi && (
-        <span role="img" aria-label="Capi" className="grid size-8 flex-none place-items-center rounded-full bg-terra">
-          <CapiMark className="size-[22px]" />
+        <span
+          role="img"
+          aria-label={tirana ? 'Capi Tirana' : 'Capi'}
+          className="grid size-8 flex-none place-items-center rounded-full bg-terra"
+        >
+          {tirana ? <CapiTirana className="size-[24px]" /> : <CapiMark className="size-[22px]" />}
         </span>
       )}
       {digitando ? (

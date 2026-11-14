@@ -2,6 +2,7 @@
 export { Icon, type IconProps } from './Icon'
 export type { IconName } from './icones'
 export { CapiMark, type CapiMarkProps } from './CapiMark'
+export { CapiTirana, type CapiTiranaProps } from './CapiTirana'
 export { Button, type ButtonProps } from './Button'
 export { Badge, type BadgeProps } from './Badge'
 export { NIVEIS, ORDEM_NIVEIS, type Nivel } from './nivel'

@@ -11,9 +11,13 @@ import {
   separarLink,
   termosDoLink,
 } from '../api'
-import { Button, CapiMark, ChatBubble, ChatComposer, Icon, ProdutoCard } from '../componentes'
+import { Button, CapiMark, CapiTirana, ChatBubble, ChatComposer, Icon, ProdutoCard } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
+import { BOTAO_ACORDAR, RESPOSTA_DO_TIRANO, TIRANO_JA_ACORDADO } from '../easter-egg/falas'
+import { ehPalavraDoTirano } from '../easter-egg/gatilhos'
+import { modoTirano } from '../easter-egg/modoTirano'
+import { useModoTirano } from '../easter-egg/useModoTirano'
 import { cascata, comMovimento, DESLOCAMENTO, DURACAO, EASE, MOVIMENTO_REDUZIDO, useGSAP } from '../movimento'
 import type { AcaoChat, MensagemChat, MensagemDoHistorico, ProdutoResumo, RespostaChat } from '../tipos'
 import { acoesNaConversa } from './acoesDoChat'
@@ -24,7 +28,7 @@ import { reduzirFoto } from './foto'
 
 type Item =
   | { id: number; de: 'cliente'; texto: string; anexo?: string; foto?: string; fotoEnviada?: boolean; link?: string }
-  | { id: number; de: 'capi'; texto: string }
+  | { id: number; de: 'capi'; texto: string; tirana?: boolean }
   | { id: number; de: 'capi'; produtos: ProdutoResumo[] }
 
 type SemId<T> = T extends unknown ? Omit<T, 'id'> : never
@@ -184,6 +188,9 @@ export default function Capi() {
   /** O texto que uma sugestão pôs no campo: a versão nova remonta o campo com ele. */
   const [rascunho, setRascunho] = useState({ texto: '', versao: 0 })
   const [anexo, setAnexo] = useState<FotoAnexada | null>(null)
+  /** O convite da Capi Tirana depois de "tyranitar": acordar o tirano, ou ir ao mapa se ele já acordou. */
+  const [convite, setConvite] = useState<'acordar' | 'mapa' | null>(null)
+  const tirano = useModoTirano()
 
   const lista = useRef<HTMLDivElement>(null)
   const fim = useRef<HTMLDivElement>(null)
@@ -224,6 +231,7 @@ export default function Capi() {
         if (!valendo()) return
         setOcupada(true)
         setAcoes([])
+        setConvite(null)
         setParaTentarDeNovo(null)
         if (!repetir) adicionar({ de: 'cliente', texto: envio.texto, foto: envio.foto, link: envio.link })
         setDigitando(true)
@@ -272,6 +280,31 @@ export default function Capi() {
     [navigate],
   )
 
+  /**
+   * "tyranitar" (o nome da equipe): a Capi Tirana responde aqui mesmo, sem chamar a IA nem gravar
+   * na conversa salva (docs/easter-egg.md), e oferece acordar o tirano.
+   */
+  function chamarOTirano(texto: string) {
+    const minha = conversa.current
+    const valendo = () => conversa.current === minha
+    fila.current = fila.current.then(async () => {
+      if (!valendo()) return
+      setOcupada(true)
+      setAcoes([])
+      setConvite(null)
+      setParaTentarDeNovo(null)
+      setItens((atuais) => [...atuais, comId({ de: 'cliente', texto })])
+      setDigitando(true)
+      await esperar(ESPERA_PARTE_MS)
+      if (!valendo()) return
+      const acordado = modoTirano.estado().ligado
+      setDigitando(false)
+      setItens((atuais) => [...atuais, comId({ de: 'capi', texto: acordado ? TIRANO_JA_ACORDADO : RESPOSTA_DO_TIRANO, tirana: true })])
+      setConvite(acordado ? 'mapa' : 'acordar')
+      setOcupada(false)
+    })
+  }
+
   /** "Nova conversa": apaga a conversa salva e volta às sugestões. */
   async function novaConversa() {
     try {
@@ -288,6 +321,7 @@ export default function Capi() {
     setProcurando(false)
     setOcupada(false)
     setParaTentarDeNovo(null)
+    setConvite(null)
     setAnexo(null)
     setRascunho((r) => ({ texto: '', versao: r.versao + 1 }))
   }
@@ -313,7 +347,9 @@ export default function Capi() {
   }
 
   function enviarDoCampo(texto: string) {
-    if (anexo) {
+    if (!anexo && ehPalavraDoTirano(texto)) {
+      chamarOTirano(texto)
+    } else if (anexo) {
       conversar({ texto, imagem: anexo.imagem, foto: anexo.previa })
       setAnexo(null)
     } else if (texto) {
@@ -364,16 +400,18 @@ export default function Capi() {
   const terminou = !ocupada && itens.length > 0
   const { botoes } = acoesNaConversa(acoes)
   const vazia = !carregando && !ocupada && itens.length === 0
+  // A Capi vira a Capi Tirana quando o tirano responde, e fica assim enquanto as luzes estão apagadas.
+  const tirana = tirano.ligado || itens.some((item) => 'tirana' in item && item.tirana)
 
   return (
     <div className="flex h-full flex-col">
       <title>{`Capi · ${APP_NOME}`}</title>
       <header className="flex flex-none items-center gap-3 border-b bg-surface p-4">
         <span className="grid size-10 flex-none place-items-center rounded-full bg-terra">
-          <CapiMark className="size-[26px]" />
+          {tirana ? <CapiTirana className="size-[30px]" /> : <CapiMark className="size-[26px]" />}
         </span>
         <div>
-          <h1 className="text-body font-semibold">Capi</h1>
+          <h1 className="text-body font-semibold">{tirana ? 'Capi Tirana' : 'Capi'}</h1>
           <p className="text-body-sm text-ink-muted">Assistente do Capim Dourado</p>
         </div>
         {itens.length > 0 && (
@@ -429,7 +467,7 @@ export default function Capi() {
                 {item.texto}
               </ChatBubble>
             ) : (
-              <ChatBubble key={item.id} de="capi">
+              <ChatBubble key={item.id} de="capi" tirana={item.tirana}>
                 {item.texto}
               </ChatBubble>
             ),
@@ -445,7 +483,23 @@ export default function Capi() {
             )}
           </div>
         )}
-        {terminou && (botoes.length > 0 || paraTentarDeNovo) && (
+        {terminou && convite && (
+          <div className="mt-3 flex flex-wrap gap-2 pl-10">
+            <Button
+              variant="primary"
+              size="sm"
+              icon={convite === 'mapa' ? 'mapa' : undefined}
+              onClick={() => {
+                setConvite(null)
+                if (convite === 'mapa') navigate('/mapa')
+                else modoTirano.acordar()
+              }}
+            >
+              {convite === 'mapa' ? 'Ver o mapa no escuro' : BOTAO_ACORDAR}
+            </Button>
+          </div>
+        )}
+        {terminou && !convite && (botoes.length > 0 || paraTentarDeNovo) && (
           <div className="mt-3 flex flex-wrap gap-2 pl-10">
             {paraTentarDeNovo && (
               <Button
