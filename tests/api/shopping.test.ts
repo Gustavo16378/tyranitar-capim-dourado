@@ -220,6 +220,8 @@ describe('GET e POST /api/shopping/cupons', () => {
           ativo: true,
           usos: 1,
           descontoCentavos: 2000,
+          reservas: 0,
+          emUso: true,
         },
       ],
       total: 1,

@@ -113,6 +113,8 @@ export async function usosDoCliente(
 
 export interface CupomComUsoLinha {
   id: string
+  /** null: voucher do shopping. */
+  loja_id: string | null
   titulo: string
   tipo: 'PERCENTUAL' | 'VALOR' | 'BRINDE'
   valor: number
@@ -123,13 +125,19 @@ export interface CupomComUsoLinha {
   ativo: 0 | 1
   usos: number
   desconto_centavos: number
+  /** Reservas com o cupom, de qualquer status: elas guardam o desconto prometido. */
+  reservas: number
 }
 
 const SELECAO_COM_USO = `
-  SELECT c.id, c.titulo, c.tipo, c.valor, c.categoria_alvo, c.nivel_minimo, c.limite_por_cliente, c.validade, c.ativo,
+  SELECT c.id, c.loja_id, c.titulo, c.tipo, c.valor, c.categoria_alvo, c.nivel_minimo, c.limite_por_cliente, c.validade, c.ativo,
          (SELECT count(*) FROM uso_cupom u WHERE u.cupom_id = c.id) AS usos,
-         (SELECT COALESCE(sum(u.desconto_centavos), 0) FROM uso_cupom u WHERE u.cupom_id = c.id) AS desconto_centavos
+         (SELECT COALESCE(sum(u.desconto_centavos), 0) FROM uso_cupom u WHERE u.cupom_id = c.id) AS desconto_centavos,
+         (SELECT count(*) FROM reserva r WHERE r.cupom_id = c.id) AS reservas
   FROM cupom c`
+
+/** Já usado numa compra ou preso numa reserva: o tipo, o valor, a categoria e o nível não mudam, e ele não sai. */
+export const cupomEmUso = (c: Pick<CupomComUsoLinha, 'usos' | 'reservas'>) => c.usos > 0 || c.reservas > 0
 
 /** Cupom no formato dos painéis (GET /api/loja/cupons e GET /api/shopping/cupons). */
 export function cupomComUsoParaApi(c: CupomComUsoLinha) {
@@ -145,6 +153,8 @@ export function cupomComUsoParaApi(c: CupomComUsoLinha) {
     ativo: c.ativo === 1,
     usos: c.usos,
     descontoCentavos: c.desconto_centavos,
+    reservas: c.reservas,
+    emUso: cupomEmUso(c),
   }
 }
 
@@ -188,4 +198,38 @@ export async function criarCupom(db: D1Database, lojaId: string | null, c: NovoC
     .bind(id, lojaId, c.titulo, c.tipo, c.valor, c.categoriaAlvo, c.nivelMinimo, c.limitePorCliente, c.validade)
     .run()
   return id
+}
+
+/** Nenhuma compra nem reserva com o cupom (a condição de mudar tudo e de excluir). */
+const SEM_USO = `NOT EXISTS (SELECT 1 FROM uso_cupom u WHERE u.cupom_id = ?1) AND NOT EXISTS (SELECT 1 FROM reserva r WHERE r.cupom_id = ?1)`
+
+/**
+ * Grava a edição. Com `soLivres`, muda só o título, a validade, o limite por cliente e o ativo (o
+ * cupom já foi usado ou está numa reserva). Sem ele, muda tudo, mas só se o cupom continua sem uso
+ * no instante da gravação: devolve false se alguém usou no meio do caminho.
+ */
+export async function atualizarCupom(db: D1Database, id: string, c: NovoCupom & { ativo: boolean }, { soLivres }: { soLivres: boolean }) {
+  const ativo = c.ativo ? 1 : 0
+  if (soLivres) {
+    await db
+      .prepare('UPDATE cupom SET titulo = ?2, validade = ?3, limite_por_cliente = ?4, ativo = ?5 WHERE id = ?1')
+      .bind(id, c.titulo, c.validade, c.limitePorCliente, ativo)
+      .run()
+    return true
+  }
+  const { meta } = await db
+    .prepare(
+      `UPDATE cupom SET titulo = ?2, tipo = ?3, valor = ?4, categoria_alvo = ?5, nivel_minimo = ?6,
+         limite_por_cliente = ?7, validade = ?8, ativo = ?9
+       WHERE id = ?1 AND ${SEM_USO}`,
+    )
+    .bind(id, c.titulo, c.tipo, c.valor, c.categoriaAlvo, c.nivelMinimo, c.limitePorCliente, c.validade, ativo)
+    .run()
+  return meta.changes === 1
+}
+
+/** Apaga o cupom que nunca foi usado e não está em reserva nenhuma. Devolve false se ele tem uso. */
+export async function excluirCupomSemUso(db: D1Database, id: string) {
+  const { meta } = await db.prepare(`DELETE FROM cupom WHERE id = ?1 AND ${SEM_USO}`).bind(id).run()
+  return meta.changes === 1
 }
