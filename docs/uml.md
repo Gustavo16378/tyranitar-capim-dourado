@@ -339,21 +339,26 @@ Na versão atual do QR da NFC-e, o valor da compra não vem no código. O client
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Pendente : cliente reserva (estoque - 1)
-  Pendente --> Confirmada : loja confirma
+  [*] --> Pendente : cliente reserva (estoque - 1, cupom preso)
+  Pendente --> Confirmada : loja confirma e diz a hora em que fica pronta
   Confirmada --> Separada : loja separa o produto
-  Pendente --> Separada : loja separa direto
-  Separada --> Retirada : QR lido no balcão
-  Confirmada --> Retirada : QR lido no balcão
-  Pendente --> Cancelada : cliente ou loja cancela
-  Confirmada --> Cancelada : cliente ou loja cancela
-  Separada --> Cancelada : cliente ou loja cancela
-  Pendente --> Expirada : prazo vencido (RN01, RN02)
-  Confirmada --> Expirada : prazo vencido
-  Separada --> Expirada : prazo vencido
-  Cancelada --> [*] : estoque + 1
-  Expirada --> [*] : estoque + 1
-  Retirada --> [*]
+  Separada --> Retirada : compra registrada no balcão
+  Confirmada --> Retirada : compra registrada no balcão
+  Pendente --> Cancelada : cliente cancela
+  Confirmada --> Cancelada : cliente cancela
+  Separada --> Cancelada : cliente cancela
+  Pendente --> Recusada : loja recusa, com motivo
+  Confirmada --> Recusada : loja recusa, com motivo
+  Separada --> Recusada : loja recusa, com motivo
+  Pendente --> Expirada : a loja não confirmou no prazo (RN01)
+  Confirmada --> Expirada : prazo de retirada vencido (RN01, RN02)
+  Separada --> Expirada : prazo de retirada vencido
+  Cancelada --> [*] : estoque + 1, cupom livre, estorno se paga
+  Recusada --> [*] : estoque + 1, cupom livre, estorno se paga
+  Expirada --> [*] : estoque + 1, cupom livre, estorno se paga
+  Retirada --> [*] : o cupom vira uso da compra
 ```
 
 A expiração é conferida sempre que uma reserva é lida, porque Pages Functions não roda tarefas agendadas.
+
+O prazo para retirar conta da hora que a loja informa ao confirmar ("pronta para retirar a partir de HH:MM"): 4 horas para pagar na loja (RN01) e 48 horas se a reserva já foi paga por Pix (RN02). Enquanto está pendente, a loja tem o prazo de pagar na loja, desde a criação, para confirmar. Cancelar é só do cliente; a loja recusa, dizendo o motivo. A retirada é a compra registrada no balcão com a reserva num dos itens. Cada mudança, e a expiração, deixa um aviso para o cliente no app.

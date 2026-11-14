@@ -35,13 +35,13 @@ Prioridade **MVP** entra na demo do hackathon. **Desejável** entra se houver te
 | RF05 | Buscar produtos em todas as lojas, com filtro por categoria, loja e faixa de preço | MVP |
 | RF06 | Ver a vitrine de ofertas, com cupons das lojas e campanhas do shopping | MVP |
 | RF07 | Ver a página do produto, com as lojas que o têm, preço, estoque e avaliações | MVP |
-| RF08 | Reservar um produto para pagar e retirar na loja | MVP |
+| RF08 | Reservar um produto para pagar e retirar na loja, escolhendo o tamanho, a cor e um cupom que vale para ele | MVP |
 | RF09 | Reservar um produto pagando antes por Pix (simulado) e retirar no balcão | MVP |
 | RF10 | Ver o mapa 3D do shopping com a loja destacada e a rota até ela | MVP |
 | RF11 | Ver a carteira: QR do cliente, cupons disponíveis, pontos e nível de fidelidade | MVP |
 | RF12 | Registrar uma compra lendo o QR da nota fiscal (NFC-e) | Desejável |
 | RF13 | Autorizar ou revogar o compartilhamento da ficha de preferências com as lojas | MVP |
-| RF14 | Receber notificações no app (reserva pronta, cupom novo, cupom perto de vencer) | Desejável |
+| RF14 | Receber notificações no app a cada mudança da reserva (enviada, confirmada com a hora, separada, recusada, expirada, retirada) e dos pontos, com o selo no Início e na Carteira | MVP |
 | RF15 | Avaliar um produto depois de uma compra registrada | Desejável |
 | RF16 | Salvar produtos como favoritos e ver o histórico de reservas e compras | Desejável |
 
@@ -51,8 +51,8 @@ Prioridade **MVP** entra na demo do hackathon. **Desejável** entra se houver te
 | --- | --- | --- |
 | RF17 | Entrar no painel da loja com e-mail e senha | MVP |
 | RF18 | No Atendimento, ler o QR do cliente e ver a ficha, as reservas e os cupons válidos dele | MVP |
-| RF19 | Registrar uma compra no caixa, informando o valor e os cupons aplicados | MVP |
-| RF20 | Gerir as reservas da loja: confirmar, separar, marcar retirada e cancelar | MVP |
+| RF19 | Registrar uma compra no caixa com itens (as reservas da cliente nesta loja, produtos do catálogo e valor avulso) e os cupons, com o desconto item por item | MVP |
+| RF20 | Gerir as reservas da loja: confirmar com a hora em que fica pronta, separar e recusar com motivo, com o aviso de reserva nova | MVP |
 | RF21 | Cadastrar e editar produtos, com atributos que mudam conforme a categoria | MVP |
 | RF22 | Importar produtos por planilha CSV | Desejável |
 | RF23 | Criar cupons da loja e acompanhar o uso | MVP |
@@ -91,11 +91,11 @@ Prioridade **MVP** entra na demo do hackathon. **Desejável** entra se houver te
 
 | Código | Regra |
 | --- | --- |
-| RN01 | Uma reserva para pagar na loja expira 4 horas depois de criada, se não for retirada. |
-| RN02 | Uma reserva paga por Pix fica separada por até 48 horas. |
-| RN03 | O estoque é descontado quando a reserva é criada e devolvido quando ela expira ou é cancelada. |
+| RN01 | A loja confirma a reserva dizendo a partir de que horas ela fica pronta; o prazo para retirar conta dessa hora. Para pagar na loja, são 4 horas. Pendente, a loja tem 4 horas desde a criação para confirmar; depois disso, a reserva expira. |
+| RN02 | Uma reserva paga por Pix fica separada por até 48 horas a partir da hora em que fica pronta. |
+| RN03 | O estoque é descontado quando a reserva é criada e devolvido quando ela expira, é cancelada pelo cliente ou recusada pela loja. Saindo depois de paga por Pix, o estorno é pedido. |
 | RN04 | A ficha do cliente só aparece para a loja se ele deu consentimento, e só com os interesses das categorias que a loja vende. |
-| RN05 | Um cupom da loja pode ser usado junto com um voucher do shopping; dois cupons da mesma loja na mesma compra, não. |
+| RN05 | Uma compra usa no máximo um cupom da loja e um voucher do shopping (contando os das reservas que saem nela); o voucher desconta sobre o que sobrou depois do cupom da loja. |
 | RN06 | Cada cupom tem limite de usos por cliente e data de validade. |
 | RN07 | O cliente ganha 1 ponto a cada R$ 1,00 gasto (valor pago, depois dos descontos). |
 | RN08 | O nível é calculado pelos pontos dos últimos 12 meses: Semente (0), Broto (500), Capim (2.000) e Dourado (5.000). Os limites iniciais podem ser alterados pelo shopping. |
@@ -105,6 +105,7 @@ Prioridade **MVP** entra na demo do hackathon. **Desejável** entra se houver te
 | RN12 | Toda busca sem resultado é registrada para o relatório de demanda, sem identificar o cliente nos painéis. |
 | RN13 | O comparativo com a categoria só é mostrado quando há pelo menos 3 lojas na categoria, para nenhuma loja ver números de outra. |
 | RN14 | A Capi só oferece produtos que existem no catálogo e nunca informa preço ou estoque que não veio do banco. |
+| RN15 | O cupom da loja com categoria só desconta nos itens dessa categoria e só aparece como opção (na reserva e no caixa) quando há um item dela; sem categoria, vale na compra toda da loja. Valor avulso ("Outros") não tem categoria. O cupom escolhido na reserva já desconta no preço e no Pix e fica preso a ela até a retirada; volta para a carteira se a reserva for cancelada, recusada ou expirar. |
 
 ## Fora do escopo do MVP
 
