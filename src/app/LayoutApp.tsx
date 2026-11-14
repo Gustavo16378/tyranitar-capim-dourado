@@ -8,6 +8,7 @@ import { CamadaDoTirano } from '../easter-egg/CamadaDoTirano'
 import { comMovimento, DURACAO, EASE, useGSAP } from '../movimento'
 import { AvisoDosSalvos } from './AvisoDosSalvos'
 import { BarraLateral } from './BarraLateral'
+import { useAvisos } from './useAvisos'
 
 /** As abas do app do cliente, na ordem da barra (a busca fica com a Capi). */
 const ABAS: AbaId[] = ['inicio', 'salvos', 'capi', 'mapa', 'carteira']
@@ -49,6 +50,9 @@ export default function LayoutApp() {
   const navigate = useNavigate()
   const sessao = useSessao()
   const palco = useRef<HTMLElement>(null)
+  // O selo da Carteira: as mudanças das reservas que a cliente ainda não viu.
+  const avisos = useAvisos(sessao?.usuario.perfil === 'CLIENTE')
+  const selos = { carteira: avisos?.naoLidas.reservas ?? 0 }
 
   useGSAP(
     () => {
@@ -91,7 +95,7 @@ export default function LayoutApp() {
   const aba = abaDaRota(pathname)
   return (
     <div className="flex h-dvh bg-surface">
-      <BarraLateral ativo={aba} naConta={pathname.startsWith('/conta')} />
+      <BarraLateral ativo={aba} naConta={pathname.startsWith('/conta')} selos={selos} />
       <div className="mx-auto flex min-w-0 max-w-md flex-1 flex-col md:max-w-none">
         {/* O modo tirano do easter egg: o apagão e, com as luzes apagadas, a faixa de acender. */}
         <CamadaDoTirano />
@@ -109,7 +113,7 @@ export default function LayoutApp() {
         {/* O aviso do coração de salvar (o leitor de tela lê; o de erro aparece na tela). */}
         <AvisoDosSalvos />
         <div className="flex-none bg-surface-raised pb-[env(safe-area-inset-bottom)] md:hidden [&>nav]:rounded-none">
-          <BottomNav abas={ABAS} ativo={aba} onSelect={(destino) => navigate(`/${destino}`)} />
+          <BottomNav abas={ABAS} ativo={aba} selos={selos} onSelect={(destino) => navigate(`/${destino}`)} />
         </div>
       </div>
     </div>

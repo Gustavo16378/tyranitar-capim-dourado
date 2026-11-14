@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { gsap } from 'gsap'
-import { obterCarteira, useDados, useSessao } from '../api'
+import { marcarAvisosComoLidos, obterCarteira, useDados, useSessao } from '../api'
 import { CarteiraQR, CupomTicket, NIVEIS, NivelBadge, ProgressoNivel } from '../componentes'
 import { APP_NOME } from '../config'
 import { modoTirano } from '../easter-egg/modoTirano'
@@ -8,7 +8,8 @@ import { useModoTirano } from '../easter-egg/useModoTirano'
 import { comMovimento, DURACAO, EASE, encherBarra, somarPontos, subirDeNivel, useEntrada, useGSAP } from '../movimento'
 import { desdeAUltimaVista, guardarVista, lerVista } from './carteiraVista'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
-import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel } from './formatos'
+import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel, paraQueValeOCupom } from './formatos'
+import { useAvisos } from './useAvisos'
 import { MinhasCompras } from './MinhasCompras'
 import { MinhasReservas } from './MinhasReservas'
 
@@ -28,6 +29,11 @@ const CUPOM_DO_TIRANO = {
 export default function Carteira() {
   const usuario = useSessao()?.usuario
   const carteira = useDados(obterCarteira, 'carteira')
+  // A carteira mostra o andamento das reservas: os avisos delas ficam lidos, e o selo da aba some.
+  const naoLidasDeReserva = useAvisos(true)?.naoLidas.reservas ?? 0
+  useEffect(() => {
+    if (naoLidasDeReserva > 0) void marcarAvisosComoLidos('RESERVA')
+  }, [naoLidasDeReserva])
   const { ligado: tirano } = useModoTirano()
   // A subida para o Tirano é celebrada na primeira visita depois do apagão, e só nela.
   const [celebrarTirano] = useState(() => modoTirano.estado().ligado && !modoTirano.estado().nivelVisto)
@@ -192,7 +198,8 @@ export default function Carteira() {
                       <CupomTicket
                         origem={cupom.loja ? 'loja' : 'shopping'}
                         titulo={cupom.titulo}
-                        loja={cupom.loja ?? undefined}
+                        // Para que vale: "Calçados na Centauro", "Tudo na Centauro"; o voucher diz "Vale em qualquer loja".
+                        loja={cupom.loja ? paraQueValeOCupom(cupom) : undefined}
                         desconto={descontoDoCupom(cupom)}
                         validade={dataCurta(cupom.validade)}
                         nivel={cupom.nivelMinimo === 'SEMENTE' ? undefined : paraNivel(cupom.nivelMinimo)}

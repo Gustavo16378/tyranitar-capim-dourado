@@ -4,6 +4,7 @@ import { comoErroApi, requisitar } from './cliente'
 import { usarMock } from './fonte'
 import * as mock from './mocks/auth'
 import { apagarSessao, lerSessao, salvarSessao } from './sessao'
+import { esquecerAvisos } from './avisos'
 
 /** Quem está usando o app, ou null antes do login. Nas telas, prefira useSessao(). */
 export function usuarioAtual(): Usuario | null {
@@ -59,4 +60,6 @@ export async function cadastrar(dados: { nome: string; email: string; senha: str
 
 export function sair() {
   apagarSessao()
+  // Os avisos eram de quem saiu: quem entrar depois neste aparelho não vê.
+  esquecerAvisos()
 }

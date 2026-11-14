@@ -11,6 +11,8 @@ export interface BottomNavProps {
   onSelect?: (aba: AbaId) => void
   /** Quais abas mostrar, na ordem padrão. Padrão: todas as do design system. */
   abas?: AbaId[]
+  /** Quantos avisos novos cada aba tem (a Carteira, com as mudanças das reservas): vira um selo. */
+  selos?: Partial<Record<AbaId, number>>
 }
 
 const ABAS: { id: AbaId; rotulo: string; icone?: IconName }[] = [
@@ -23,7 +25,7 @@ const ABAS: { id: AbaId; rotulo: string; icone?: IconName }[] = [
 ]
 
 /** Ocupa a largura do pai (no design system, 360 px). */
-export function BottomNav({ ativo, onSelect, abas }: BottomNavProps) {
+export function BottomNav({ ativo, onSelect, abas, selos }: BottomNavProps) {
   return (
     <nav
       aria-label="Navegação principal"
@@ -31,6 +33,7 @@ export function BottomNav({ ativo, onSelect, abas }: BottomNavProps) {
     >
       {ABAS.filter((aba) => !abas || abas.includes(aba.id)).map((aba) => {
         const atual = aba.id === ativo
+        const selo = selos?.[aba.id] ?? 0
         return (
           <button
             key={aba.id}
@@ -44,13 +47,22 @@ export function BottomNav({ ativo, onSelect, abas }: BottomNavProps) {
           >
             <span
               className={cx(
-                'grid h-7 w-12 place-items-center rounded-pill',
+                'relative grid h-7 w-12 place-items-center rounded-pill',
                 atual ? 'bg-marrom-soft text-marrom-ink' : aba.id === 'capi' && 'bg-terra text-on-terra',
               )}
             >
               {aba.icone ? <Icon name={aba.icone} /> : <CapiMark className="size-[22px]" />}
+              {selo > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-0.5 -top-1 grid h-4 min-w-4 place-items-center rounded-pill bg-marrom px-1 text-caption font-semibold leading-none text-on-marrom"
+                >
+                  {selo > 9 ? '9+' : selo}
+                </span>
+              )}
             </span>
             {aba.rotulo}
+            {selo > 0 && <span className="sr-only">{`, ${selo} ${selo === 1 ? 'aviso novo' : 'avisos novos'}`}</span>}
           </button>
         )
       })}

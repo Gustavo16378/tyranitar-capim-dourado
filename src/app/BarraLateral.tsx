@@ -3,7 +3,7 @@ import { useSessao } from '../api'
 import { CapiMark, Icon, type AbaId, type IconName } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
-import { primeiroNome } from './formatos'
+import { numeroDoSelo, primeiroNome } from './formatos'
 
 const ITENS: { aba: AbaId; rotulo: string; icone?: IconName }[] = [
   { aba: 'inicio', rotulo: 'Início', icone: 'casa' },
@@ -20,7 +20,16 @@ const ITEM =
  * Navegação do app a partir de 768 px: a barra lateral faz o papel da BottomNav, com as mesmas
  * abas, e a Minha conta embaixo. No celular ela some (e a BottomNav aparece).
  */
-export function BarraLateral({ ativo, naConta }: { ativo: AbaId; naConta: boolean }) {
+export function BarraLateral({
+  ativo,
+  naConta,
+  selos,
+}: {
+  ativo: AbaId
+  naConta: boolean
+  /** Quantos avisos novos cada aba tem (a Carteira, com as mudanças das reservas). */
+  selos?: Partial<Record<AbaId, number>>
+}) {
   const usuario = useSessao()?.usuario
   return (
     <nav
@@ -54,6 +63,12 @@ export function BarraLateral({ ativo, naConta }: { ativo: AbaId; naConta: boolea
                   </span>
                 )}
                 {rotulo}
+                {(selos?.[aba] ?? 0) > 0 && (
+                  <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-pill bg-marrom px-1.5 text-caption font-semibold text-on-marrom">
+                    <span aria-hidden="true">{numeroDoSelo(selos?.[aba] ?? 0)}</span>
+                    <span className="sr-only">{`, ${selos?.[aba]} ${selos?.[aba] === 1 ? 'aviso novo' : 'avisos novos'}`}</span>
+                  </span>
+                )}
               </Link>
             </li>
           )

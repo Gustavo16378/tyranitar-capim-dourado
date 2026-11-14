@@ -6,6 +6,7 @@ import { cx } from '../componentes/cx'
 import { useEntrada } from '../movimento'
 import { CAMINHO_DOS_SALVOS } from './caminhos'
 import { CartaoDoProduto } from './CartaoDoProduto'
+import { Avisos } from './Avisos'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
 import { dataCurta, descontoDoCupom, paraNivel, primeiroNome, saudacao } from './formatos'
 import { SetasDoCarrossel } from './SetasDoCarrossel'
@@ -42,14 +43,18 @@ export default function Inicio() {
             </div>
             <h1 className="mt-1 text-title-lg">O que você procura hoje?</h1>
           </div>
-          {/* O avatar abre a Minha conta. A partir de 768 px, quem faz isso é a barra lateral. */}
-          <Link
-            to="/conta"
-            aria-label="Minha conta"
-            className="grid size-11 flex-none place-items-center rounded-full bg-terra text-title-sm text-on-terra md:hidden"
-          >
-            <span aria-hidden="true">{usuario ? primeiroNome(usuario.nome).charAt(0).toUpperCase() : '?'}</span>
-          </Link>
+          <div className="flex flex-none items-center gap-2">
+            {/* Os avisos do app: cada mudança da reserva, os pontos de uma compra. */}
+            <Avisos />
+            {/* O avatar abre a Minha conta. A partir de 768 px, quem faz isso é a barra lateral. */}
+            <Link
+              to="/conta"
+              aria-label="Minha conta"
+              className="grid size-11 flex-none place-items-center rounded-full bg-terra text-title-sm text-on-terra md:hidden"
+            >
+              <span aria-hidden="true">{usuario ? primeiroNome(usuario.nome).charAt(0).toUpperCase() : '?'}</span>
+            </Link>
+          </div>
         </header>
 
         <Link
