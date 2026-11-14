@@ -14,14 +14,14 @@ export function textoDoDesconto({ tipo, valor }: { tipo: TipoCupom; valor: numbe
 const AVISO_DE_VENCIMENTO = 7
 
 /**
- * Situação do cupom em palavra (nunca só cor): inativo, vencido ou vencendo.
+ * Situação do cupom em palavra (nunca só cor): desativado, vencido ou vencendo.
  * null quando ele vale normalmente e não há nada a avisar.
  */
 export function situacaoDoCupom(
   { ativo, validade }: Pick<CupomComUso, 'ativo' | 'validade'>,
   hoje: string,
 ): { tom: 'neutral' | 'aviso'; texto: string; icone?: 'relogio' } | null {
-  if (!ativo) return { tom: 'neutral', texto: 'Inativo' }
+  if (!ativo) return { tom: 'neutral', texto: 'Desativado' }
   const dias = diasAte(validade, hoje)
   if (dias < 0) return { tom: 'neutral', texto: 'Vencido' }
   if (dias === 0) return { tom: 'aviso', texto: 'Vence hoje', icone: 'relogio' }
@@ -39,4 +39,21 @@ export function textoDoAlvo(categoriaAlvo: string | null) {
 /** Cupom que vale hoje. */
 export function cupomValendo(cupom: Pick<CupomComUso, 'ativo' | 'validade'>, hoje: string) {
   return cupom.ativo && cupom.validade >= hoje
+}
+
+/** A partir de quanto o desconto em porcentagem pede confirmação antes de gravar. */
+export const PORCENTAGEM_ALTA = 50
+
+/**
+ * "Este cupom dá 60% de desconto. Confirmar?" quando o desconto passa de 50%, para um zero a mais
+ * no campo não virar um cupom de 100%. null quando não precisa confirmar. Na edição, só pergunta
+ * se o desconto mudou.
+ */
+export function confirmacaoDoDesconto(
+  { tipo, valor }: { tipo: TipoCupom; valor: number },
+  antes?: { tipo: TipoCupom; valor: number },
+) {
+  if (tipo !== 'PERCENTUAL' || valor <= PORCENTAGEM_ALTA) return null
+  if (antes && antes.tipo === tipo && antes.valor === valor) return null
+  return `Este cupom dá ${valor}% de desconto. Confirmar?`
 }

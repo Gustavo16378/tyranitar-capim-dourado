@@ -56,6 +56,13 @@ export interface CupomComUso {
   usos: number
   /** Soma dos descontos dados com ele. */
   descontoCentavos: number
+  /** Reservas feitas com ele, de qualquer status: elas guardam o desconto prometido. */
+  reservas: number
+  /**
+   * Já usado numa compra ou preso numa reserva: o tipo, o valor, a categoria e o nível mínimo não
+   * mudam mais, e ele não pode ser excluído (só desativado).
+   */
+  emUso: boolean
 }
 
 /** Corpo de POST /api/loja/cupons e de POST /api/shopping/cupons. */
@@ -63,3 +70,6 @@ export type PedidoCupom = Pick<
   CupomComUso,
   'titulo' | 'tipo' | 'valor' | 'categoriaAlvo' | 'nivelMinimo' | 'limitePorCliente' | 'validade'
 >
+
+/** Corpo de PUT /api/loja/cupons/{id} e /api/shopping/cupons/{id}: o que não vier fica como está. */
+export type EdicaoCupom = Partial<PedidoCupom> & { ativo?: boolean }

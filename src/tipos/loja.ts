@@ -8,7 +8,7 @@ import type { CupomComUso, TipoCupom } from './cupom'
 
 export type * from './comum'
 export type * from './usuario'
-export type { CupomComUso, PedidoCupom, TipoCupom } from './cupom'
+export type { CupomComUso, EdicaoCupom, PedidoCupom, TipoCupom } from './cupom'
 
 export type StatusReserva =
   | 'PENDENTE'

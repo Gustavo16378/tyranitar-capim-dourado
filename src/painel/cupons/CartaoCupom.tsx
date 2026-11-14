@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Badge, CupomTicket, formatarNumero, formatarPreco } from '../../componentes'
 import { cx } from '../../componentes/cx'
 import type { CupomComUso } from '../../tipos'
@@ -10,13 +11,16 @@ interface CartaoCupomProps {
   origem: 'loja' | 'shopping'
   /** Hoje em Palmas ("2026-11-13"), para a situação: vencido, vence em N dias. */
   hoje: string
+  /** Editar, Desativar ou Reativar e Excluir (AcoesDoCupom), embaixo do uso. */
+  acoes?: ReactNode
 }
 
 /**
  * Um cupom como o cliente vê na carteira (CupomTicket) e, embaixo, o uso dele: quantas
  * vezes, quanto deu de desconto (na loja) ou quanto o shopping devolve às lojas (voucher).
+ * O desativado e o vencido ficam apagados, com o selo dizendo qual dos dois.
  */
-export function CartaoCupom({ cupom, origem, hoje }: CartaoCupomProps) {
+export function CartaoCupom({ cupom, origem, hoje, acoes }: CartaoCupomProps) {
   const situacao = situacaoDoCupom(cupom, hoje)
   const uso =
     cupom.usos === 0 ? 'Ainda não usado' : `Usado ${cupom.usos === 1 ? '1 vez' : `${formatarNumero(cupom.usos)} vezes`}`
@@ -25,26 +29,30 @@ export function CartaoCupom({ cupom, origem, hoje }: CartaoCupomProps) {
       ? ` · ${formatarPreco(cupom.descontoCentavos)} ${origem === 'loja' ? 'de desconto' : 'devolvidos às lojas'}`
       : ''
   return (
-    <div className={cx('flex flex-col gap-3', !cupomValendo(cupom, hoje) && 'opacity-70')}>
-      <CupomTicket
-        origem={origem}
-        titulo={cupom.titulo}
-        loja={textoDoAlvo(cupom.categoriaAlvo)}
-        desconto={textoDoDesconto(cupom)}
-        validade={formatarDia(cupom.validade)}
-        nivel={cupom.nivelMinimo === 'SEMENTE' ? undefined : paraNivel(cupom.nivelMinimo)}
-      />
-      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-        <p className="text-body-sm text-ink-muted">
-          {uso}
-          {valorUsado} · até {cupom.limitePorCliente} por cliente
-        </p>
-        {situacao && (
-          <Badge tone={situacao.tom} icon={situacao.icone}>
-            {situacao.texto}
-          </Badge>
-        )}
+    <div className="flex flex-col gap-3">
+      {/* Só o cupom fica apagado: os botões embaixo mantêm o contraste. */}
+      <div className={cx('flex flex-col gap-3', !cupomValendo(cupom, hoje) && 'opacity-70')}>
+        <CupomTicket
+          origem={origem}
+          titulo={cupom.titulo}
+          loja={textoDoAlvo(cupom.categoriaAlvo)}
+          desconto={textoDoDesconto(cupom)}
+          validade={formatarDia(cupom.validade)}
+          nivel={cupom.nivelMinimo === 'SEMENTE' ? undefined : paraNivel(cupom.nivelMinimo)}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <p className="text-body-sm text-ink-muted">
+            {uso}
+            {valorUsado} · até {cupom.limitePorCliente} por cliente
+          </p>
+          {situacao && (
+            <Badge tone={situacao.tom} icon={situacao.icone}>
+              {situacao.texto}
+            </Badge>
+          )}
+        </div>
       </div>
+      {acoes && <div className="px-1">{acoes}</div>}
     </div>
   )
 }

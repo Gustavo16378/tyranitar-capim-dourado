@@ -9,6 +9,7 @@ import type {
   LojistaCriado,
   LojistaDaLoja,
   Lista,
+  EdicaoCupom,
   PedidoCupom,
   PedidoLoja,
   PedidoLojista,
@@ -62,6 +63,16 @@ export function listarVouchers(sinal?: AbortSignal) {
 /** POST /api/shopping/cupons: um voucher que vale em qualquer loja e aparece na vitrine do app. */
 export function criarVoucher(voucher: PedidoCupom) {
   return requisitar<VoucherDoShopping>('POST', '/api/shopping/cupons', { corpo: voucher })
+}
+
+/** PUT /api/shopping/cupons/{id}: edita, desativa ou reativa um voucher. */
+export function editarVoucher(id: string, edicao: EdicaoCupom) {
+  return requisitar<VoucherDoShopping>('PUT', `/api/shopping/cupons/${encodeURIComponent(id)}`, { corpo: edicao })
+}
+
+/** DELETE /api/shopping/cupons/{id}: só o voucher nunca usado e sem reserva. */
+export function excluirVoucher(id: string) {
+  return requisitar<void>('DELETE', `/api/shopping/cupons/${encodeURIComponent(id)}`)
 }
 
 /** GET /api/shopping/demanda: o que os clientes buscam e não acham em nenhuma loja (RF29). */

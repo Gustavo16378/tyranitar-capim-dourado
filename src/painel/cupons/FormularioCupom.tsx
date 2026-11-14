@@ -1,15 +1,15 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Button, CupomTicket, NIVEIS } from '../../componentes'
 import { useEntrada } from '../../movimento'
 import type { CupomComUso, NivelApi, PedidoCupom, TipoCupom } from '../../tipos'
 import { useAcao } from '../api/useAcao'
 import { Campo } from '../comum/Campo'
 import { Erro } from '../comum/Estados'
-import { formatarDia, hojeEmPalmas, lerValorEmCentavos, paraNivel } from '../comum/formatos'
+import { formatarDia, hojeEmPalmas, lerValorEmCentavos, paraNivel, valorParaCampo } from '../comum/formatos'
 import { Opcao } from '../comum/Opcao'
 import { Selecao } from '../comum/Selecao'
 import type { CategoriaDoShopping } from '../comum/categorias'
-import { textoDoAlvo, textoDoDesconto } from './textos'
+import { confirmacaoDoDesconto, textoDoAlvo, textoDoDesconto } from './textos'
 
 const TIPOS: readonly { valor: TipoCupom; rotulo: string }[] = [
   { valor: 'PERCENTUAL', rotulo: 'Porcentagem' },
@@ -21,36 +21,76 @@ const TODAS = ''
 
 // O que muda entre o cupom da loja e o voucher do shopping.
 const TEXTOS = {
-  loja: { nome: 'cupom', titulo: 'Novo cupom', exemplo: '10% em calçados', todas: 'Toda a loja', voltar: 'Voltar aos cupons' },
-  shopping: { nome: 'voucher', titulo: 'Novo voucher', exemplo: 'R$ 20 em qualquer loja', todas: 'Qualquer compra', voltar: 'Voltar aos vouchers' },
+  loja: {
+    nome: 'cupom',
+    titulo: 'Novo cupom',
+    editar: 'Editar cupom',
+    exemplo: '10% em calçados',
+    todas: 'Toda a loja',
+    voltar: 'Voltar aos cupons',
+  },
+  shopping: {
+    nome: 'voucher',
+    titulo: 'Novo voucher',
+    editar: 'Editar voucher',
+    exemplo: 'R$ 20 em qualquer loja',
+    todas: 'Qualquer compra',
+    voltar: 'Voltar aos vouchers',
+  },
 } as const
+
+/** O desconto como está no campo: "10" na porcentagem, "20,00" em reais, vazio no brinde. */
+function valorNoCampo(tipo: TipoCupom, valor: number) {
+  return tipo === 'PERCENTUAL' ? String(valor) : tipo === 'VALOR' ? valorParaCampo(valor) : ''
+}
 
 interface FormularioCupomProps {
   /** loja: cupom da loja (RF23). shopping: voucher que vale em qualquer loja (RF28). */
   origem: 'loja' | 'shopping'
-  /** A rota que cria: criarCupom na loja, criarVoucher no shopping. */
+  /**
+   * A rota que grava: criarCupom ou criarVoucher para um novo; para editar (com `cupom`), a edição
+   * dele (editarCupom ou editarVoucher, com o id).
+   */
   criar: (pedido: PedidoCupom) => Promise<CupomComUso>
   /** As categorias que o cupom pode mirar. */
   categorias: readonly CategoriaDoShopping[]
+  /** O cupom que está sendo editado; sem ele, o formulário cria um novo. */
+  cupom?: CupomComUso
   aoCriar: (cupom: CupomComUso) => void
   aoVoltar: () => void
 }
 
-/** Novo cupom ou voucher, com a prévia de como ele aparece na carteira do cliente. */
-export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCriar, aoVoltar }: FormularioCupomProps) {
+/**
+ * Novo cupom ou voucher, com a prévia de como ele aparece na carteira do cliente. Com `cupom`, o
+ * mesmo formulário edita: já usado ou preso numa reserva, o tipo, o valor, a categoria e o nível
+ * ficam travados (a API recusa mudar). Desconto em porcentagem acima de 50% pede confirmação.
+ */
+export function FormularioCupom({ origem, criar: enviarCupom, categorias, cupom, aoCriar, aoVoltar }: FormularioCupomProps) {
   const textos = TEXTOS[origem]
   const ref = useEntrada<HTMLFormElement>()
   const grupoTipo = useId()
+  const idConfirmacao = useId()
   const hoje = hojeEmPalmas()
-  const [titulo, setTitulo] = useState('')
-  const [tipo, setTipo] = useState<TipoCupom>('PERCENTUAL')
-  const [valor, setValor] = useState('10')
-  const [categoriaAlvo, setCategoriaAlvo] = useState(TODAS)
-  const [nivelMinimo, setNivelMinimo] = useState<NivelApi>('SEMENTE')
-  const [limite, setLimite] = useState('1')
-  const [validade, setValidade] = useState(() => hojeEmPalmas(Date.now() + 30 * 86_400_000))
+  const [titulo, setTitulo] = useState(cupom?.titulo ?? '')
+  const [tipo, setTipo] = useState<TipoCupom>(cupom?.tipo ?? 'PERCENTUAL')
+  const [valor, setValor] = useState(cupom ? valorNoCampo(cupom.tipo, cupom.valor) : '10')
+  const [categoriaAlvo, setCategoriaAlvo] = useState(cupom?.categoriaAlvo ?? TODAS)
+  const [nivelMinimo, setNivelMinimo] = useState<NivelApi>(cupom?.nivelMinimo ?? 'SEMENTE')
+  const [limite, setLimite] = useState(cupom ? String(cupom.limitePorCliente) : '1')
+  const [validade, setValidade] = useState(() => cupom?.validade ?? hojeEmPalmas(Date.now() + 30 * 86_400_000))
   const [erros, setErros] = useState<Record<string, string>>({})
+  // A pergunta "Este cupom dá 60% de desconto. Confirmar?", enquanto espera a resposta.
+  const [confirmacao, setConfirmacao] = useState<string | null>(null)
+  const botaoConfirmar = useRef<HTMLButtonElement>(null)
   const criar = useAcao(enviarCupom)
+  // Já usado ou numa reserva: só o título, a validade e os usos por cliente mudam.
+  const travado = cupom?.emUso ?? false
+  // A validade de um cupom já vencido continua valendo se não mudou (para editar o título, por exemplo).
+  const validadeAntiga = cupom && cupom.validade < hoje ? cupom.validade : null
+
+  useEffect(() => {
+    if (confirmacao) botaoConfirmar.current?.focus()
+  }, [confirmacao])
 
   // O valor como a API quer: porcentagem inteira, centavos ou 0 no brinde.
   const valorLido =
@@ -66,7 +106,7 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
     if (!/^\d+$/.test(limite.trim()) || Number(limite) < 1 || Number(limite) > 99) {
       novos.limite = 'Use de 1 a 99 usos por cliente.'
     }
-    if (!validade || validade < hoje) novos.validade = 'A validade precisa ser hoje ou depois.'
+    if (!validade || (validade < hoje && validade !== validadeAntiga)) novos.validade = 'A validade precisa ser hoje ou depois.'
     if (Object.keys(novos).length || valorLido === null) return { erros: novos }
     return {
       pedido: {
@@ -89,8 +129,24 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
       return
     }
     setErros({})
-    const criado = await criar.executar(lido.pedido)
+    const pergunta = confirmacaoDoDesconto(lido.pedido, cupom)
+    if (pergunta && !confirmacao) {
+      setConfirmacao(pergunta)
+      return
+    }
+    await gravar(lido.pedido)
+  }
+
+  async function gravar(pedido: PedidoCupom) {
+    setConfirmacao(null)
+    const criado = await criar.executar(pedido)
     if (criado) aoCriar(criado)
+  }
+
+  /** Mudar o desconto desfaz a confirmação: a pergunta vale para o número que estava. */
+  function mudarDesconto(acao: () => void) {
+    setConfirmacao(null)
+    acao()
   }
 
   return (
@@ -102,8 +158,14 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
     >
       <div className="flex flex-col gap-5">
         <h2 data-anim className="text-title-sm">
-          {textos.titulo}
+          {cupom ? textos.editar : textos.titulo}
         </h2>
+        {travado && (
+          <p data-anim className="rounded-md bg-surface-sunken px-4 py-3 text-body-sm text-ink-muted">
+            Este {textos.nome} já foi usado ou está numa reserva: o tipo, o valor, a categoria e o nível mínimo ficam
+            como estão. Dá para mudar o título, a validade e os usos por cliente, ou desativar o {textos.nome}.
+          </p>
+        )}
 
         <div data-anim className="flex flex-col gap-4">
           <Campo
@@ -123,10 +185,13 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
                   tipo="radio"
                   name={grupoTipo}
                   checked={tipo === t.valor}
-                  onChange={() => {
-                    setTipo(t.valor)
-                    setValor(t.valor === 'PERCENTUAL' ? '10' : t.valor === 'VALOR' ? '20,00' : '')
-                  }}
+                  disabled={travado}
+                  onChange={() =>
+                    mudarDesconto(() => {
+                      setTipo(t.valor)
+                      setValor(t.valor === 'PERCENTUAL' ? '10' : t.valor === 'VALOR' ? '20,00' : '')
+                    })
+                  }
                 >
                   {t.rotulo}
                 </Opcao>
@@ -139,7 +204,8 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
               prefixo={tipo === 'VALOR' ? 'R$' : undefined}
               inputMode={tipo === 'VALOR' ? 'decimal' : 'numeric'}
               value={valor}
-              onChange={(e) => setValor(e.target.value)}
+              disabled={travado}
+              onChange={(e) => mudarDesconto(() => setValor(e.target.value))}
               erro={erros.valor}
               className="max-w-[240px]"
             />
@@ -151,6 +217,7 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
             rotulo="Vale em"
             opcoes={[{ valor: TODAS, rotulo: textos.todas }, ...categorias.map((c) => ({ valor: c.id, rotulo: c.rotulo }))]}
             value={categoriaAlvo}
+            disabled={travado}
             onChange={(e) => setCategoriaAlvo(e.target.value)}
             dica={`Com uma categoria, o ${textos.nome} aparece para quem procura por ela.`}
           />
@@ -158,6 +225,7 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
             rotulo="Nível mínimo"
             opcoes={NIVEIS_DA_API.map((n) => ({ valor: n, rotulo: NIVEIS[paraNivel(n)] }))}
             value={nivelMinimo}
+            disabled={travado}
             onChange={(e) => setNivelMinimo(e.target.value as NivelApi)}
           />
           <Campo
@@ -170,7 +238,7 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
           <Campo
             rotulo="Vale até"
             type="date"
-            min={hoje}
+            min={validadeAntiga ?? hoje}
             value={validade}
             onChange={(e) => setValidade(e.target.value)}
             erro={erros.validade}
@@ -179,14 +247,30 @@ export function FormularioCupom({ origem, criar: enviarCupom, categorias, aoCria
 
         <div data-anim className="flex flex-col gap-4">
           {criar.erro && <Erro erro={criar.erro} />}
-          <div className="flex flex-wrap gap-2 border-t border-line pt-4">
-            <Button type="submit" variant="primary" disabled={criar.enviando}>
-              {criar.enviando ? 'Criando…' : `Criar ${textos.nome}`}
-            </Button>
-            <Button variant="ghost" onClick={aoVoltar} disabled={criar.enviando}>
-              {textos.voltar}
-            </Button>
-          </div>
+          {confirmacao ? (
+            <div role="group" aria-labelledby={idConfirmacao} className="flex flex-col gap-3 border-t border-line pt-4">
+              <p id={idConfirmacao} className="text-body font-semibold">
+                {confirmacao}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button ref={botaoConfirmar} type="submit" variant="primary" disabled={criar.enviando}>
+                  {criar.enviando ? (cupom ? 'Salvando…' : 'Criando…') : 'Confirmar'}
+                </Button>
+                <Button variant="ghost" onClick={() => setConfirmacao(null)} disabled={criar.enviando}>
+                  Revisar o desconto
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 border-t border-line pt-4">
+              <Button type="submit" variant="primary" disabled={criar.enviando}>
+                {criar.enviando ? (cupom ? 'Salvando…' : 'Criando…') : cupom ? 'Salvar' : `Criar ${textos.nome}`}
+              </Button>
+              <Button variant="ghost" onClick={aoVoltar} disabled={criar.enviando}>
+                {textos.voltar}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -363,3 +363,50 @@ for (const tema of ['light', 'dark'] as const) {
     })
   })
 }
+
+// Editar, desativar e excluir cupons nos painéis (TX18), nos dois temas: a lista com as ações, o
+// formulário de editar um cupom já usado (com os campos travados), a pergunta do desconto acima de
+// 50%, a confirmação de excluir e os vouchers do shopping. Nada é gravado: o teste só abre e volta.
+for (const tema of ['light', 'dark'] as const) {
+  test.describe(`cupons dos painéis, tema ${tema === 'light' ? 'claro' : 'escuro'}`, () => {
+    test.use({ colorScheme: tema })
+
+    test('TX18: cupons com Editar, Desativar e Excluir, o formulário de editar e as confirmações', async ({ page, request }) => {
+      await entrarNoPainelDaLoja(page, '/loja/cupons')
+      await expect(page.getByRole('button', { name: 'Editar 10% em calçados', exact: true })).toBeVisible()
+      await semViolacoesGraves(page)
+
+      // O cupom já usado: o tipo, o valor, a categoria e o nível ficam travados.
+      await page.getByRole('button', { name: 'Editar 10% em calçados', exact: true }).click()
+      await expect(page.getByLabel('Desconto em %')).toBeDisabled()
+      await semViolacoesGraves(page)
+      await page.getByRole('button', { name: 'Voltar aos cupons' }).click()
+
+      // Desconto acima de 50%: a pergunta antes de criar.
+      await page.getByRole('button', { name: 'Novo cupom' }).click()
+      await page.getByLabel('Título').fill('Cupom do teste de acessibilidade')
+      await page.getByLabel('Desconto em %').fill('70')
+      await page.getByRole('button', { name: 'Criar cupom' }).click()
+      await expect(page.getByRole('group', { name: 'Este cupom dá 70% de desconto. Confirmar?' })).toBeVisible()
+      await semViolacoesGraves(page)
+      await page.getByRole('button', { name: 'Revisar o desconto' }).click()
+      await page.getByRole('button', { name: 'Voltar aos cupons' }).click()
+
+      // Excluir pede confirmação (o cupom só para Dourado nunca foi usado no banco de teste).
+      await page.getByRole('button', { name: 'Excluir Só para Dourado' }).click()
+      await expect(page.getByRole('button', { name: 'Sim, excluir' })).toBeFocused()
+      await semViolacoesGraves(page)
+      await page.getByRole('button', { name: 'Voltar' }).click()
+      await expect(page.getByRole('button', { name: 'Excluir Só para Dourado' })).toBeFocused()
+
+      // Os vouchers do shopping, com as mesmas ações.
+      const login = await request.post('/api/auth/login', { data: dados.admin })
+      const sessao = await login.json()
+      await page.evaluate((s) => localStorage.setItem('shopping.sessao', JSON.stringify(s)), sessao)
+      await page.goto('/shopping/fidelidade')
+      await page.getByRole('button', { name: 'Vouchers e campanhas' }).click()
+      await expect(page.getByRole('button', { name: 'Editar R$ 20 em qualquer loja', exact: true })).toBeVisible()
+      await semViolacoesGraves(page)
+    })
+  })
+}

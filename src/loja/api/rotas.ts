@@ -11,6 +11,7 @@ import type {
   Lista,
   ListaDeReservas,
   PedidoCompra,
+  EdicaoCupom,
   PedidoCupom,
   PedidoMudarStatus,
   PedidoPrevia,
@@ -91,6 +92,16 @@ export function listarCupons(sinal?: AbortSignal) {
 /** POST /api/loja/cupons */
 export function criarCupom(cupom: PedidoCupom) {
   return requisitar<CupomDaLoja>('POST', '/api/loja/cupons', { corpo: cupom })
+}
+
+/** PUT /api/loja/cupons/{id}: edita, desativa ou reativa (o que não vier fica como está). */
+export function editarCupom(id: string, edicao: EdicaoCupom) {
+  return requisitar<CupomDaLoja>('PUT', `/api/loja/cupons/${encodeURIComponent(id)}`, { corpo: edicao })
+}
+
+/** DELETE /api/loja/cupons/{id}: só o cupom nunca usado e sem reserva. */
+export function excluirCupom(id: string) {
+  return requisitar<void>('DELETE', `/api/loja/cupons/${encodeURIComponent(id)}`)
 }
 
 /** GET /api/loja/relatorios: o desempenho da loja no período (RF24). */
