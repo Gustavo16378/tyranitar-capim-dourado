@@ -5,6 +5,8 @@ export interface RespostaErro {
   status: number
   erro: string
   mensagem: string
+  /** Só no 409 RESERVA_REPETIDA de POST /api/reservas: a reserva que o cliente já tem. */
+  reserva?: { id: string; link: string }
 }
 
 /** Listas paginadas: ?pagina=1&tamanho=20 → { itens, total }. */

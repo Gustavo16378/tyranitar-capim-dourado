@@ -1,6 +1,5 @@
 // Partes puras da Capi: entrada do chat (TI06), página do link (TI07), confirmação e ficha.
 import { describe, expect, it } from 'vitest'
-import { clienteConfirmou } from '../../functions/_lib/capi/confirmacao'
 import { IMAGEM_MAXIMA_BYTES, lerEntradaDoChat, tamanhoDoBase64 } from '../../functions/_lib/capi/entrada'
 import { extrairDadosDaPagina } from '../../functions/_lib/capi/pagina'
 import { juntarInteresses } from '../../functions/_lib/regras/ficha'
@@ -83,17 +82,6 @@ describe('página do link (TI07)', () => {
     })
     expect(extrairDadosDaPagina('<title>Só o título</title>', 'https://a.example').titulo).toBe('Só o título')
   })
-})
-
-describe('confirmação da reserva', () => {
-  it.each(['Pode separar', 'sim, pago na loja', 'Quero com Pix', 'Isso, reserva pra mim', 'ok', 'Fechado!'])(
-    '"%s" confirma',
-    (texto) => expect(clienteConfirmou(texto)).toBe(true),
-  )
-  it.each(['Tem esse tênis aí no shopping?', 'Não, obrigado', 'Quero ver outro', 'Depois eu vejo', 'Qual o preço?'])(
-    '"%s" não confirma',
-    (texto) => expect(clienteConfirmou(texto)).toBe(false),
-  )
 })
 
 describe('ficha atualizada pela Capi', () => {

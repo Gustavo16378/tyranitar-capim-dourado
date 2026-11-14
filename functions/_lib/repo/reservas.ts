@@ -345,6 +345,20 @@ export interface ReservaCriada {
  * que o D1 roda numa transação. Duas pessoas nunca ficam com a última unidade. O cupom (já conferido
  * por quem chama) fica preso à reserva, com o desconto calculado. O cliente recebe o aviso.
  */
+/**
+ * A reserva em aberto que o cliente já tem deste produto, neste tamanho e nesta cor, se tiver: uma
+ * segunda igual é recusada (POST /api/reservas, 409 RESERVA_REPETIDA).
+ */
+async function reservaIgualEmAberto(db: D1Database, clienteId: string, produtoId: string, tamanho: string | null, cor: string | null) {
+  return db
+    .prepare(
+      `SELECT id FROM reserva
+       WHERE cliente_id = ?1 AND produto_id = ?2 AND tamanho IS ?3 AND cor IS ?4 AND status IN ${ATIVAS}`,
+    )
+    .bind(clienteId, produtoId, tamanho, cor)
+    .first<{ id: string }>()
+}
+
 export async function criarReserva(
   db: D1Database,
   pedido: {
@@ -364,15 +378,26 @@ export async function criarReserva(
   const agora = pedido.agora ?? new Date()
   const expira = calcularExpiracao({ forma: pedido.formaPagamento, criadaEm: agora }, await lerPrazosReserva(db))
   const id = crypto.randomUUID()
+  // A reserva que venceu não conta como em aberto (a expiração é conferida na leitura).
+  await expirarVencidas(db, { clienteId: pedido.clienteId }, agora)
+  const tamanho = pedido.tamanho ?? null
+  const cor = pedido.cor ?? null
 
+  // Nada acontece se o cliente já tem uma reserva em aberto do mesmo produto, tamanho e cor: a
+  // conferência fica dentro da mesma transação do estoque, para dois toques seguidos não virarem
+  // duas reservas.
   const [, insercao] = await db.batch([
     db
       .prepare(
         `UPDATE produto SET estoque = estoque - ?2, atualizado_em = datetime('now')
          WHERE id = ?1 AND ativo = 1 AND estoque >= ?2
-           AND loja_id IN (SELECT id FROM loja WHERE ativa = 1)`,
+           AND loja_id IN (SELECT id FROM loja WHERE ativa = 1)
+           AND NOT EXISTS (
+             SELECT 1 FROM reserva r
+             WHERE r.cliente_id = ?3 AND r.produto_id = ?1 AND r.tamanho IS ?4 AND r.cor IS ?5 AND r.status IN ${ATIVAS}
+           )`,
       )
-      .bind(pedido.produtoId, pedido.quantidade),
+      .bind(pedido.produtoId, pedido.quantidade, pedido.clienteId, tamanho, cor),
     db
       .prepare(
         `INSERT INTO reserva (id, cliente_id, produto_id, loja_id, quantidade, preco_centavos, status,
@@ -388,8 +413,8 @@ export async function criarReserva(
         paraSqlite(expira),
         paraSqlite(agora),
         pedido.produtoId,
-        pedido.tamanho ?? null,
-        pedido.cor ?? null,
+        tamanho,
+        cor,
         pedido.cupom?.id ?? null,
         pedido.cupom?.descontoCentavos ?? 0,
       ),
@@ -404,6 +429,12 @@ export async function criarReserva(
   ])
 
   if (insercao.meta.changes !== 1) {
+    const repetida = await reservaIgualEmAberto(db, pedido.clienteId, pedido.produtoId, tamanho, cor)
+    if (repetida) {
+      throw new ErroApi('RESERVA_REPETIDA', 'Você já tem uma reserva deste produto.', {
+        reserva: { id: repetida.id, link: `/reserva/${repetida.id}` },
+      })
+    }
     const produto = await buscarProdutoAtivo(db, pedido.produtoId)
     if (!produto) throw new ErroApi('NAO_ENCONTRADO', 'Esse produto não está mais disponível.')
     throw new ErroApi('SEM_ESTOQUE', 'Esse produto acabou de esgotar nesta loja.')

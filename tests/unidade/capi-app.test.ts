@@ -17,7 +17,7 @@ const reserva = (formaPagamento: 'PIX' | 'NA_LOJA'): ReservaCriada => ({
 })
 
 describe('ações da resposta da Capi', () => {
-  it('reservar é o botão principal e a rota leva ao mapa', () => {
+  it('reservar não vira botão na conversa (o "Reservar" fica no cartão); a rota leva ao mapa', () => {
     expect(
       acoesNaConversa([
         { tipo: 'RESERVAR', produtoId: 'p1' },
@@ -25,7 +25,6 @@ describe('ações da resposta da Capi', () => {
       ]),
     ).toEqual({
       botoes: [
-        { chave: 'reservar-p1', rotulo: 'Sim, separar', destino: '/produto/p1', principal: true },
         {
           chave: 'rota-loja-esportes',
           rotulo: 'Ver no mapa',
@@ -38,7 +37,7 @@ describe('ações da resposta da Capi', () => {
     })
   })
 
-  it('reserva criada com Pix abre o pagamento sozinha e tira o botão de reservar', () => {
+  it('reserva criada com Pix (conversa antiga) abre o pagamento sozinha', () => {
     const { botoes, abrirSozinho } = acoesNaConversa([
       { tipo: 'RESERVAR', produtoId: 'p1' },
       { tipo: 'RESERVA_CRIADA', reserva: reserva('PIX') },

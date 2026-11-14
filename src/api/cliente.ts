@@ -8,13 +8,16 @@ export class ErroApi extends Error implements RespostaErro {
   status: number
   erro: string
   mensagem: string
+  /** RESERVA_REPETIDA: a reserva em aberto que o cliente já tem, com o link dela. */
+  reserva?: { id: string; link: string }
 
-  constructor({ status, erro, mensagem }: RespostaErro) {
+  constructor({ status, erro, mensagem, reserva }: RespostaErro) {
     super(mensagem)
     this.name = 'ErroApi'
     this.status = status
     this.erro = erro
     this.mensagem = mensagem
+    if (reserva) this.reserva = reserva
   }
 }
 
@@ -73,7 +76,7 @@ export async function requisitar<T>(
   if (!resposta.ok) {
     throw new ErroApi(
       ehRespostaErro(json)
-        ? { status: resposta.status, erro: json.erro, mensagem: json.mensagem }
+        ? { status: resposta.status, erro: json.erro, mensagem: json.mensagem, ...(json.reserva ? { reserva: json.reserva } : {}) }
         : {
             status: resposta.status,
             erro: 'ERRO_INESPERADO',

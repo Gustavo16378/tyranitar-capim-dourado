@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { comoErroApi, criarReserva, opcoesDaReserva, type ErroApi } from '../api'
 import { Badge, formatarPreco, Icon } from '../componentes'
 import { cx } from '../componentes/cx'
@@ -176,7 +176,18 @@ export function FolhaReserva({ produto, aberta, onFechar }: FolhaReservaProps) {
       {erro && (
         <p role="alert" className="flex items-start gap-2 text-body-sm text-perigo-ink">
           <Icon name="alerta" className="mt-px" />
-          {erro.mensagem}
+          <span>
+            {erro.mensagem}
+            {/* Já tem uma reserva igual em aberto (409 RESERVA_REPETIDA): o link leva até ela. */}
+            {erro.reserva && (
+              <>
+                {' '}
+                <Link to={erro.reserva.link} className="font-semibold text-perigo-ink underline">
+                  Ver a reserva
+                </Link>
+              </>
+            )}
+          </span>
         </p>
       )}
     </Folha>

@@ -1,18 +1,16 @@
-// As cinco ferramentas da Capi: o que o Claude vê (definições) e o que o servidor faz no D1.
+// As ferramentas da Capi: o que o Claude vê (definições) e o que o servidor faz no D1.
 // O servidor valida tudo o que o modelo manda; erro de entrada volta como tool_result com is_error.
+// A Capi não reserva: quem reserva é o cliente, no botão "Reservar" do cartão do produto, que abre
+// a mesma folha de reserva da tela do produto (tamanho, cor, cupom e pagamento).
 import type Anthropic from '@anthropic-ai/sdk'
 import { buscarNoCatalogo, registrarResultado } from '../catalogo'
-import { ErroApi } from '../erros'
 import { formatarPreco, nomeDoPiso } from '../formatar'
 import { acrescentarInteresses } from '../repo/fichas'
 import { buscarLojaAtiva, lojasDaCategoria } from '../repo/lojas'
 import { buscarProdutoAtivo, categoriasComProduto, listarProdutosAtivos, type ProdutoLinha } from '../repo/produtos'
-import { criarReserva, type ReservaCriada } from '../repo/reservas'
-import { lerEscolhas } from '../cliente/reservar'
 import { CATEGORIAS_DO_SHOPPING, ehCategoria } from '../regras/categorias'
 import type { Interesse } from '../regras/ficha'
 import { lerJson, normalizar, termosDaBusca, textosDoJson } from '../texto'
-import { clienteConfirmou } from './confirmacao'
 
 export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
   {
@@ -53,27 +51,6 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
         estilo: { type: 'string', description: 'Estilo ou uso: "esportivo", "social", "casual".' },
       },
       required: ['categoria', 'descricao'],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: 'reservar',
-    description:
-      'Reserva um produto para o cliente retirar na loja. Só use depois que o cliente confirmar, na conversa, o ' +
-      'produto e a forma de pagamento. A loja confirma a reserva e avisa no app a partir de que horas fica pronta; ' +
-      'daí, PIX (pago agora) fica separado por 48 horas e NA_LOJA (paga na retirada), por 4 horas.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        produto_id: { type: 'string' },
-        forma_pagamento: { type: 'string', enum: ['PIX', 'NA_LOJA'] },
-        quantidade: { type: 'integer', minimum: 1, maximum: 5, description: 'Padrão 1.' },
-        tamanho: {
-          type: 'string',
-          description: 'O tamanho ou o número que o cliente disse ("42", "M"), se o produto tiver. Sem ele, a loja combina no balcão.',
-        },
-      },
-      required: ['produto_id', 'forma_pagamento'],
       additionalProperties: false,
     },
   },
@@ -120,19 +97,12 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
   },
 ]
 
-export type Acao =
-  | { tipo: 'RESERVAR'; produtoId: string }
-  | { tipo: 'ROTA'; lojaId: string; mapaId: string; piso: number }
-  | { tipo: 'RESERVA_CRIADA'; reserva: ReservaCriada }
+export type Acao = { tipo: 'RESERVAR'; produtoId: string } | { tipo: 'ROTA'; lojaId: string; mapaId: string; piso: number }
 
 export interface ContextoDasFerramentas {
   db: D1Database
   clienteId: string
-  /** A mensagem do cliente desta vez: a reserva só sai se ela for uma confirmação. */
-  mensagemDoCliente: string
   agora: Date
-  /** Reservas já criadas nesta mensagem (no máximo uma). */
-  reservasFeitas: number
 }
 
 export interface ResultadoDaFerramenta {
@@ -255,51 +225,6 @@ const executores: Record<string, (entrada: Record<string, unknown>, ctx: Context
       return { conteudo: await nadaEncontrado(ctx.db, `Não há produtos ativos na categoria "${categoria}".`, categoria) }
     }
     return { conteudo: { candidatos: candidatos.map(paraOModelo) }, produtos: candidatos }
-  },
-
-  async reservar(entrada, ctx) {
-    const produtoId = texto(entrada, 'produto_id', { obrigatorio: true, max: 64 })!
-    const forma = entrada.forma_pagamento
-    if (forma !== 'PIX' && forma !== 'NA_LOJA') throw new EntradaInvalida('forma_pagamento é PIX ou NA_LOJA')
-    const quantidade = inteiro(entrada, 'quantidade', 1, 5) ?? 1
-    if (!clienteConfirmou(ctx.mensagemDoCliente)) {
-      return {
-        erro: true,
-        conteudo: { erro: 'O cliente ainda não confirmou. Confirme o produto e a forma de pagamento com ele antes de reservar.' },
-      }
-    }
-    if (ctx.reservasFeitas > 0) {
-      return { erro: true, conteudo: { erro: 'Já fiz uma reserva nesta mensagem. Para outra, confirme de novo com o cliente.' } }
-    }
-    try {
-      const produto = await buscarProdutoAtivo(ctx.db, produtoId)
-      const { tamanho, cor } = produto ? lerEscolhas(produto, entrada.tamanho, undefined) : { tamanho: null, cor: null }
-      const reserva = await criarReserva(ctx.db, {
-        clienteId: ctx.clienteId,
-        produtoId,
-        quantidade,
-        formaPagamento: forma,
-        tamanho,
-        cor,
-        agora: ctx.agora,
-      })
-      ctx.reservasFeitas++
-      return {
-        conteudo: {
-          reservada: true,
-          reservaId: reserva.id,
-          formaPagamento: reserva.formaPagamento,
-          expiraEm: reserva.expiraEm,
-          observacao:
-            (forma === 'PIX' ? 'O app abre o Pix para o cliente pagar. ' : 'O cliente paga na retirada. ') +
-            'A loja confirma e avisa no app a partir de que horas fica pronto.',
-        },
-        acao: { tipo: 'RESERVA_CRIADA', reserva },
-      }
-    } catch (erro) {
-      if (erro instanceof ErroApi) return { erro: true, conteudo: { erro: erro.codigo, mensagem: erro.message } }
-      throw erro
-    }
   },
 
   async rota_na_loja(entrada, ctx) {

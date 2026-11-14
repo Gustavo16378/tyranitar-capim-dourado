@@ -50,7 +50,7 @@ describe('Capi com o Claude simulado', () => {
     expect(n).toBe(2)
   })
 
-  it('manda o prompt de sistema, as 5 ferramentas, esforço baixo, cache e o fallback do servidor', async () => {
+  it('manda o prompt de sistema, as 4 ferramentas (sem reservar), esforço baixo, cache e o fallback do servidor', async () => {
     const { modelo, chamadas } = modeloSimulado(gravada(respostaSimples))
     await conversar({ clienteId: 'c-ana', texto: 'Oi' }, { db: env.DB, modelo })
     const p = chamadas[0]
@@ -59,7 +59,6 @@ describe('Capi com o Claude simulado', () => {
     expect(p.tools?.map((t) => ('name' in t ? t.name : ''))).toEqual([
       'buscar_produtos',
       'buscar_similares',
-      'reservar',
       'rota_na_loja',
       'gerar_ficha',
     ])
@@ -78,23 +77,52 @@ describe('Capi com o Claude simulado', () => {
     expect(r.resposta).not.toContain('[produto:')
   })
 
-  it('TI03: reservar sem confirmação do cliente não cria a reserva', async () => {
+  it('TI03: a Capi nunca cria reserva, nem com o "sim" do cliente nem se o modelo chamar reservar', async () => {
+    // A gravação é o modelo chamando a ferramenta reservar, que não existe mais.
     const { modelo, chamadas } = modeloSimulado(gravada(reservar))
-    const r = await conversar({ clienteId: 'c-ana', texto: 'Tem esse tênis aí no shopping?' }, { db: env.DB, modelo })
-    expect(r.acoes.some((a) => a.tipo === 'RESERVA_CRIADA')).toBe(false)
+    const r = await conversar({ clienteId: 'c-ana', texto: 'Sim, pode separar, pago na loja' }, { db: env.DB, modelo })
     expect(await umValor('SELECT count(*) AS n FROM reserva')).toEqual({ n: 0 })
     expect(await umValor("SELECT estoque FROM produto WHERE id = 'p-pulse'")).toEqual({ estoque: 2 })
     const resultado = (chamadas[1].messages.at(-1)!.content as { is_error?: boolean; content: string }[])[0]
     expect(resultado.is_error).toBe(true)
-    expect(resultado.content).toContain('ainda não confirmou')
+    expect(resultado.content).toContain('Ferramenta desconhecida: reservar')
+    expect(r.acoes.every((a) => a.tipo === 'RESERVAR' || a.tipo === 'ROTA')).toBe(true)
   })
 
-  it('com a confirmação do cliente, reserva e baixa o estoque', async () => {
-    const { modelo } = modeloSimulado(gravada(reservar))
-    const r = await conversar({ clienteId: 'c-ana', texto: 'Pode separar, pago na loja' }, { db: env.DB, modelo })
-    const criada = r.acoes.find((a) => a.tipo === 'RESERVA_CRIADA')
-    expect(criada).toMatchObject({ reserva: { produtoId: 'p-pulse', formaPagamento: 'NA_LOJA', status: 'PENDENTE' } })
-    expect(await umValor("SELECT estoque FROM produto WHERE id = 'p-pulse'")).toEqual({ estoque: 1 })
+  it('a conversa antiga com uma chamada a reservar não manda essa chamada de volta ao modelo', async () => {
+    const troca = [
+      {
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'toolu_antiga_busca', name: 'buscar_produtos', input: { texto: 'tênis' } },
+          { type: 'tool_use', id: 'toolu_antiga_reserva', name: 'reservar', input: { produto_id: 'p-pulse', forma_pagamento: 'PIX' } },
+        ],
+      },
+      {
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'toolu_antiga_busca', content: '{"produtos":[]}' },
+          { type: 'tool_result', tool_use_id: 'toolu_antiga_reserva', content: '{"reservada":true}' },
+        ],
+      },
+    ]
+    await env.DB.batch([
+      env.DB.prepare(
+        "INSERT INTO mensagem (id, cliente_id, papel, conteudo, criado_em) VALUES ('m-1', 'c-ana', 'CLIENTE', 'Pode reservar', datetime('now', '-2 minutes'))",
+      ),
+      env.DB.prepare(
+        "INSERT INTO mensagem (id, cliente_id, papel, conteudo, troca, criado_em) VALUES ('m-2', 'c-ana', 'CAPI', 'Reservei.', ?1, datetime('now', '-1 minutes'))",
+      ).bind(JSON.stringify(troca)),
+    ])
+    const { modelo, chamadas } = modeloSimulado(gravada(respostaSimples))
+    await conversar({ clienteId: 'c-ana', texto: 'Oi de novo' }, { db: env.DB, modelo })
+    const blocos = chamadas[0].messages.flatMap((m) => (Array.isArray(m.content) ? m.content : [])) as {
+      type: string
+      name?: string
+      tool_use_id?: string
+    }[]
+    expect(blocos.some((b) => b.name === 'reservar' || b.tool_use_id === 'toolu_antiga_reserva')).toBe(false)
+    expect(blocos.filter((b) => b.name === 'buscar_produtos' || b.tool_use_id === 'toolu_antiga_busca')).toHaveLength(2)
   })
 
   it('TI04: gerar_ficha de cliente sem consentimento não grava nada', async () => {
@@ -370,7 +398,7 @@ describe('Capi com o Claude simulado', () => {
     })
 
     it('sem categoria, com uma que não existe ou sem loja dela, o resultado não traz lojas e diz por quê', async () => {
-      const ctx = { db: env.DB, clienteId: 'c-ana', mensagemDoCliente: '', agora: new Date(), reservasFeitas: 0 }
+      const ctx = { db: env.DB, clienteId: 'c-ana', agora: new Date() }
       const semCategoria = await executarFerramenta('buscar_produtos', { texto: 'garrafa térmica' }, ctx)
       expect(semCategoria.conteudo).toMatchObject({ produtos: [], aviso: expect.stringContaining('Busque de novo com a categoria') })
       expect(semCategoria.conteudo).not.toHaveProperty('lojasDaCategoria')

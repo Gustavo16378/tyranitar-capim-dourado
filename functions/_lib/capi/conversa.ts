@@ -129,10 +129,33 @@ function lerTroca(troca: string | null): Mensagem[] {
   if (!troca) return []
   try {
     const lista: unknown = JSON.parse(troca)
-    return Array.isArray(lista) ? (lista as Mensagem[]) : []
+    return Array.isArray(lista) ? soFerramentasDeHoje(lista as Mensagem[]) : []
   } catch {
     return []
   }
+}
+
+const FERRAMENTAS_DE_HOJE = new Set(FERRAMENTAS.map((f) => f.name))
+
+/**
+ * Tira do histórico as chamadas a ferramentas que a Capi não tem mais (como a reservar, das
+ * conversas antigas) e os resultados delas; a mensagem que fica vazia sai junto. Assim o modelo
+ * não vê uma ferramenta que não existe na lista de hoje.
+ */
+function soFerramentasDeHoje(troca: Mensagem[]): Mensagem[] {
+  const fora = new Set<string>()
+  for (const m of troca) {
+    if (!Array.isArray(m.content)) continue
+    for (const b of m.content) if (b.type === 'tool_use' && !FERRAMENTAS_DE_HOJE.has(b.name)) fora.add(b.id)
+  }
+  if (!fora.size) return troca
+  return troca.flatMap((m): Mensagem[] => {
+    if (!Array.isArray(m.content)) return [m]
+    const content = m.content.filter(
+      (b) => !((b.type === 'tool_use' && fora.has(b.id)) || (b.type === 'tool_result' && fora.has(b.tool_use_id))),
+    )
+    return content.length ? [{ ...m, content } as Mensagem] : []
+  })
 }
 
 /**
@@ -179,7 +202,8 @@ export function montarResposta(
   const produtos = cartoes.slice(0, CARTOES_NO_MAXIMO)
   const todas = [...acoes]
   const disponivel = produtos.find((p) => p.estoque > 0)
-  if (disponivel && !acoes.some((a) => a.tipo === 'RESERVA_CRIADA')) todas.unshift({ tipo: 'RESERVAR', produtoId: disponivel.id })
+  // O cartão com estoque ganha o botão "Reservar" no app (a Capi não reserva sozinha).
+  if (disponivel) todas.unshift({ tipo: 'RESERVAR', produtoId: disponivel.id })
   return { resposta: limpo || RESPOSTA_SEM_TEXTO, produtos: produtos.map(produtoParaApi), acoes: todas }
 }
 
@@ -391,9 +415,7 @@ export async function conversar(pedido: PedidoDaCapi, deps: DependenciasDaCapi):
     const ctx: ContextoDasFerramentas = {
       db,
       clienteId: pedido.clienteId,
-      mensagemDoCliente: pedido.texto,
       agora: deps.agora ?? new Date(),
-      reservasFeitas: 0,
     }
     try {
       // A leitura do link conta dentro dos mesmos 15 s.

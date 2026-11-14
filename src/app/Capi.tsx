@@ -25,6 +25,7 @@ import { acoesNaConversa } from './acoesDoChat'
 import { CartaoDoProduto } from './CartaoDoProduto'
 import { FolhaFoto } from './FolhaFoto'
 import { FolhaLink } from './FolhaLink'
+import { FolhaReserva } from './FolhaReserva'
 import { partesDoLink } from './formatos'
 import { reduzirFoto } from './foto'
 
@@ -187,6 +188,9 @@ export default function Capi() {
   const [paraTentarDeNovo, setParaTentarDeNovo] = useState<Envio | null>(null)
   const [folhaLink, setFolhaLink] = useState(false)
   const [folhaFoto, setFolhaFoto] = useState(false)
+  // O produto do "Reservar" tocado num cartão: abre a mesma folha de reserva da tela do produto.
+  const [reservando, setReservando] = useState<ProdutoResumo | null>(null)
+  const [folhaReserva, setFolhaReserva] = useState(false)
   /** O texto que uma sugestão pôs no campo: a versão nova remonta o campo com ele. */
   const [rascunho, setRascunho] = useState({ texto: '', versao: 0 })
   const [anexo, setAnexo] = useState<FotoAnexada | null>(null)
@@ -444,7 +448,18 @@ export default function Capi() {
               <ul key={item.id} className="flex flex-col gap-2 pl-10 md:grid md:grid-cols-2">
                 {item.produtos.map((p) => (
                   <li key={p.id}>
-                    <CartaoDoProduto produto={p} />
+                    {/* A Capi não reserva: o cliente toca em "Reservar" e escolhe na folha. */}
+                    <CartaoDoProduto
+                      produto={p}
+                      {...(p.estoque > 0 && {
+                        acao: 'Reservar',
+                        nomeDaAcao: `Reservar ${p.nome}`,
+                        onAcao: () => {
+                          setReservando(p)
+                          setFolhaReserva(true)
+                        },
+                      })}
+                    />
                   </li>
                 ))}
               </ul>
@@ -576,6 +591,7 @@ export default function Capi() {
         onFechar={() => setFolhaLink(false)}
         onEnviar={(link) => conversar({ texto: '', link })}
       />
+      {reservando && <FolhaReserva produto={reservando} aberta={folhaReserva} onFechar={() => setFolhaReserva(false)} />}
     </div>
   )
 }

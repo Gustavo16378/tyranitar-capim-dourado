@@ -14,6 +14,7 @@ export type CodigoErro =
   | 'CUPOM_INVALIDO'
   | 'CUPONS_INCOMPATIVEIS'
   | 'CUPOM_EM_USO'
+  | 'RESERVA_REPETIDA'
   | 'LOJA_NAO_CADASTRADA'
   | 'LOJA_VAGA'
   | 'IA_INDISPONIVEL'
@@ -32,6 +33,7 @@ export const STATUS_DO_ERRO: Record<CodigoErro, number> = {
   CUPOM_INVALIDO: 422,
   CUPONS_INCOMPATIVEIS: 422,
   CUPOM_EM_USO: 409,
+  RESERVA_REPETIDA: 409,
   LOJA_NAO_CADASTRADA: 422,
   LOJA_VAGA: 422,
   IA_INDISPONIVEL: 503,
@@ -40,12 +42,15 @@ export const STATUS_DO_ERRO: Record<CodigoErro, number> = {
 
 export class ErroApi extends Error {
   readonly codigo: CodigoErro
+  /** Campos a mais no corpo da resposta, como a reserva que já existe ({ reserva: { id, link } }). */
+  readonly extras: Record<string, unknown> | undefined
 
   /** A mensagem vai para a tela: diga o que aconteceu e o que fazer, sem "Ops!". */
-  constructor(codigo: CodigoErro, mensagem: string) {
+  constructor(codigo: CodigoErro, mensagem: string, extras?: Record<string, unknown>) {
     super(mensagem)
     this.name = 'ErroApi'
     this.codigo = codigo
+    this.extras = extras
   }
 
   get status() {
@@ -54,5 +59,5 @@ export class ErroApi extends Error {
 }
 
 export function respostaDeErro(erro: ErroApi) {
-  return Response.json({ status: erro.status, erro: erro.codigo, mensagem: erro.message }, { status: erro.status })
+  return Response.json({ ...erro.extras, status: erro.status, erro: erro.codigo, mensagem: erro.message }, { status: erro.status })
 }

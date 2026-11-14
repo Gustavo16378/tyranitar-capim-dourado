@@ -3,10 +3,11 @@
 import { expect, test } from '@playwright/test'
 import { aba, comToken, entrarNoPainelDaLoja, tokenNaTela } from './apoio'
 
-// Celular e computador usam o mesmo banco: cada um reserva um produto, para não se contarem.
-const PRODUTOS: Record<string, { id: string; nome: string }> = {
-  'e2e-celular': { id: 'p-sandalia', nome: 'Sandália de couro' },
-  'e2e-computador': { id: 'p-jaqueta', nome: 'Jaqueta corta-vento' },
+// Celular e computador usam o mesmo banco: cada um reserva um produto, para não se contarem. As
+// duas reservas do mesmo produto vão em tamanhos diferentes: a mesma reserva em aberto duas vezes é 409.
+const PRODUTOS: Record<string, { id: string; nome: string; tamanhos: { PIX: string; NA_LOJA: string } }> = {
+  'e2e-celular': { id: 'p-sandalia', nome: 'Sandália de couro', tamanhos: { PIX: '36', NA_LOJA: '37' } },
+  'e2e-computador': { id: 'p-jaqueta', nome: 'Jaqueta corta-vento', tamanhos: { PIX: 'P', NA_LOJA: 'M' } },
 }
 
 test('TE28: o cliente cancela a reserva na carteira e na tela da reserva, e a loja vê cancelada', async ({
@@ -20,7 +21,10 @@ test('TE28: o cliente cancela a reserva na carteira e na tela da reserva, e a lo
   const ana = comToken(await tokenNaTela(page))
 
   async function reservar(formaPagamento: 'PIX' | 'NA_LOJA') {
-    const resposta = await request.post('/api/reservas', { headers: ana, data: { produtoId: produto.id, formaPagamento } })
+    const resposta = await request.post('/api/reservas', {
+      headers: ana,
+      data: { produtoId: produto.id, formaPagamento, tamanho: produto.tamanhos[formaPagamento] },
+    })
     expect(resposta.status()).toBe(201)
     return ((await resposta.json()) as { id: string }).id
   }

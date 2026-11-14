@@ -33,13 +33,13 @@ test('TE01: Capi, reserva com Pix, mapa, atendimento pelo QR e pontos na carteir
     await aba(page, 'Capi').click()
     const conversa = await perguntarPeloTenisDaFoto(page)
     await expect(conversa.getByRole('heading', { name: /Tênis/ }).first()).toBeVisible()
-    await page.getByRole('button', { name: 'Sim, separar' }).click()
+    // A Capi não reserva: o "Reservar" do cartão abre a folha de reserva ali mesmo, na conversa.
+    await conversa.getByRole('button', { name: /^Reservar / }).first().click()
   })
 
   let reservaId = ''
   await test.step('reserva com Pix e pagamento simulado', async () => {
-    await expect(page).toHaveURL(/\/produto\//)
-    await page.getByRole('button', { name: 'Reservar' }).click()
+    await expect(page).toHaveURL(/\/capi$/)
     const folha = page.getByRole('dialog', { name: 'Como você quer reservar?' })
     await folha.getByRole('button', { name: /Pagar agora com Pix/ }).click()
     await expect(page).toHaveURL(/\/reserva\//)
@@ -112,18 +112,21 @@ test('TE02: pergunta à Capi e reserva para pagar na loja', async ({ page }) => 
   await page.getByRole('button', { name: 'Enviar', exact: true }).click()
   const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
   await expect(conversa.getByRole('heading', { name: /Perfume Cerrado/ })).toBeVisible()
-  await page.getByRole('button', { name: 'Sim, separar' }).click()
-
-  await expect(page.getByRole('heading', { name: 'Perfume Cerrado 100 ml' })).toBeVisible()
-  // O site dos testes tem o modo demonstração ligado: o produto avisa que os dados são fictícios.
-  await expect(page.getByText('Produtos, preços e buscas fictícios, para demonstração.')).toBeVisible()
-  await page.getByRole('button', { name: 'Reservar' }).click()
+  // O "Reservar" do cartão abre a mesma folha da tela do produto.
+  await conversa.getByRole('button', { name: 'Reservar Perfume Cerrado 100 ml' }).click()
   await page
     .getByRole('dialog', { name: 'Como você quer reservar?' })
     .getByRole('button', { name: /Pagar na loja/ })
     .click()
   await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible()
   await expect(page.getByText(/Expira em [34] h/)).toBeVisible()
+
+  // O site dos testes tem o modo demonstração ligado: o produto avisa que os dados são fictícios.
+  const reservaId = decodeURIComponent(new URL(page.url()).pathname.split('/').pop() ?? '')
+  await page.goto('/produto/p-perfume')
+  await expect(page.getByText('Produtos, preços e buscas fictícios, para demonstração.')).toBeVisible()
+  // A reserva sai no fim: a mesma reserva em aberto não pode ser feita de novo no outro projeto (409).
+  expect((await page.request.patch(`/api/reservas/${reservaId}/cancelar`, { headers: comToken(token) })).status()).toBe(200)
 })
 
 test('TE07: sem sessão, ou com ela vencida, volta para o login e depois para a tela pedida', async ({ page }) => {

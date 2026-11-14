@@ -57,7 +57,7 @@ export async function novaConversa(request: APIRequestContext, token: string) {
 
 /**
  * Na Capi vazia, toca na sugestão com a foto do tênis (ela só anexa a foto e preenche o campo) e
- * envia. A Capi responde o roteiro, e o botão de separar aparece no fim.
+ * envia. A Capi responde o roteiro, com os cartões dos tênis e o "Reservar" em cada um.
  */
 export async function perguntarPeloTenisDaFoto(page: Page) {
   const conversa = page.getByRole('log', { name: 'Conversa com a Capi' })
@@ -66,7 +66,7 @@ export async function perguntarPeloTenisDaFoto(page: Page) {
   await expect(page.getByRole('textbox', { name: 'Mensagem para a Capi' })).toHaveValue(PERGUNTA_DO_ROTEIRO)
   await page.getByRole('button', { name: 'Enviar', exact: true }).click()
   await expect(conversa.getByText(PERGUNTA_DO_ROTEIRO)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Sim, separar' })).toBeVisible()
+  await expect(conversa.getByRole('button', { name: /^Reservar Tênis/ }).first()).toBeVisible()
   return conversa
 }
 
