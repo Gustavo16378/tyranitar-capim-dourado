@@ -163,7 +163,8 @@ function Relatorio({ relatorio, atualizando }: { relatorio: DadosDoRelatorio; at
             linhas: [
               ['Retiradas', reservas.retiradas],
               ['Em aberto', reservas.emAberto],
-              ['Canceladas', reservas.canceladas],
+              ['Recusadas pela loja', reservas.recusadas],
+              ['Canceladas pelo cliente', reservas.canceladas],
               ['Expiradas', reservas.expiradas],
             ].map(([nome, n]) => [
               nome,
@@ -178,7 +179,7 @@ function Relatorio({ relatorio, atualizando }: { relatorio: DadosDoRelatorio; at
             <Vazio ilustracao="sacola" compacto>Nenhuma reserva neste período.</Vazio>
           )}
           <span className="sr-only">
-            {`Retiradas ${partes.retiradas}, em aberto ${partes.emAberto}, canceladas ou expiradas ${partes.perdidas}.`}
+            {`Retiradas ${partes.retiradas}, em aberto ${partes.emAberto}, recusadas pela loja ${partes.recusadas}, canceladas ou expiradas ${partes.perdidas}.`}
           </span>
         </CartaoGrafico>
       </div>
