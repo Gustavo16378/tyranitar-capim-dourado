@@ -1,6 +1,7 @@
 // O mapa sem "Você está aqui" inventado (docs/evidencias-testes.md, TE20): na primeira rota ele
 // pergunta por qual entrada o cliente chegou, lembra a resposta e aceita ?origem=<entrada> (o QR
-// de cada entrada). Sem resposta, a rota sai da entrada mais próxima.
+// de cada entrada). Sem resposta, a rota sai da entrada mais próxima. O TE29 troca a entrada pelo
+// botão ao lado de "Saindo da…" e tocando numa entrada no próprio mapa.
 import { expect, test } from '@playwright/test'
 import { comSessaoDaAna, dados } from './apoio'
 
@@ -52,4 +53,35 @@ test('TE20: o mapa pergunta a entrada, lembra a escolha e aceita ?origem= do QR'
   await qr.goto('/mapa?origem=p1-c34')
   await expect(qr.getByText(/Você está na Entrada A\./)).toBeVisible()
   await outro.close()
+})
+
+test('TE29: "Trocar a entrada" ao lado de "Saindo da…" e tocar numa entrada no mapa refaz a rota', async ({ page }) => {
+  await page.goto(`/mapa?loja=${LOJA_A}`)
+  await page.getByRole('region', { name: 'Por qual entrada você chegou?' }).getByRole('button', { name: 'Entrada B' }).click()
+  const saindo = page.getByText('Saindo da Entrada B.', { exact: true })
+  const trocar = page.getByRole('button', { name: 'Trocar a entrada' })
+  await expect(saindo).toBeVisible()
+  await expect(trocar).toBeVisible()
+
+  // O botão fica na linha do texto, logo à direita dele.
+  const texto = (await saindo.boundingBox())!
+  const botao = (await trocar.boundingBox())!
+  expect(Math.abs(texto.y + texto.height / 2 - (botao.y + botao.height / 2))).toBeLessThan(botao.height / 2)
+  expect(botao.x).toBeGreaterThanOrEqual(texto.x + texto.width)
+
+  // Tocar na etiqueta da Entrada A, no próprio mapa, escolhe ela e refaz a rota na hora.
+  const etiqueta = (nome: string) => page.locator('[aria-hidden="true"] span', { hasText: new RegExp(`^${nome}$`) })
+  await expect(etiqueta('Entrada A')).toBeVisible()
+  await etiqueta('Entrada A').click()
+  await expect(page.getByText('Saindo da Entrada A.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('img', { name: /com a rota da Entrada A até Loja A/ })).toBeVisible()
+  // A Entrada A virou "Você está aqui", e a B voltou a ter o nome (e a ser tocável).
+  await expect(etiqueta('Entrada A')).toHaveCount(0)
+  await expect(page.getByText('Você está aqui', { exact: true })).toHaveCount(1)
+  await expect(etiqueta('Entrada B')).toHaveCount(1)
+
+  // A escolha pelo mapa fica lembrada, como a da pergunta.
+  await page.reload()
+  await expect(page.getByText('Saindo da Entrada A.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Por qual entrada você chegou?' })).toHaveCount(0)
 })
