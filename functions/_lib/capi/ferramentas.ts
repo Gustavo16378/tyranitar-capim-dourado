@@ -8,6 +8,7 @@ import { acrescentarInteresses } from '../repo/fichas'
 import { buscarLojaAtiva, lojasDaCategoria } from '../repo/lojas'
 import { buscarProdutoAtivo, categoriasComProduto, listarProdutosAtivos, type ProdutoLinha } from '../repo/produtos'
 import { criarReserva, type ReservaCriada } from '../repo/reservas'
+import { lerEscolhas } from '../cliente/reservar'
 import { CATEGORIAS_DO_SHOPPING, ehCategoria } from '../regras/categorias'
 import type { Interesse } from '../regras/ficha'
 import { lerJson, normalizar, termosDaBusca, textosDoJson } from '../texto'
@@ -59,14 +60,18 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
     name: 'reservar',
     description:
       'Reserva um produto para o cliente retirar na loja. Só use depois que o cliente confirmar, na conversa, o ' +
-      'produto e a forma de pagamento. PIX: paga agora e fica separado por 48 horas. NA_LOJA: paga na retirada e ' +
-      'fica separado por 4 horas.',
+      'produto e a forma de pagamento. A loja confirma a reserva e avisa no app a partir de que horas fica pronta; ' +
+      'daí, PIX (pago agora) fica separado por 48 horas e NA_LOJA (paga na retirada), por 4 horas.',
     input_schema: {
       type: 'object',
       properties: {
         produto_id: { type: 'string' },
         forma_pagamento: { type: 'string', enum: ['PIX', 'NA_LOJA'] },
         quantidade: { type: 'integer', minimum: 1, maximum: 5, description: 'Padrão 1.' },
+        tamanho: {
+          type: 'string',
+          description: 'O tamanho ou o número que o cliente disse ("42", "M"), se o produto tiver. Sem ele, a loja combina no balcão.',
+        },
       },
       required: ['produto_id', 'forma_pagamento'],
       additionalProperties: false,
@@ -267,11 +272,15 @@ const executores: Record<string, (entrada: Record<string, unknown>, ctx: Context
       return { erro: true, conteudo: { erro: 'Já fiz uma reserva nesta mensagem. Para outra, confirme de novo com o cliente.' } }
     }
     try {
+      const produto = await buscarProdutoAtivo(ctx.db, produtoId)
+      const { tamanho, cor } = produto ? lerEscolhas(produto, entrada.tamanho, undefined) : { tamanho: null, cor: null }
       const reserva = await criarReserva(ctx.db, {
         clienteId: ctx.clienteId,
         produtoId,
         quantidade,
         formaPagamento: forma,
+        tamanho,
+        cor,
         agora: ctx.agora,
       })
       ctx.reservasFeitas++
@@ -281,7 +290,9 @@ const executores: Record<string, (entrada: Record<string, unknown>, ctx: Context
           reservaId: reserva.id,
           formaPagamento: reserva.formaPagamento,
           expiraEm: reserva.expiraEm,
-          observacao: forma === 'PIX' ? 'O app abre o Pix para o cliente pagar.' : 'O cliente paga na retirada.',
+          observacao:
+            (forma === 'PIX' ? 'O app abre o Pix para o cliente pagar. ' : 'O cliente paga na retirada. ') +
+            'A loja confirma e avisa no app a partir de que horas fica pronto.',
         },
         acao: { tipo: 'RESERVA_CRIADA', reserva },
       }

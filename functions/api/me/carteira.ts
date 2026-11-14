@@ -8,9 +8,9 @@ import { json } from '../../_lib/http'
 import { listarCuponsVigentes, paraVisibilidade, usosDoCliente } from '../../_lib/repo/cupons'
 import { nivelDoCliente } from '../../_lib/repo/fidelidade'
 import { categoriasDaFicha } from '../../_lib/repo/fichas'
-import { expirarVencidas, reservasAtivasDoCliente } from '../../_lib/repo/reservas'
+import { expirarVencidas, reservasAtivasDoCliente, valoresDaReserva } from '../../_lib/repo/reservas'
 import { buscarUsuarioPorId } from '../../_lib/repo/usuarios'
-import { clienteVeCupom } from '../../_lib/regras/cupons'
+import { clienteVeCupom, paraQueVale } from '../../_lib/regras/cupons'
 import { dataEmPalmas, deSqlite } from '../../_lib/regras/datas'
 
 export const onRequestGet: Rota = async ({ env, data }) => {
@@ -42,12 +42,20 @@ export const onRequestGet: Rota = async ({ env, data }) => {
         tipo: c.tipo,
         valor: c.valor,
         nivelMinimo: c.nivel_minimo,
+        // Para que vale: a categoria em que desconta ("Calçados"), ou null na loja toda (RN15).
+        categoria: paraQueVale({ categoria: c.categoria_alvo }),
       })),
     reservasAtivas: reservas.map((r) => ({
       id: r.id,
       produto: r.produto_nome,
       status: r.status,
       pago: r.pago === 1,
+      tamanho: r.tamanho,
+      cor: r.cor,
+      precoCentavos: valoresDaReserva(r).precoCentavos,
+      cupom: r.cupom_titulo,
+      // A hora que a loja informou ao confirmar: pronta para retirar a partir dela.
+      prontaEm: r.pronta_em ? deSqlite(r.pronta_em).toISOString() : null,
       expiraEm: deSqlite(r.expira_em).toISOString(),
       loja: { nome: r.loja_nome, piso: r.loja_piso, mapaId: r.loja_mapa_id },
     })),
