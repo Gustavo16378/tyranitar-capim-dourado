@@ -53,7 +53,6 @@ A API fica no mesmo domínio do site, sob `/api`, e fala JSON. Todas as rotas, m
 | `GET /api/me/dados` | CLIENTE | RF13 |
 | `GET /api/me/carteira` | CLIENTE | RF11 |
 | `GET /api/me/compras` | CLIENTE | RF11, RF16 |
-| `GET /api/me/historico` | CLIENTE | RF16 |
 | `POST /api/me/notas` | CLIENTE | RF12 |
 | `PUT /api/me/consentimento` | CLIENTE | RF13 |
 | `GET /api/me/notificacoes` | CLIENTE | RF14 |
