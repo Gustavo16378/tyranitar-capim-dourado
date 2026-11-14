@@ -1,10 +1,22 @@
-// Roda antes de toda rota /api: transforma erros em { status, erro, mensagem }, lê o JWT
-// e exige o perfil certo para cada área. As rotas soltas (POST /api/reservas, por exemplo)
-// conferem o perfil com exigirPerfil.
+// Roda antes de toda rota /api: marca a resposta com o X-Tyranitar, transforma erros em
+// { status, erro, mensagem }, lê o JWT e exige o perfil certo para cada área. As rotas soltas
+// (POST /api/reservas, por exemplo) conferem o perfil com exigirPerfil.
 import type { Perfil } from '../_lib/auth/jwt'
 import { lerToken } from '../_lib/auth/jwt'
 import { exigirPerfil, type Rota } from '../_lib/contexto'
 import { ErroApi, respostaDeErro } from '../_lib/erros'
+
+/** Easter egg do tema "O tirano da sexta-feira 13": o cabeçalho de toda resposta da API. */
+const CABECALHO_TIRANO = ['X-Tyranitar', 'ontem foi sexta-feira 13'] as const
+
+// Fica antes de tratarErros para marcar também as respostas de erro. A resposta é copiada
+// porque a de um fetch ou de um redirect não deixa mudar os cabeçalhos.
+const marcarTirano: Rota = async (context) => {
+  const resposta = await context.next()
+  const marcada = new Response(resposta.body, resposta)
+  marcada.headers.set(...CABECALHO_TIRANO)
+  return marcada
+}
 
 const tratarErros: Rota = async (context) => {
   try {
@@ -38,4 +50,4 @@ const autenticar: Rota = async (context) => {
   return context.next()
 }
 
-export const onRequest = [tratarErros, autenticar]
+export const onRequest = [marcarTirano, tratarErros, autenticar]
