@@ -72,8 +72,8 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TU12 | Cupom acima do limite de usos do cliente | RN06 | Erro `CUPOM_INVALIDO` |
 | TU13 | Cupom com nível mínimo acima do nível do cliente | RF06 | Erro `CUPOM_INVALIDO` |
 | TU14 | Ordem dos descontos | RN05 | Cupom da loja calcula sobre o valor bruto; o voucher do shopping é subtraído depois |
-| TU15 | Prazo de reserva para pagar na loja criada às 10h | RN01 | Expira às 14h |
-| TU16 | Prazo de reserva paga por Pix | RN02 | Expira 48 h depois do pagamento |
+| TU15 | Reserva pendente criada às 10h | RN01 | A loja tem até as 14h para confirmar |
+| TU16 | Prazo para retirar depois da confirmação | RN01, RN02 | Conta da hora em que fica pronta: 4 h para pagar na loja, 48 h com o Pix pago |
 | TU17 | Reserva lida depois do prazo | RN01 | Tratada como `EXPIRADA` |
 | TU18 | Todas as transições permitidas da máquina de estados | RF20 | Aceitas |
 | TU19 | Transições proibidas (`RETIRADA` para `CANCELADA`, `EXPIRADA` para `SEPARADA`) | RF20 | Erro `TRANSICAO_INVALIDA` |
@@ -96,6 +96,10 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TU36 | Easter egg: os personagens da equipe | Easter egg | Os nomes dos PNGs sem acento (`kaua-apontando.png`) e a inicial do avatar sem PNG |
 | TU37 | Easter egg: `tyranitar()` no console | Easter egg | O evento do console começa o apagão, como o botão da Capi |
 | TU38 | Aparência Automático, Claro ou Escuro | RNF08 | A escolha fica salva no aparelho; o tema da página segue a escolha, ou o escuro do modo tirano; o script do `index.html` dá o mesmo tema em toda combinação |
+| TU39 | Cupom da loja com categoria numa compra com itens | RN15 | "10% em calçados" numa compra só com camiseta é recusado com a mensagem "vale só para calçados"; com tênis e camiseta, desconta só no tênis; o valor avulso ("Outros") nunca entra; sem categoria, vale na compra toda |
+| TU40 | O desconto item por item | RN05, RN06, RN15 | O cupom da loja calcula sobre os itens dele e o voucher sobre o que sobrou de todos; no máximo um de cada; validade, nível e uso único valem; a repartição soma sempre o total, sem centavo a mais nem a menos |
+| TU41 | A reserva no balcão | RN15 | O cupom da reserva vale como prometido, mesmo vencido, e conta no limite da compra; o item pago com Pix entra no valor e nos pontos, mas o caixa não cobra e nenhum cupom do caixa desconta nele |
+| TU42 | A hora "pronta a partir de" | RN01, RNF11 | `HH:MM` no horário de Palmas, hoje, ou amanhã se já passou há mais de uma hora; sem hora, pronta agora; formato errado, 400 |
 
 ### Banco (TB)
 
@@ -136,7 +140,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA12 | Reserva com Pix e pagamento | RF09, RN02 | Reserva paga, expira 48 h depois do pagamento |
 | TA13 | Reserva de produto sem estoque | RN03 | 409 `SEM_ESTOQUE` |
 | TA14 | Duas reservas ao mesmo tempo da última unidade | RN03 | Uma 201 e outra 409; estoque final 0 |
-| TA15 | Cancelar reserva | RN03 | Estoque devolvido e status `CANCELADA` |
+| TA15 | Cancelar ou recusar reserva | RN03 | Estoque devolvido e status `CANCELADA` ou `RECUSADA` |
 | TA16 | Pagar reserva expirada | RN01 | 409 `TRANSICAO_INVALIDA` e estoque devolvido |
 | TA17 | Carteira | RF11 | Pontos, nível, cupons e reservas ativas corretos |
 | TA18 | Nota fiscal válida | RF12 | 201, compra com origem `NOTA` e pontos somados |
@@ -148,7 +152,7 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA24 | Resposta do atendimento | RNF06 | Nunca contém mensagens da conversa |
 | TA25 | Compra no caixa com cupom da loja e voucher do shopping | RF19, RN05, RN07, RN11 | Descontos certos, pontos sobre o valor pago, reembolso pendente criado |
 | TA26 | Compra com dois cupons da mesma loja | RN05 | 422 `CUPONS_INCOMPATIVEIS` e nada gravado |
-| TA27 | Compra retirando uma reserva, duas vezes | RF19 | Primeira 201 e reserva `RETIRADA`; segunda 409 |
+| TA27 | Compra retirando uma reserva, duas vezes | RF19 | Primeira 201 e reserva `RETIRADA` (paga por Pix: o caixa não cobra, os pontos entram); segunda 409; reserva pendente, 409 "Confirme a reserva antes de entregar." |
 | TA28 | Transição de reserva proibida pelo painel | RF20 | 409 `TRANSICAO_INVALIDA` |
 | TA29 | Importar CSV com uma linha ruim | RF22 | Linhas boas importadas e erro da linha ruim listado |
 | TA30 | Relatórios da loja sobre o seed de teste | RF24 | Mais vendidos e não encontrados batem com os dados |
@@ -166,6 +170,12 @@ A Capi nunca chama o Claude de verdade nos testes automáticos: as respostas do 
 | TA42 | Salvar e tirar dos favoritos (`PUT` e `DELETE /api/me/favoritos/{produtoId}`) | RF16 | O produto salvo aparece primeiro em `GET /api/me/favoritos`; salvar de novo é 204 sem mudar a data; produto inativo ou inexistente é 404 sem salvar; tirar só mexe nos do cliente logado e repetir é 204; sem login 401, lojista 403 |
 | TA43 | Minhas compras (`GET /api/me/compras`) | RF11, RF16 | As compras do cliente, da mais nova para a mais antiga, com loja, data, valor pago, cupons (o maior desconto primeiro) e pontos; paginação como as outras listas; outro cliente não vê; sem login 401, lojista 403 |
 | TA44 | Página da loja (`GET /api/lojas/{id}`) | RF07, RF10 | A loja ativa no formato da lista, também sem login; unidade vaga ou id que não existe, 404; os produtos dela por `GET /api/produtos?loja=` |
+| TA45 | A loja confirma com a hora (`PATCH /api/loja/reservas/{id}`) | RF20, RN01, RF14 | `CONFIRMADA` com `prontaAs`: `prontaEm` na hora de Palmas e o prazo para retirar contando dela; a cliente recebe "Loja A confirmou sua reserva", que leva à reserva; depois, `SEPARADA` com o aviso "Sua reserva está separada"; pendente, separar sem confirmar é 409; hora fora do formato, 400 |
+| TA46 | "10% em calçados" numa camiseta | RN15 | 422 `CUPOM_INVALIDO` com "vale só para calçados, e a compra não tem itens dessa categoria"; cupom de categoria num valor avulso, 422; com o tênis junto, desconta só no tênis |
+| TA47 | Compra com reserva, produto do catálogo e valor avulso | RF19 | 201 com os três itens, a reserva `RETIRADA`, três linhas em `compra_item` e os avisos da retirada e dos pontos; o corpo antigo (`valorCentavos` sem itens) vira "Outros" |
+| TA48 | A loja recusa com motivo | RF20, RN03, RN15 | `RECUSADA` com o motivo, que a cliente vê no aviso; o estoque volta, o estorno do Pix é pedido e o cupom volta a valer no balcão; sem motivo, 400; pedir `CANCELADA` ou `RETIRADA` pelo painel é 400, com o caminho certo na mensagem |
+| TA49 | Cupom na reserva (`GET /api/produtos/{id}/cupons` e `POST /api/reservas`) | RF08, RN15 | Os cupons que valem para o tênis (o de calçados e o voucher, não o de camisetas) e os tamanhos dele; o preço e o Pix saem com o desconto; o cupom preso some da carteira, do balcão e da próxima reserva, e volta quando a reserva é cancelada; tamanho que não existe, 400 |
+| TA50 | Avisos do cliente (`GET /api/me/notificacoes` e `POST .../lidas`) | RF14 | Cada mudança da reserva vira um aviso, do mais novo para o mais antigo, com o selo do Início e o da Carteira; outro cliente não vê; marcar como lidos zera os dois; tipo desconhecido, 400 |
 
 ### Capi (TI)
 
@@ -196,8 +206,8 @@ Com o Claude simulado:
 
 | ID | Jornada | Cobre | Resultado esperado |
 | --- | --- | --- | --- |
-| TE01 | Cadastro, chat com foto, reserva com Pix, pagamento, mapa, atendimento pelo QR, compra e carteira | RF01, RF03, RF09, RF10, RF18, RF19, RF11 | Ao final, a carteira mostra os pontos novos |
-| TE02 | Busca, produto, reserva para pagar na loja | RF05, RF07, RF08 | Reserva aparece no histórico |
+| TE01 | Cadastro, chat com foto, reserva com Pix, pagamento, mapa, a loja confirma com a hora e separa, atendimento pelo QR, compra e carteira | RF01, RF03, RF09, RF10, RF14, RF18, RF19, RF20, RF11 | A reserva mostra "Reserva confirmada" e "Pronta para retirar a partir das 23:59"; ao final, a carteira mostra os pontos novos |
+| TE02 | Busca, produto, reserva para pagar na loja | RF05, RF07, RF08 | "Reserva enviada", e a reserva aparece na carteira esperando a loja |
 | TE03 | Lojista cria cupom | RF23, RF06 | O cupom aparece na vitrine do cliente |
 | TE04 | Lojista importa CSV | RF22, RF05 | Os produtos aparecem na busca |
 | TE05 | Shopping altera os níveis | RF28 | A carteira do cliente muda de nível |
@@ -241,7 +251,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | TX01 | Login e cadastro |
 | TX02 | Chat com a Capi, incluindo navegação só pelo teclado |
 | TX03 | Vitrine e busca |
-| TX04 | Página do produto e reserva |
+| TX04 | Página do produto e reserva, com a folha de reservar mostrando o tamanho e o cupom |
 | TX05 | Carteira com o QR |
 | TX06 | Atendimento do painel da loja, incluindo navegação só pelo teclado |
 | TX07 | Relatórios do painel da loja (gráficos com texto alternativo) |
@@ -276,19 +286,19 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF05 Buscar | TA07, TE02, TE04 |
 | RF06 Vitrine | TA10, TU13, TE03, TE11, TE12 |
 | RF07 Produto | TA09, TA44, TE02, TE35 |
-| RF08 Reservar na loja | TA11, TA15, TA40, TI03, TE02, TE28 |
+| RF08 Reservar na loja | TA11, TA15, TA40, TA49, TI03, TE02, TE28 |
 | RF09 Reservar com Pix | TA12, TA40, TB06, TB16, TE01, TE28 |
 | RF10 Mapa e rota | TA44, TE01, TE09, TE20, TE27, TE29, TE35, TM01 |
 | RF11 Carteira | TU05, TA17, TA43, TE01, TE28, TE34 |
 | RF12 Nota fiscal | TU22, TA18 |
 | RF13 Consentimento | TA21, TA38, TA39, TE06, TE13, TE14 |
-| RF14 Notificações | TE01 (notificação de pontos) |
+| RF14 Notificações | TA45, TA47, TA48, TA50, TE01 |
 | RF15 Avaliar | TA22, TB11 |
 | RF16 Favoritos e histórico | TA42, TA43, TE02, TE33, TE34 |
 | RF17 Login do lojista | TA03, TE03 |
 | RF18 Atendimento | TA23, TA24, TE01, TE06, TM03 |
-| RF19 Compra no caixa | TU06, TU07, TA25, TA27, TB08 |
-| RF20 Gerir reservas | TU18, TU19, TA28, TB05, TE28 |
+| RF19 Compra no caixa | TU06, TU07, TU39 a TU41, TA25, TA27, TA46, TA47, TB08 |
+| RF20 Gerir reservas | TU18, TU19, TU42, TA28, TA45, TA48, TB05, TE01, TE28 |
 | RF21 Produtos | TB12 |
 | RF22 Importar CSV | TU27, TU28, TA29, TE04 |
 | RF23 Cupons da loja | TB15, TE03 |
@@ -299,10 +309,10 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RF29 Demanda | TA08, TA33 |
 | RF30 Jornada | TA30 (conversão com ficha) |
 | RF31 Reembolsos | TA34, TB10 |
-| RN01 e RN02 Prazos | TU15, TU16, TU17, TA11, TA12, TA16 |
-| RN03 Estoque | TB04, TB14, TA13, TA14, TA15, TA40 |
+| RN01 e RN02 Prazos | TU15, TU16, TU17, TU42, TA11, TA12, TA16, TA45 |
+| RN03 Estoque | TB04, TB14, TA13, TA14, TA15, TA40, TA48 |
 | RN04 Ficha | TU20, TU21, TB13, TA23, TI04 |
-| RN05 e RN06 Cupons | TU08 a TU14, TB09, TA25, TA26 |
+| RN05 e RN06 Cupons | TU08 a TU14, TU40, TB09, TA25, TA26 |
 | RN07 e RN08 Pontos e níveis | TU01 a TU04, TA25, TA32 |
 | RN09 Nota única | TU23, TU24, TB07, TA19, TA20 |
 | RN10 Avaliação | TB11, TA22 |
@@ -310,6 +320,7 @@ Cada tela abaixo passa pelo axe-core e não pode ter violação de impacto `seri
 | RN12 Demanda anônima | TA08, TA33 |
 | RN13 Comparativo | TU30 |
 | RN14 Capi não inventa | TI02, TI10, TI13 |
+| RN15 Cupom por categoria e na reserva | TU39, TU40, TU41, TA46, TA48, TA49 |
 | RNF01 PWA | TE08, TE10, TM02, TM06 |
 | RNF02 Tempo de resposta | TA35, TM06 |
 | RNF04 e RNF05 Segurança e isolamento | TU25, TU26, TA04, TA05, TA06, TA36 |
