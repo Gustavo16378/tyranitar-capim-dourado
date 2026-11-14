@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { listarLojas, useDados, useSessao } from '../api'
 import { Badge, Button, Icon, type IconName } from '../componentes'
 import { cx } from '../componentes/cx'
 import { APP_NOME } from '../config'
+import { EQUIPE } from '../easter-egg/equipe'
+import { Personagem } from '../easter-egg/Personagem'
+import { useModoTirano } from '../easter-egg/useModoTirano'
 import { acharNaPlanta, rotaAte } from '../mapa/dados'
 import {
   acharEntrada,
@@ -102,6 +105,9 @@ function MapaAte({
   const achado = destino ? acharNaPlanta(destino) : undefined
   const [piso, setPiso] = useState<Piso>(achado?.piso ?? doLink?.piso ?? 1)
   const abas = useRef<(HTMLButtonElement | null)[]>([])
+  const navigate = useNavigate()
+  // O modo tirano (docs/easter-egg.md): o mapa no escuro, com a trilha até a Loja 13.
+  const { ligado: escuro } = useModoTirano()
   const controle = useRef<ControleDoMapa>(null)
   // A entrada por onde o cliente chegou, em cada piso: a do QR, a lembrada ou nenhuma ainda.
   const [escolhas, setEscolhas] = useState<Partial<Record<Piso, string>>>(() => {
@@ -143,18 +149,22 @@ function MapaAte({
     abas.current[proximo - 1]?.focus()
   }
 
-  const descricao =
-    rota && naTela
+  const naTrilha = escuro && piso === 1 && !destino
+  const descricao = naTrilha
+    ? 'Mapa do térreo no escuro, com uma trilha de rachaduras da Entrada B até a Loja 13.'
+    : rota && naTela
       ? `Mapa do ${nomeDoPiso(piso).toLowerCase()} com a rota da ${naRota?.nome ?? 'entrada mais próxima'} até ${daLoja}, ${Math.round(rota.metros)} metros.`
       : `Mapa do ${nomeDoPiso(piso).toLowerCase()} do Capim Dourado Shopping.`
 
   return (
     <div className="flex flex-col gap-4 px-4 py-6 md:h-full">
-      <title>{nome ? `Rota até ${nome} · ${APP_NOME}` : `Mapa · ${APP_NOME}`}</title>
-      <header className="flex items-start justify-between gap-3">
+      <title>
+        {nome ? `Rota até ${nome} · ${APP_NOME}` : escuro ? `Mapa no escuro · ${APP_NOME}` : `Mapa · ${APP_NOME}`}
+      </title>
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-body-sm text-ink-muted">{nome ? 'Rota até' : 'Mapa do shopping'}</p>
-          <h1 className="mt-0.5 text-title-md">{nome ?? (destino ? 'Rota até a loja' : 'Mapa')}</h1>
+          <h1 className="mt-0.5 text-title-md">{nome ?? (destino ? 'Rota até a loja' : escuro ? 'Mapa no escuro' : 'Mapa')}</h1>
         </div>
         <div role="tablist" aria-label="Piso" className="flex flex-none rounded-pill bg-surface-sunken p-1">
           {PISOS.map((n) => (
@@ -198,6 +208,8 @@ function MapaAte({
             onSelecionarLoja={aoEscolher}
             onSelecionarEntrada={escolher}
             controle={controle}
+            escuro={escuro}
+            onLoja13={() => navigate('/loja-13')}
           />
         </div>
         {/* Fora do role="img", para o leitor de tela achar os botões. */}
@@ -212,13 +224,35 @@ function MapaAte({
         </div>
       </div>
 
+      {naTrilha && (
+        <section aria-labelledby="titulo-trilha" className="flex flex-col items-start gap-3 rounded-md border bg-surface-raised p-4">
+          <div className="flex -space-x-3">
+            {EQUIPE.map((pessoa) => (
+              <Personagem key={pessoa.nome} nome={pessoa.nome} pose="apontando" className="size-10 ring-2 ring-surface-raised" />
+            ))}
+          </div>
+          <div>
+            <h2 id="titulo-trilha" className="text-label">
+              Siga as rachaduras até a Loja 13
+            </h2>
+            <p className="mt-1 text-body-sm text-ink-muted">
+              As luzes do shopping se apagaram. Passe o dedo ou o mouse para iluminar com a lanterna: a trilha sai da
+              Entrada B. Toque na Loja 13 para entrar.
+            </p>
+          </div>
+          <Button size="sm" variant="secondary" icon="seta" onClick={() => navigate('/loja-13')}>
+            Entrar na Loja 13
+          </Button>
+        </section>
+      )}
+
       <div className="flex flex-col items-start gap-2">
         {rota && naTela && (
           <Badge tone="ouro" icon="pin">
             {minutosAPe(rota.metros)} min a pé · {Math.round(rota.metros)} m
           </Badge>
         )}
-        {destino && achado?.piso === piso ? (
+        {naTrilha ? null : destino && achado?.piso === piso ? (
           <>
             {/* De onde a rota sai, com o botão de trocar logo ao lado. Tocar numa entrada no
                 mapa também troca, e a rota é refeita na hora. */}

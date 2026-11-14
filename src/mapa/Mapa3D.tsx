@@ -10,6 +10,7 @@ import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref, ty
 import * as THREE from 'three'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { cx } from '../componentes/cx'
+import { LOJA_13, trilhaDeRachaduras } from '../easter-egg/lugarDaLoja13'
 import { comMovimento, DURACAO, EASE } from '../movimento'
 import { useCoresDoMapa, type CoresDoMapa } from './cores'
 import { acharNaPlanta, CAIXAS, GRAFO, LOJAS_DA_PLANTA, PLANTAS, rotaAte } from './dados'
@@ -94,6 +95,13 @@ export interface Mapa3DProps {
   onSelecionarEntrada?: (entradaId: string) => void
   /** Para os botões de aproximar, afastar e recentralizar. */
   controle?: Ref<ControleDoMapa>
+  /**
+   * O mapa no escuro do modo tirano (docs/easter-egg.md): as luzes apagadas, uma lanterna que segue
+   * o dedo ou o mouse e, no térreo, a trilha de rachaduras até a Loja 13, que só existe assim.
+   */
+  escuro?: boolean
+  /** Tocar na Loja 13 do mapa no escuro. */
+  onLoja13?: () => void
 }
 
 interface Bloco {
@@ -127,6 +135,7 @@ function Prisma({
   cor,
   realce,
   contorno,
+  brilho,
   ...eventos
 }: {
   formas: THREE.Shape[]
@@ -136,6 +145,8 @@ function Prisma({
   realce?: string
   /** Cor do contorno das arestas (as lojas; o chão fica sem). */
   contorno?: string
+  /** Quanto o bloco brilha sozinho, sem luz (a Loja 13 no escuro). */
+  brilho?: number
   onClick?: (e: ThreeEvent<MouseEvent>) => void
   onPointerOver?: (e: ThreeEvent<PointerEvent>) => void
   onPointerOut?: (e: ThreeEvent<PointerEvent>) => void
@@ -147,7 +158,7 @@ function Prisma({
   useEffect(() => () => geometria.dispose(), [geometria])
   return (
     <mesh geometry={geometria} rotation-x={Math.PI / 2} position-y={base + altura} {...eventos}>
-      <meshLambertMaterial color={cor} emissive={realce ?? cor} emissiveIntensity={realce ? 0.35 : 0} />
+      <meshLambertMaterial color={cor} emissive={realce ?? cor} emissiveIntensity={brilho ?? (realce ? 0.35 : 0)} />
       {contorno && <Edges color={contorno} threshold={20} />}
     </mesh>
   )
@@ -292,6 +303,67 @@ function useControleDoMapa(controle: Ref<ControleDoMapa> | undefined, recentrali
   }, [camera, controls, invalidate, recentralizar])
 }
 
+/**
+ * A lanterna do mapa no escuro: uma luz acima do chão que vai para onde o dedo ou o mouse está
+ * (o ponto do chão debaixo do ponteiro). Arrastar para girar o mapa também leva a luz junto.
+ */
+function Lanterna({ caixa, inicio, cor }: { caixa: Caixa; inicio: { x: number; y: number }; cor: string }) {
+  const { gl, camera, invalidate } = useThree()
+  const luz = useRef<THREE.PointLight>(null)
+  const altura = Math.max(caixa.largura, caixa.altura) * 0.07
+  useEffect(() => {
+    const tela = gl.domElement
+    const raio = new THREE.Raycaster()
+    const chao = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+    const ponto = new THREE.Vector3()
+    const ndc = new THREE.Vector2()
+    const seguir = (evento: PointerEvent) => {
+      const caixaDaTela = tela.getBoundingClientRect()
+      ndc.set(
+        ((evento.clientX - caixaDaTela.left) / caixaDaTela.width) * 2 - 1,
+        -((evento.clientY - caixaDaTela.top) / caixaDaTela.height) * 2 + 1,
+      )
+      raio.setFromCamera(ndc, camera)
+      if (luz.current && raio.ray.intersectPlane(chao, ponto)) {
+        luz.current.position.set(ponto.x, altura, ponto.z)
+        invalidate()
+      }
+    }
+    tela.addEventListener('pointermove', seguir)
+    tela.addEventListener('pointerdown', seguir)
+    return () => {
+      tela.removeEventListener('pointermove', seguir)
+      tela.removeEventListener('pointerdown', seguir)
+    }
+  }, [gl, camera, invalidate, altura])
+  // Forte no centro e sumindo em uns 1,5 × a altura: um círculo de luz, não o piso inteiro.
+  return (
+    <pointLight
+      ref={luz}
+      position={[inicio.x, altura, inicio.y]}
+      color={cor}
+      intensity={Math.PI * 1.4 * altura * altura}
+      distance={altura * 4}
+      decay={2}
+    />
+  )
+}
+
+/** A trilha de rachaduras até a Loja 13 (lugarDaLoja13.ts): linhas sem luz própria, que brilham no escuro. */
+function TrilhaDeRachaduras({ altura, cor }: { altura: number; cor: string }) {
+  const { tronco, galhos } = useMemo(() => trilhaDeRachaduras(), [])
+  return (
+    <group>
+      <Line points={tronco.map((p) => [p.x, altura, p.y] as const)} color={cor} lineWidth={3} />
+      {galhos.map((galho, i) => (
+        <Line key={i} points={galho.map((p) => [p.x, altura, p.y] as const)} color={cor} lineWidth={2} />
+      ))}
+    </group>
+  )
+}
+
+const FORMAS_DA_LOJA_13 = [new THREE.Shape(LOJA_13.pontos.map((p) => new THREE.Vector2(p.x, p.y)))]
+
 function Cena({
   piso,
   destino,
@@ -300,6 +372,8 @@ function Cena({
   onSelecionarLoja,
   onSelecionarEntrada,
   controle,
+  escuro,
+  onLoja13,
   sobre,
   setSobre,
   etiquetas,
@@ -310,7 +384,9 @@ function Cena({
   etiquetas: Etiqueta[]
   elementos: RefObject<Map<string, HTMLElement>>
 }) {
-  const cores = useCoresDoMapa()
+  // No escuro, as lojas têm as cores do tema claro: a lanterna mostra cada uma como ela é.
+  const cores = useCoresDoMapa(escuro ? 'light' : undefined)
+  const comTrilha = Boolean(escuro && piso === LOJA_13.piso)
   const [vez, setVez] = useState(0)
   const recentralizar = useMemo(() => () => setVez((v) => v + 1), [])
   useControleDoMapa(controle, recentralizar)
@@ -328,9 +404,15 @@ function Cena({
   const rota = useMemo(() => (destinoAqui ? rotaAte(destinoAqui, origemAqui) : null), [destinoAqui, origemAqui])
   const proporcao = useThree((s) => s.size.width / Math.max(1, s.size.height))
   const { alvo, posicao } = useMemo(
-    () => enquadrar(caixa, rota ? [...rota.pontos, ...achado!.loja.pontos] : [], proporcao),
+    () =>
+      enquadrar(
+        caixa,
+        // No escuro, sem loja buscada, a câmera abre na trilha até a Loja 13.
+        rota ? [...rota.pontos, ...achado!.loja.pontos] : comTrilha ? [...trilhaDeRachaduras().tronco, ...LOJA_13.pontos] : [],
+        proporcao,
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- achado muda junto com a rota
-    [caixa, rota, proporcao],
+    [caixa, rota, proporcao, comTrilha],
   )
 
   useEffect(() => {
@@ -345,8 +427,18 @@ function Cena({
 
   return (
     <>
-      <ambientLight intensity={1.7} />
-      <directionalLight position={[caixa.x, Math.max(caixa.largura, caixa.altura), caixa.y]} intensity={1.6} />
+      {/* No escuro, quase nenhuma luz: o que se vê é a lanterna, a trilha e a Loja 13. */}
+      <ambientLight intensity={escuro ? 0.08 : 1.7} />
+      {!escuro && (
+        <directionalLight position={[caixa.x, Math.max(caixa.largura, caixa.altura), caixa.y]} intensity={1.6} />
+      )}
+      {escuro && (
+        <Lanterna
+          caixa={caixa}
+          inicio={comTrilha ? trilhaDeRachaduras().tronco[0] : { x: caixa.x + caixa.largura / 2, y: caixa.y + caixa.altura / 2 }}
+          cor={cores.lanterna}
+        />
+      )}
       <OrbitControls
         makeDefault
         enableDamping={false}
@@ -366,7 +458,8 @@ function Cena({
             base={ESPESSURA_DO_PISO}
             altura={eDestino ? altura * 2.2 : altura}
             cor={corDaLoja(bloco.id)}
-            contorno={cores.borda}
+            // As arestas não pegam luz: no escuro, elas acenderiam a planta inteira.
+            contorno={escuro ? undefined : cores.borda}
             realce={sobre === bloco.id ? cores.borda : undefined}
             onPointerOver={(e) => {
               e.stopPropagation()
@@ -382,7 +475,29 @@ function Cena({
         )
       })}
 
-      {nomes && (
+      {comTrilha && (
+        <>
+          <TrilhaDeRachaduras altura={ESPESSURA_DO_PISO + 0.05} cor={cores.rachadura} />
+          <Prisma
+            formas={FORMAS_DA_LOJA_13}
+            base={ESPESSURA_DO_PISO}
+            altura={altura * 1.8}
+            cor={cores.rachadura}
+            brilho={0.55}
+            onPointerOver={(e) => {
+              e.stopPropagation()
+              setSobre(() => LOJA_13.mapaId)
+            }}
+            onPointerOut={() => setSobre((atual) => (atual === LOJA_13.mapaId ? null : atual))}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (e.delta <= 6) onLoja13?.()
+            }}
+          />
+        </>
+      )}
+
+      {nomes && !escuro && (
         <RotulosDasLojas
           piso={piso}
           nomes={nomes}
@@ -431,7 +546,7 @@ function Cena({
 
 /** O mapa 3D de um piso. Ocupa o pai: dê a altura pelo contêiner. */
 export function Mapa3D(props: Mapa3DProps) {
-  const { piso, destino, nomes, origem, onSelecionarEntrada } = props
+  const { piso, destino, nomes, origem, onSelecionarEntrada, escuro } = props
   const caixa = CAIXAS[piso]
   const inicial = enquadrar(caixa, [], 1)
   const [sobre, setSobre] = useState<string | null>(null)
@@ -440,10 +555,21 @@ export function Mapa3D(props: Mapa3DProps) {
   const achado = destino ? acharNaPlanta(destino) : undefined
   const destinoAqui = achado?.piso === piso ? destino : undefined
   const origemAqui = acharEntrada(origem)?.piso === piso ? origem : undefined
-  const etiquetas = useMemo(
-    () => etiquetasDoPiso(piso, { destinoAqui, origem: origemAqui, sobre, nomes, grandes }),
-    [piso, destinoAqui, origemAqui, sobre, nomes, grandes],
-  )
+  const etiquetas = useMemo(() => {
+    if (!escuro) return etiquetasDoPiso(piso, { destinoAqui, origem: origemAqui, sobre, nomes, grandes })
+    // No escuro, os nomes das lojas somem: ficam as entradas, a loja buscada e a Loja 13.
+    const acesas = etiquetasDoPiso(piso, { destinoAqui, origem: origemAqui, sobre: null, nomes, grandes: new Set() }).filter(
+      (e) => e.entrada || e.estilo === 'escolhida',
+    )
+    if (piso !== LOJA_13.piso) return acesas
+    const loja13: Etiqueta = {
+      id: LOJA_13.mapaId,
+      texto: 'Loja 13',
+      posicao: [LOJA_13.centro.x, ESPESSURA_DO_PISO + alturaDoPiso(caixa) * 2.6, LOJA_13.centro.y],
+      estilo: 'escolhida',
+    }
+    return [...acesas, loja13]
+  }, [piso, destinoAqui, origemAqui, sobre, nomes, grandes, escuro, caixa])
   return (
     <div className="relative size-full">
       <Canvas
