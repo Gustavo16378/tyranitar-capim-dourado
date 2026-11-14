@@ -2,26 +2,29 @@
 // janela, como na demonstração. Ela reserva com tamanho e cupom; o painel avisa a reserva nova no
 // selo do menu; a loja confirma com a hora, e a Ana vê a hora e o aviso; a loja separa; no
 // Atendimento, a reserva sai junto com um produto do catálogo; e os pontos chegam na carteira.
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { devices, expect, test, type Locator, type Page } from '@playwright/test'
 import { formatarNumero, formatarPreco } from '../../src/componentes/formatar'
 import { aba, comSessaoDaAna, comToken, entrarNoPainelDaLoja, pontosDaAna } from './apoio'
 
-// Celular e computador usam o mesmo banco, e cada cupom vale uma vez: cada um reserva um produto
-// com um cupom diferente. O voucher do shopping fica livre para a folha de reservar do TX04.
-const ROTEIROS = {
-  'e2e-celular': {
-    reserva: { id: 'p-run', nome: 'Tênis Run 2 preto', tamanho: '41', precoCentavos: 34990 },
-    cupom: { titulo: '10% em calçados', descontoCentavos: 3499 },
-    pix: true,
-    doCatalogo: { busca: 'camiseta', nome: 'Camiseta dry-fit', precoCentavos: 7990 },
-  },
-  'e2e-computador': {
-    reserva: { id: 'p-camiseta', nome: 'Camiseta dry-fit', tamanho: 'M', precoCentavos: 7990 },
-    cupom: { titulo: 'R$ 15 em camisetas', descontoCentavos: 1500 },
-    pix: false,
-    doCatalogo: { busca: 'sandália', nome: 'Sandália de couro', precoCentavos: 15990 },
-  },
-} as const
+// O cupom da Ana vale uma vez e o banco é o mesmo para os dois projetos: o TE36 roda uma vez só,
+// no projeto do computador, com a Ana num contexto de celular (o mesmo do e2e-celular) e o painel
+// noutro de computador. No computador, ele roda depois do TE11 (inicio.spec.ts), que precisa dos
+// quatro cupons da Ana para a faixa do Início passar da tela. O voucher do shopping fica livre
+// para a folha de reservar do TX04.
+const ROTEIRO = {
+  reserva: { id: 'p-run', nome: 'Tênis Run 2 preto', tamanho: '41', precoCentavos: 34990 },
+  cupom: { titulo: '10% em calçados', descontoCentavos: 3499 },
+  pix: true,
+  doCatalogo: { busca: 'camiseta', nome: 'Camiseta dry-fit', precoCentavos: 7990 },
+}
+
+const CELULAR = {
+  ...devices['Desktop Chrome'],
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 3,
+  isMobile: true,
+  hasTouch: true,
+}
 
 /** O link Reservas do menu lateral, com o selo das novas: "Reservas, 2 reservas novas". */
 const menu = (painel: Page) => painel.getByRole('navigation', { name: 'Telas do painel' })
@@ -42,13 +45,15 @@ async function novasNoSelo(painel: Page) {
 }
 
 test('TE36: a Ana reserva com cupom, a loja confirma com a hora, separa e entrega no balcão com um item do catálogo', async ({
-  page,
   browser,
   baseURL,
 }, info) => {
+  test.skip(info.project.name !== 'e2e-computador', 'uma vez só: a Ana fica num contexto de celular próprio')
   // Espera o aviso do painel, que pergunta à API a cada 20 s.
   test.setTimeout(150_000)
-  const roteiro = ROTEIROS[info.project.name as keyof typeof ROTEIROS]
+  const roteiro = ROTEIRO
+  const celular = await browser.newContext({ ...CELULAR, baseURL })
+  const page = await celular.newPage()
   const { token } = await comSessaoDaAna(page)
   const pontosAntes = await pontosDaAna(page.request, token)
   const precoDaReserva = roteiro.reserva.precoCentavos - roteiro.cupom.descontoCentavos
@@ -175,4 +180,5 @@ test('TE36: a Ana reserva com cupom, a loja confirma com a hora, separa e entreg
   })
 
   await janela.close()
+  await celular.close()
 })
