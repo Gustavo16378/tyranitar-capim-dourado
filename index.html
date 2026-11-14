@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="%COR_TERRA%" />
     <title>%APP_NOME%</title>
+    <script>
+      // A aparência escolhida em Minha conta ou nos painéis (src/tema/aparencia.ts), aplicada antes
+      // da primeira pintura: sem isto, a página pintaria o tema do aparelho e trocaria depois. Com
+      // as luzes apagadas pelo tirano (o easter egg, na sessão), sempre escuro. A mesma regra de
+      // temaDaPagina; tests/unidade/tema.test.ts confere as duas.
+      ;(function () {
+        try {
+          var escolha = localStorage.getItem('capi.tema')
+          var tirano = JSON.parse(sessionStorage.getItem('capi.tirano') || 'null')
+          var tema = (tirano && tirano.ligado) || escolha === 'escuro' ? 'dark' : escolha === 'claro' ? 'light' : null
+          if (tema) document.documentElement.setAttribute('data-theme', tema)
+        } catch (erro) {
+          // Sem acesso ao armazenamento: fica o tema do aparelho.
+        }
+      })()
+    </script>
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
