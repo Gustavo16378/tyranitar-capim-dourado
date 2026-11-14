@@ -1,5 +1,5 @@
 import { cx } from './cx'
-import type { Nivel } from './nivel'
+import type { NivelDoSelo } from './nivel'
 import { NivelBadge } from './NivelBadge'
 
 export interface CupomTicketProps {
@@ -12,7 +12,7 @@ export interface CupomTicketProps {
   /** Data curta: "31/12". */
   validade: string
   /** Nível mínimo para usar o cupom. */
-  nivel?: Nivel
+  nivel?: NivelDoSelo
 }
 
 // Os dois furos do canhoto, em cima e embaixo da linha tracejada.

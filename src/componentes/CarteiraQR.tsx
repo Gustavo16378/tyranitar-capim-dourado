@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { formatarNumero } from './formatar'
-import type { Nivel } from './nivel'
+import type { NivelDoSelo } from './nivel'
 import { NivelBadge } from './NivelBadge'
 
 export interface CarteiraQRProps {
   nome: string
-  nivel: Nivel
+  nivel: NivelDoSelo
   pontos: number
   /** Conteúdo do QR: o qrToken do cliente, que o vendedor lê no balcão. */
   qrToken?: string

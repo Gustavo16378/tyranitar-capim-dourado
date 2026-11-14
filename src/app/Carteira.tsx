@@ -3,16 +3,33 @@ import { gsap } from 'gsap'
 import { obterCarteira, useDados, useSessao } from '../api'
 import { CarteiraQR, CupomTicket, NIVEIS, NivelBadge, ProgressoNivel } from '../componentes'
 import { APP_NOME } from '../config'
+import { modoTirano } from '../easter-egg/modoTirano'
+import { useModoTirano } from '../easter-egg/useModoTirano'
 import { comMovimento, DURACAO, EASE, encherBarra, somarPontos, subirDeNivel, useEntrada, useGSAP } from '../movimento'
 import { desdeAUltimaVista, guardarVista, lerVista } from './carteiraVista'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
 import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel } from './formatos'
 import { MinhasReservas } from './MinhasReservas'
 
-/** Carteira: o QR do cliente para o balcão, pontos, progresso de nível, reservas e cupons. */
+/** O cupom que só o modo tirano mostra: de demonstração, não vale no caixa e some ao acender as luzes. */
+const CUPOM_DO_TIRANO = {
+  titulo: 'TYRANITAR13',
+  loja: 'Loja 13 · cupom de demonstração',
+  desconto: '13%',
+  validade: 'acender as luzes',
+} as const
+
+/**
+ * Carteira: o QR do cliente para o balcão, pontos, progresso de nível, reservas e cupons. No modo
+ * tirano (docs/easter-egg.md), o nível secreto Tirano, acima do Dourado: o selo, a subida de nível
+ * uma vez por sessão e o cupom de demonstração TYRANITAR13. Nada disso vai para a API.
+ */
 export default function Carteira() {
   const usuario = useSessao()?.usuario
   const carteira = useDados(obterCarteira, 'carteira')
+  const { ligado: tirano } = useModoTirano()
+  // A subida para o Tirano é celebrada na primeira visita depois do apagão, e só nela.
+  const [celebrarTirano] = useState(() => modoTirano.estado().ligado && !modoTirano.estado().nivelVisto)
   // O que o cliente viu na última visita, lido uma vez só, antes de a tela guardar o de agora.
   const [antes] = useState(() => (usuario ? lerVista(usuario.id) : null))
   const mudou =
@@ -29,7 +46,15 @@ export default function Carteira() {
   // - nada novo: o cartão do QR entra com um quique e a barra enche, como no protótipo.
   useGSAP(
     () => {
-      if (carteira.tipo !== 'ok' || !tela.current || !mudou) return
+      if (carteira.tipo !== 'ok' || !tela.current) return
+      // Nível Tirano: a única conquista da tela é ele (a barra não existe: é o nível mais alto).
+      if (celebrarTirano) {
+        const selo = tela.current.querySelector('[data-selo-tirano]')
+        const efeito = selo ? subirDeNivel(selo) : null
+        modoTirano.marcarNivelVisto()
+        return () => efeito?.revert()
+      }
+      if (!mudou) return
       const { pontos, nivel } = carteira.dados
       const raiz = tela.current
       const cartao = raiz.querySelector('[aria-label="Carteira"]')
@@ -89,7 +114,15 @@ export default function Carteira() {
 
         {carteira.tipo === 'ok' && (
           <>
-            {mudou?.subiu && (
+            {tirano && celebrarTirano && (
+              <div data-anim role="status" className="flex items-center gap-3 rounded-md bg-ouro-soft p-4 text-ouro-ink">
+                <span data-selo-tirano className="flex-none">
+                  <NivelBadge nivel="tirano" />
+                </span>
+                <p className="text-label">Você subiu para o nível Tirano, o nível secreto acima do Dourado.</p>
+              </div>
+            )}
+            {!celebrarTirano && mudou?.subiu && (
               <div
                 data-anim
                 role="status"
@@ -104,14 +137,19 @@ export default function Carteira() {
             <div data-anim>
               <CarteiraQR
                 nome={usuario?.nome ?? 'Cliente'}
-                nivel={paraNivel(carteira.dados.nivel)}
+                nivel={tirano ? 'tirano' : paraNivel(carteira.dados.nivel)}
                 pontos={carteira.dados.pontos}
                 qrToken={carteira.dados.qrToken}
               />
             </div>
 
             <div data-anim className="rounded-md border bg-surface-raised p-4">
-              {carteira.dados.proximoNivel ? (
+              {tirano ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-body-sm text-ink-muted">Nível secreto, acima do Dourado. Só o tirano libera.</p>
+                  <NivelBadge nivel="tirano" />
+                </div>
+              ) : carteira.dados.proximoNivel ? (
                 <ProgressoNivel
                   pontos={carteira.dados.pontos}
                   inicio={INICIO_DO_NIVEL[paraNivel(carteira.dados.nivel)]}
@@ -135,10 +173,15 @@ export default function Carteira() {
               <h2 id="titulo-cupons" className="text-title-sm text-marrom-ink">
                 Seus cupons
               </h2>
-              {carteira.dados.cupons.length === 0 ? (
+              {carteira.dados.cupons.length === 0 && !tirano ? (
                 <Vazio>Você ainda não tem cupons. As ofertas do Início aparecem aqui quando valem para você.</Vazio>
               ) : (
                 <ul className="flex flex-col gap-3 pt-2.5 md:grid md:grid-cols-2">
+                  {tirano && (
+                    <li>
+                      <CupomTicket origem="loja" nivel="tirano" {...CUPOM_DO_TIRANO} />
+                    </li>
+                  )}
                   {carteira.dados.cupons.map((cupom) => (
                     <li key={cupom.id}>
                       <CupomTicket
