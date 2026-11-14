@@ -1,5 +1,5 @@
 // Como os dados da API aparecem nas telas do app (português, fuso de Palmas: RNF11).
-import { formatarPreco } from '../componentes/formatar'
+import { formatarNumero, formatarPreco } from '../componentes/formatar'
 import type { Nivel } from '../componentes/nivel'
 import type { NivelApi, Piso, TipoCupom } from '../tipos'
 
@@ -70,4 +70,17 @@ export function partesDoLink(link: string) {
 /** Nome do arquivo de GET /api/me/dados: "meus-dados-2026-11-13.json", pela data em que foi gerado. */
 export function nomeDoArquivoDeDados(geradoEm: string) {
   return `meus-dados-${geradoEm.slice(0, 10)}.json`
+}
+
+/** O dia da compra, em Palmas: "2026-11-12T18:30:00Z" → "12 de nov. de 2026". */
+export function dataDaCompra(iso: string) {
+  return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: FUSO }).format(
+    new Date(iso),
+  )
+}
+
+/** Os pontos de uma compra: "+339 pontos", "+1 ponto", "Sem pontos" (cupom cobriu tudo). */
+export function pontosGanhos(pontos: number) {
+  if (pontos === 0) return 'Sem pontos'
+  return `+${formatarNumero(pontos)} ${pontos === 1 ? 'ponto' : 'pontos'}`
 }

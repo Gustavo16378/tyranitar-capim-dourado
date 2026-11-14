@@ -7,6 +7,7 @@ import { comMovimento, DURACAO, EASE, encherBarra, somarPontos, subirDeNivel, us
 import { desdeAUltimaVista, guardarVista, lerVista } from './carteiraVista'
 import { Carregando, ErroTela, Esqueleto, Vazio } from './Estados'
 import { dataCurta, descontoDoCupom, INICIO_DO_NIVEL, paraNivel } from './formatos'
+import { MinhasCompras } from './MinhasCompras'
 import { MinhasReservas } from './MinhasReservas'
 
 /** Carteira: o QR do cliente para o balcão, pontos, progresso de nível, reservas e cupons. */
@@ -129,6 +130,10 @@ export default function Carteira() {
 
             <div data-anim>
               <MinhasReservas reservas={carteira.dados.reservasAtivas} />
+            </div>
+
+            <div data-anim>
+              <MinhasCompras />
             </div>
 
             <section data-anim aria-labelledby="titulo-cupons" className="flex flex-col gap-3">
